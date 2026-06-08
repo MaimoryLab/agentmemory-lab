@@ -53,8 +53,22 @@ function readJsonIfExists(path: string): Record<string, unknown> | null {
   }
 }
 
+function deliveryArtifactRoot(): string {
+  const base = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    process.cwd(),
+    resolve(base, "..", ".."),
+    resolve(base, ".."),
+    resolve(base, "."),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(join(candidate, "artifacts", "delivery-manifest.json"))) return candidate;
+  }
+  return process.cwd();
+}
+
 function readDeliveryStatus(): Record<string, unknown> {
-  const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+  const root = deliveryArtifactRoot();
   const manifest = readJsonIfExists(join(root, "artifacts", "delivery-manifest.json"));
   const evidence = readJsonIfExists(join(root, "artifacts", "ai-validation-evidence-summary.json"));
   if (!manifest) {

@@ -15,20 +15,21 @@
        Georgia / system serif / system sans / system mono. -->
   <style>
     :root {
-      --bg: #FFFFFF;
-      --bg-alt: #F3F4F6;
-      --bg-subtle: #E5E5E5;
-      --bg-inset: #E5E7EB;
-      --border: #9CA3AF;
-      --border-light: #D1D5DB;
-      --border-heavy: #9CA3AF;
-      --ink: #111827;
-      --ink-secondary: #4B5563;
-      --ink-muted: #6B7280;
-      --ink-faint: #9CA3AF;
-      --accent: #9CA3AF;
-      --accent-light: #9CA3AF;
-      --cream: #F5F0E8;
+      --bg: #F5F5F5;
+      --bg-alt: #FAFAFA;
+      --bg-subtle: #F0EFED;
+      --bg-inset: #F0EFED;
+      --surface: #FFFFFF;
+      --border: #D6D3D1;
+      --border-light: #E7E5E4;
+      --border-heavy: #A8A29E;
+      --ink: #0C0A09;
+      --ink-secondary: #4E4E4E;
+      --ink-muted: #777169;
+      --ink-faint: #A8A29E;
+      --accent: #292524;
+      --accent-light: #D6D3D1;
+      --cream: #FAFAFA;
       --node-file: #2D6A4F;
       --node-function: #1D4E89;
       --node-concept: #B8860B;
@@ -44,9 +45,9 @@
       --purple: #6B3FA0;
       --orange: #C2410C;
       --cyan: #0E7490;
-      --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      --font-body: "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
-      --font-ui: "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --font-mono: "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
     }
     html[data-theme="dark"] {
@@ -89,8 +90,7 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      background-image: radial-gradient(circle, #D4D4CF 0.5px, transparent 0.5px);
-      background-size: 16px 16px;
+      background-image: none;
     }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
@@ -318,29 +318,28 @@
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 0;
+      gap: 12px;
       margin-bottom: 24px;
-      border: 1px solid var(--border);
     }
     .stat-card {
-      background: var(--bg);
-      padding: 16px 20px;
-      border-right: 1px solid var(--border-light);
-      border-bottom: 1px solid var(--border-light);
+      background: var(--surface);
+      padding: 18px 20px;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
     }
-    .stat-card:last-child { border-right: none; }
+    .stat-card:last-child { border-right: 1px solid var(--border-light); }
     .stat-card .label {
       font-size: 9px;
       color: var(--ink-muted);
       text-transform: uppercase;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.08em;
       margin-bottom: 4px;
       font-family: var(--font-ui);
       font-weight: 600;
     }
     .stat-card .value {
       font-size: 32px;
-      font-weight: 900;
+      font-weight: 300;
       color: var(--ink);
       font-family: var(--font-display);
       line-height: 1.1;
@@ -353,24 +352,25 @@
     }
 
     .card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 2px;
-      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 20px;
       margin-bottom: 16px;
-      transition: box-shadow 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
     .card:hover {
-      box-shadow: rgba(0, 0, 0, 0.05) -2px 2px 4px 0px;
+      border-color: var(--border);
+      box-shadow: 0 16px 48px rgba(12, 10, 9, 0.05);
     }
     .card-title {
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 500;
       color: var(--ink);
       margin-bottom: 12px;
       font-family: var(--font-display);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      text-transform: none;
+      letter-spacing: 0;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border-light);
     }
@@ -391,13 +391,14 @@
 
     .badge {
       display: inline-block;
-      font-size: 9px;
-      padding: 2px 8px;
+      font-size: 11px;
+      padding: 4px 10px;
       font-weight: 600;
       font-family: var(--font-ui);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.04em;
       border: 1px solid;
+      border-radius: 999px;
     }
     .badge-blue { border-color: var(--blue); color: var(--blue); background: transparent; }
     .badge-green { border-color: var(--green); color: var(--green); background: transparent; }
@@ -468,24 +469,25 @@
     .toolbar input { flex: 1; min-width: 200px; }
 
     .btn {
-      background: var(--bg);
+      background: transparent;
       border: 1px solid var(--border);
       color: var(--ink);
-      padding: 7px 16px;
-      font-size: 11px;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 14px;
       cursor: pointer;
-      transition: box-shadow 0.1s, transform 0.1s;
+      transition: background 0.15s, border-color 0.15s;
       font-family: var(--font-ui);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
     }
-    .btn:hover { box-shadow: rgba(0, 0, 0, 0.05) -2px 2px 4px 0px; transform: translate(-1px, -1px); }
+    .btn:hover { background: var(--bg-subtle); border-color: var(--border-heavy); box-shadow: none; transform: none; }
     .btn:active { box-shadow: none; transform: translate(0, 0); }
     .btn-danger { border-color: var(--accent); color: var(--accent); }
     .btn-danger:hover { background: var(--accent); color: white; box-shadow: rgba(0, 0, 0, 0.05) -2px 2px 4px 0px; }
-    .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-    .btn-primary:hover { background: var(--ink-secondary); box-shadow: rgba(0, 0, 0, 0.05) -2px 2px 4px 0px; }
+    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--ink); box-shadow: none; }
 
     .graph-container {
       display: flex;
@@ -4355,6 +4357,7 @@
       html += '<div><div class="card-title" style="margin-bottom:4px;">外部试用状态</div><div style="font-size:12px;color:var(--ink-muted);line-height:1.45;">插件 ' + esc(version) + ' · ' + esc(zipLabel) + ' · 提交 ' + esc(delivery.commit || '-') + '</div></div>';
       html += '<span class="badge ' + deliveryBadgeClass(external) + '">' + esc(external) + '</span>';
       html += '</div>';
+      html += '<div style="margin:-2px 0 14px;font-size:13px;color:var(--ink-secondary);line-height:1.55;">插件是浏览器入口层，负责把网页和 AI 对话送入本地审阅；主仓库负责 Viewer、API、记忆库、文档和交付检查。</div>';
       html += '<div class="stats-grid" style="margin-bottom:12px;">';
       html += '<div class="stat-card"><div class="label">本地演示</div><div class="value" style="font-size:22px;">' + esc(delivery.localDemo || 'not-ready') + '</div><div class="sub">插件预览页</div></div>';
       html += '<div class="stat-card"><div class="label">真实 AI 证据</div><div class="value" style="font-size:24px;">' + passed + '/' + required + '</div><div class="sub">公开发布必需</div></div>';

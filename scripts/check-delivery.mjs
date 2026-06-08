@@ -112,6 +112,7 @@ assert(browserReadme.includes('docs/browser-extension-privacy-cn.md'), 'Browser 
 assert(browserReadme.includes('docs/browser-extension-mem0-reference-cn.md'), 'Browser extension README must link Mem0 reference doc.');
 assert(browserReadme.includes('docs/browser-extension-ai-site-test-cards-cn.md'), 'Browser extension README must link AI site test cards doc.');
 assert(browserReadme.includes('保存前编辑'), 'Browser extension README must mention edit-before-save flow.');
+assert(browserReadme.includes('插件是入口层，主仓库是工作台层'), 'Browser extension README must explain extension/repo relationship.');
 assert(browserReadme.includes('复制命令'), 'Browser extension README must mention the copy evidence command flow.');
 for (const marker of ['项目', '标签', '经验候选']) {
   assert(browserReadme.includes(marker), `Browser extension README must mention draft ${marker}.`);

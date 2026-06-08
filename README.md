@@ -89,7 +89,7 @@ Agent Memory Lab 更像“工作记忆层”：它关心这段内容以后怎么
 - 在支持的 AI 页面输入问题时，输入框附近会出现“记忆建议”，展示相关记忆并支持插入/复制
 - 选中网页片段或链接后，可用右键菜单送入同一套本地待审阅队列
 
-插件结构参考了 OpenMemory / Mem0 这类跨 AI 产品记忆插件的做法：按 ChatGPT、Claude、Gemini、Perplexity 等 supported sites 维护独立配置，把记忆召回放到输入框附近。不同的是，Agent Memory Lab 不默认把网页内容直接写入长期记忆，而是统一送进本地待审阅队列，用户确认后才沉淀。
+插件结构参考了 OpenMemory / Mem0 这类跨 AI 产品记忆插件的做法：按 ChatGPT、Claude、Gemini、Perplexity 等 supported sites 维护独立配置，把记忆召回放到输入框附近。不同的是，Agent Memory Lab 不默认把网页内容直接写入长期记忆，而是统一送进本地待审阅队列，用户确认后才沉淀。详细对标见 [浏览器插件对标：Mem0 / OpenMemory 实现参考](docs/browser-extension-mem0-reference-cn.md)。
 
 你确认后，它才会进入长期记忆或经验；不合适的候选可以直接忽略。
 

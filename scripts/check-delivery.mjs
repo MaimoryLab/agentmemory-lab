@@ -41,6 +41,7 @@ const requiredFiles = [
   'docs/external-tester-guide-cn.md',
   'docs/release-gates-cn.md',
   'docs/browser-extension-ai-validation-cn.md',
+  'docs/browser-extension-mem0-reference-cn.md',
   'docs/browser-extension-privacy-en.md',
   'docs/browser-extension-store-listing-en.md',
   'docs/feishu/agentmemory-project-intro-cn.md',
@@ -91,6 +92,7 @@ const browserReadme = read('browser-extension/README.md');
 assert(browserReadme.includes('npm run package:browser-extension'), 'Browser extension README must mention packaging command.');
 assert(browserReadme.includes('npm run preview:browser-extension'), 'Browser extension README must mention preview command.');
 assert(browserReadme.includes('docs/browser-extension-privacy-cn.md'), 'Browser extension README must link privacy doc.');
+assert(browserReadme.includes('docs/browser-extension-mem0-reference-cn.md'), 'Browser extension README must link Mem0 reference doc.');
 assert(browserReadme.includes('/demo/browser-extension.html'), 'Browser extension README must mention local demo page.');
 
 const checklist = read('docs/demo-checklist-cn.md');
@@ -104,8 +106,13 @@ for (const marker of ['外部试用指南', 'npm run preview:browser-extension',
 }
 
 const plan = read('docs/product-delivery-plan-cn.md');
-for (const marker of ['本地预览包', '权限与隐私说明', 'Skill 草稿', 'AI 页面诊断']) {
+for (const marker of ['本地预览包', '权限与隐私说明', '插件对标说明', 'Skill 草稿', 'AI 页面诊断']) {
   assert(plan.includes(marker), `Product delivery plan missing marker: ${marker}`);
+}
+
+const mem0Reference = read('docs/browser-extension-mem0-reference-cn.md');
+for (const marker of ['mem0ai/mem0-chrome-extension', 'supported sites', '输入框附近', '待审阅队列', '真实 AI 站点验收']) {
+  assert(mem0Reference.includes(marker), `Mem0 reference doc missing marker: ${marker}`);
 }
 
 const releaseGates = read('docs/release-gates-cn.md');

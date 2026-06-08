@@ -69,6 +69,7 @@
 ## 插件发布物料
 
 - 权限与隐私说明：`docs/browser-extension-privacy-cn.md`
+- 插件对标说明：`docs/browser-extension-mem0-reference-cn.md`
 - 英文隐私政策草稿：`docs/browser-extension-privacy-en.md`
 - 英文商店发布文案草稿：`docs/browser-extension-store-listing-en.md`
 - 外部试用指南：`docs/external-tester-guide-cn.md`

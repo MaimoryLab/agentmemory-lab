@@ -2,6 +2,8 @@
 
 这是 Agent Memory Lab 的浏览器入口，用来把网页、AI 对话和项目文档同步到本地记忆工作台。
 
+插件结构参考 Mem0 / OpenMemory 这类跨 AI 记忆插件：记忆入口放在 AI 输入框附近，站点规则按 supported sites 维护，页面失配时用诊断 JSON 反馈。完整对标说明见 [`docs/browser-extension-mem0-reference-cn.md`](../docs/browser-extension-mem0-reference-cn.md)。
+
 它不是普通 Web Clipper。它更像一个本地优先的“上下文中转站”：先识别你正在看的页面，再生成可审阅的记忆候选，送到 Viewer 的“待审阅”队列，最后由你决定哪些内容值得进入长期记忆。
 
 ## 现在支持

@@ -1235,6 +1235,83 @@
       grid-template-columns: minmax(0, 1fr);
       gap: 12px;
     }
+    .skill-console-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .skill-console-stat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      background: #ffffff;
+    }
+    .skill-console-stat-icon {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      border: 1px solid var(--border-light);
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      color: var(--ink-muted);
+    }
+    .skill-console-stat-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+    }
+    .skill-console-stat-label {
+      color: var(--ink-faint);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .skill-console-stat-value {
+      color: var(--ink);
+      font-family: var(--font-ui);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+    .skill-filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .skill-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--border-light);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--ink-muted);
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .skill-filter-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+    }
+    .skill-filter-btn.active {
+      border-color: var(--border-heavy);
+      color: var(--ink);
+      background: var(--bg-subtle);
+    }
     .local-skill-card {
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
@@ -1313,6 +1390,39 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+    }
+    .activity-status-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      background: #ffffff;
+      color: var(--ink-muted);
+      font-size: 12px;
+    }
+    .activity-status-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .activity-status-dot {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(111, 91, 74, 0.08);
+    }
+    .activity-status-meta {
+      flex: 0 0 auto;
+      color: var(--ink-faint);
+      font-family: var(--font-mono);
+      font-size: 11px;
     }
     .icon-btn {
       width: 30px;
@@ -1466,8 +1576,13 @@
     }
     @media (max-width: 760px) {
       .lesson-workshop-head,
-      .lesson-stage-grid {
+      .lesson-stage-grid,
+      .skill-console-summary {
         grid-template-columns: 1fr;
+      }
+      .activity-status-card {
+        align-items: flex-start;
+        flex-direction: column;
       }
     }
 
@@ -3150,8 +3265,8 @@
 	      timeline: { loaded: false, observations: [], sessionId: '', projectKey: '', sessions: [], minImportance: 0, page: 0, pageSize: 50, mode: 'episodes', episodeFilter: 'all', expandedEpisodes: {} },
       sessions: { loaded: false, items: [], selectedId: null },
       audit: { loaded: false, entries: [], opFilter: '' },
-      activity: { loaded: false, observations: [], sessions: [], typeFilter: '' },
-      lessons: { loaded: false, items: [], search: '', skillSearch: '', mode: 'explicit', projects: [] },
+      activity: { loaded: false, observations: [], sessions: [], typeFilter: '', loadingPhase: '' },
+      lessons: { loaded: false, items: [], search: '', skillSearch: '', skillRootFilter: 'all', mode: 'explicit', projects: [] },
       actions: { loaded: false, items: [], frontier: [], statusFilter: '', search: '' },
       crystals: { loaded: false, items: [], search: '', lessonMap: {} },
       profile: { loaded: false, projects: [], selectedProject: '', data: null },
@@ -5678,6 +5793,7 @@
 
     async function loadActivity() {
       var el = document.getElementById('view-activity');
+      state.activity.loadingPhase = '正在读取本地会话';
       el.innerHTML = '<div class="loading">加载活动中...</div>';
       var results = await Promise.all([
         apiGet('sessions'),
@@ -5717,6 +5833,7 @@
       state.activity.observations = allObs;
       state.activity.audit = auditEntries;
       state.activity.loaded = true;
+      state.activity.loadingPhase = recentSessions.length ? '正在补齐最近会话细节' : '';
       renderActivity();
 
       var obsResults = await Promise.all(recentSessions.filter(function(s) { return sessionId(s); }).map(function(s) {
@@ -5726,6 +5843,7 @@
         if (r && r.observations) allObs = allObs.concat(r.observations);
       });
       state.activity.observations = allObs;
+      state.activity.loadingPhase = '';
       renderActivity();
     }
 
@@ -5737,6 +5855,10 @@
       var TOOL_TYPE_MAP = { Read: 'file_read', Write: 'file_write', Edit: 'file_edit', Bash: 'command_run', Grep: 'search', Glob: 'search', WebFetch: 'web_fetch', WebSearch: 'web_fetch', AskUserQuestion: 'conversation', Task: 'subagent' };
 
       var html = '';
+
+      if (state.activity.loadingPhase) {
+        html += '<div class="activity-status-card"><div class="activity-status-main"><span class="activity-status-dot"></span><span>' + esc(state.activity.loadingPhase) + '</span></div><div class="activity-status-meta">' + obs.length + ' 条</div></div>';
+      }
 
       html += '<div class="card"><div class="card-title">活动热力图（近一年）</div>';
       var dayCounts = {};
@@ -6176,16 +6298,13 @@
       var groupKeys = Object.keys(groups).sort(function(a, b) { return groups[b].length - groups[a].length; });
 
       var skillQuery = String(state.lessons.skillSearch || '').trim().toLowerCase();
+      var skillRootFilter = state.lessons.skillRootFilter || 'all';
       function skillMatches(skill) {
+        var rootOk = skillRootFilter === 'all' || String(skill.root || '') === skillRootFilter;
+        if (!rootOk) return false;
         if (!skillQuery) return true;
         return String(skill.name || '').toLowerCase().indexOf(skillQuery) >= 0 || String(skill.path || '').toLowerCase().indexOf(skillQuery) >= 0 || String(skill.root || '').toLowerCase().indexOf(skillQuery) >= 0;
       }
-      var visibleSkills = (LOCAL_SKILLS || []).filter(skillMatches);
-      var skillGroups = {};
-      visibleSkills.forEach(function(skill) {
-        if (!skillGroups[skill.root]) skillGroups[skill.root] = [];
-        skillGroups[skill.root].push(skill);
-      });
       function skillRootMeta(root) {
         var known = {
           Codex: { title: 'Codex 环境', sub: '这个 agent 会加载' },
@@ -6195,18 +6314,41 @@
         return known[root] || { title: root || '其他来源', sub: '自定义 agent / skill 目录' };
       }
       var rootOrder = { Codex: 1, Agents: 2, Plugin: 99 };
+      var allSkillRoots = Array.from(new Set((LOCAL_SKILLS || []).map(function(skill) { return skill.root || '其他'; }))).sort(function(a, b) {
+        return (rootOrder[a] || 50) - (rootOrder[b] || 50) || a.localeCompare(b);
+      });
+      var visibleSkills = (LOCAL_SKILLS || []).filter(skillMatches);
+      var skillGroups = {};
+      visibleSkills.forEach(function(skill) {
+        if (!skillGroups[skill.root]) skillGroups[skill.root] = [];
+        skillGroups[skill.root].push(skill);
+      });
       var skillRoots = Object.keys(skillGroups).sort(function(a, b) {
         return (rootOrder[a] || 50) - (rootOrder[b] || 50) || a.localeCompare(b);
       });
 
       var html = '<div class="lesson-workshop">';
       html += '<div class="lesson-workshop-head">';
-      html += '<div><div class="lesson-workshop-title">本地 Skill</div>';
-      html += '<div class="lesson-workshop-sub">查看本机可用 Skill，定位来源和文件位置。</div></div>';
+      html += '<div><div class="lesson-workshop-title">本地 Skill 管理台</div>';
+      html += '<div class="lesson-workshop-sub">先看已经安装的能力，再决定哪些经验值得沉淀进去。</div></div>';
       html += '<div class="lesson-head-actions"><div class="lesson-count-pill">' + (LOCAL_SKILLS || []).length + ' 个 Skill</div>';
       html += '<button class="btn btn-primary add-lesson-btn" data-action="open-add-lesson" aria-label="创建经验">';
       html += '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
       html += '创建经验</button></div>';
+      html += '</div>';
+
+      html += '<div class="skill-console-summary">';
+      html += '<div class="skill-console-stat"><span class="skill-console-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="M8 9h8M8 13h5"></path></svg></span><div><div class="skill-console-stat-value">' + (LOCAL_SKILLS || []).length + '</div><div class="skill-console-stat-label">已安装 Skill</div></div></div>';
+      html += '<div class="skill-console-stat"><span class="skill-console-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"></path><path d="M9 4h6"></path></svg></span><div><div class="skill-console-stat-value">' + allSkillRoots.length + '</div><div class="skill-console-stat-label">来源目录</div></div></div>';
+      html += '<div class="skill-console-stat"><span class="skill-console-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M8.5 14a6 6 0 1 1 7 0c-.8.6-1.2 1.3-1.4 2h-4.2c-.2-.7-.6-1.4-1.4-2Z"></path></svg></span><div><div class="skill-console-stat-value">' + items.length + '</div><div class="skill-console-stat-label">待沉淀经验</div></div></div>';
+      html += '</div>';
+
+      html += '<div class="skill-filter-row">';
+      html += '<button class="skill-filter-btn' + (skillRootFilter === 'all' ? ' active' : '') + '" data-action="filter-skill-root" data-root="all"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>全部</button>';
+      allSkillRoots.forEach(function(root) {
+        var meta = skillRootMeta(root);
+        html += '<button class="skill-filter-btn' + (skillRootFilter === root ? ' active' : '') + '" data-action="filter-skill-root" data-root="' + esc(root) + '"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M5 7v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7"></path><path d="M9 4h6"></path></svg>' + esc(meta.title) + '</button>';
+      });
       html += '</div>';
 
       html += '<div style="display:flex;gap:8px;align-items:center;">';
@@ -7195,6 +7337,11 @@
       }
       if (action === 'open-skill-detail') {
         openSkillDetail(target.getAttribute('data-skill-path') || '');
+        return;
+      }
+      if (action === 'filter-skill-root') {
+        state.lessons.skillRootFilter = target.getAttribute('data-root') || 'all';
+        renderLessons();
         return;
       }
       if (action === 'close-modal') {

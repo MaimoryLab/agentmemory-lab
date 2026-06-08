@@ -31,7 +31,7 @@
 
 真实站点证据目录：`docs/validation/browser-extension-ai-sites/`。
 
-每份诊断 JSON 应保留“复制诊断”的原始结构，并手动补充：
+每份诊断 JSON 会自带 `manualValidation` 模板。保存证据前，请把下面这些字段按真实验收结果改好：
 
 ```json
 {
@@ -52,7 +52,7 @@ npm run check:ai-validation-evidence
 npm run sync:ai-validation-table
 ```
 
-第一条命令会生成 `artifacts/ai-validation-evidence-summary.json`。第二条命令会用证据目录更新本页真实站点验收表。它们不会把待验收状态误判为通过；公开发布仍需 ChatGPT、Claude、Gemini、Perplexity 都有通过证据。
+第一条命令会生成 `artifacts/ai-validation-evidence-summary.json`。第二条命令会用证据目录更新本页真实站点验收表。它们不会把待验收状态误判为通过；`memoryInsertPassed`、`diagnosticsCopied`、`siteInputStillWorks` 都为通过时，才会计入真实证据通过数。公开发布仍需 ChatGPT、Claude、Gemini、Perplexity 都有通过证据。
 
 ## 本地可验证项
 
@@ -105,6 +105,13 @@ npm run sync:ai-validation-table
     "promptLength": 18,
     "turnCount": 4,
     "checkedAt": "2026-06-08T00:00:00.000Z"
+  },
+  "manualValidation": {
+    "memoryInsertPassed": false,
+    "diagnosticsCopied": true,
+    "siteInputStillWorks": false,
+    "browser": "填写浏览器名称和版本",
+    "notes": "填写无隐私信息的验收备注"
   }
 }
 ```

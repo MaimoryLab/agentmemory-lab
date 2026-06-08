@@ -159,6 +159,7 @@ npm run sync:ai-validation-table
 - 截图或录屏。
 - 同步侧栏复制出来的诊断 JSON。
 - 如果可以，直接提供 `docs/validation/browser-extension-ai-sites/` 下的证据 JSON 文件。
+- 复制诊断里的 `manualValidation` 字段需要按真实结果改成 `true` / `false`，不要默认当作通过。
 - 诊断 JSON 里 `editorFound`、`anchorFound`、`placement`、`memoryWidgetVisible` 的状态。
 - 哪一步不符合预期。
 

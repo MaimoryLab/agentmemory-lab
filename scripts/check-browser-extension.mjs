@@ -96,5 +96,8 @@ for (const field of ['anchorFound', 'placement', 'memoryWidgetVisible', 'checked
 for (const field of ['getManifest', 'manifestVersion', 'version']) {
   if (!sidepanel.includes(field)) throw new Error(`Diagnostic report must include extension ${field}.`);
 }
+for (const field of ['manualValidation', 'memoryInsertPassed', 'diagnosticsCopied', 'siteInputStillWorks']) {
+  if (!sidepanel.includes(field)) throw new Error(`Diagnostic report must include manual validation template field ${field}.`);
+}
 
 console.log('browser extension checks ok');

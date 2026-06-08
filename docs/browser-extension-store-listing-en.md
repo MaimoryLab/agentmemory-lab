@@ -26,7 +26,7 @@ On supported AI pages, the extension can show relevant local memories near the i
 - Show relevant local memories near AI input boxes on supported AI sites.
 - Insert or copy recalled memories into the current AI prompt.
 - Use the side panel to inspect page type, privacy hints, connection status, and AI-page diagnostics.
-- Copy AI diagnostics for site validation without sharing cookies, passwords, or hidden page source.
+- Copy AI diagnostics and a manual validation template for site validation without sharing cookies, passwords, or hidden page source.
 - Open the local Agent Memory Lab workbench and Skill page directly from the extension.
 
 ## What Makes It Different

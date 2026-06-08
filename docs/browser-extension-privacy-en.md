@@ -63,7 +63,7 @@ Long-term memories are stored by the local Agent Memory Lab workbench, not by th
 
 ## AI Diagnostics
 
-The side panel can copy diagnostic JSON for supported AI pages. Diagnostics are meant to help validate and repair site-specific input-box selectors.
+The side panel can copy diagnostic JSON for supported AI pages. Diagnostics are meant to help validate and repair site-specific input-box selectors. The copied JSON also includes a manual validation template for insert/copy/site-input checks; users must fill those fields themselves before treating evidence as passed.
 
 Diagnostic JSON may include page title, URL, host, detected provider, editor-found state, matched selector, prompt length, and recent turn count. It does not intentionally include cookies, passwords, access tokens, or full hidden page source.
 

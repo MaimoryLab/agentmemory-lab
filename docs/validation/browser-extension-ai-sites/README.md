@@ -34,7 +34,7 @@ YYYY-MM-DD-provider.json
 - `ai.memoryWidgetVisible`
 - `ai.checkedAt`
 
-如果插入/复制也验证通过，可以手动补充：
+复制诊断会自带 `manualValidation` 模板。请按真实验收结果把它改好：
 
 ```json
 {
@@ -47,6 +47,8 @@ YYYY-MM-DD-provider.json
   }
 }
 ```
+
+不要把模板里的 `false` 留着就当通过。`npm run check:ai-validation-evidence` 只有在这三项都为通过时，才会把对应产品计入通过数。
 
 ## 隐私提醒
 

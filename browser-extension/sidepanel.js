@@ -67,6 +67,13 @@ function buildDiagnosticReport(capture) {
       promptLength: diagnostics.promptLength || 0,
       turnCount: diagnostics.turnCount || 0,
       checkedAt: diagnostics.checkedAt || ''
+    },
+    manualValidation: {
+      memoryInsertPassed: false,
+      diagnosticsCopied: true,
+      siteInputStillWorks: false,
+      browser: '填写浏览器名称和版本',
+      notes: '填写无隐私信息的验收备注'
     }
   };
 }

@@ -24,6 +24,46 @@ async function collectPage() {
   });
 }
 
+async function collectPageFromContext(info = {}, tab = null) {
+  let capture = null;
+  try {
+    if (tab && tab.id) {
+      const response = await chrome.tabs.sendMessage(tab.id, { type: 'AGENT_MEMORY_LAB_COLLECT_PAGE' });
+      if (response && response.ok) capture = createPageCapture(response.page);
+    }
+  } catch {}
+  if (!capture) {
+    capture = createPageCapture({
+      title: (tab && tab.title) || '当前页面',
+      url: info.pageUrl || (tab && tab.url) || '',
+      description: '',
+      selection: '',
+      headings: []
+    });
+  }
+  const selection = String(info.selectionText || '').trim();
+  const linkUrl = String(info.linkUrl || '').trim();
+  if (selection || linkUrl) {
+    capture = createPageCapture({
+      ...capture.page,
+      selection: selection || capture.page.selection,
+      description: capture.page.description,
+      headings: capture.page.headings,
+      aiProvider: capture.conversation && capture.conversation.provider,
+      promptDraft: capture.conversation && capture.conversation.promptDraft,
+      turns: capture.conversation && capture.conversation.turns,
+      diagnostics: capture.diagnostics,
+      url: info.pageUrl || capture.page.url
+    });
+    capture.context = {
+      kind: selection ? 'selection' : 'link',
+      selection,
+      linkUrl
+    };
+  }
+  return capture;
+}
+
 async function rememberRecent(capture, kind, result) {
   const stored = await chrome.storage.local.get([RECENT_KEY]);
   const list = Array.isArray(stored[RECENT_KEY]) ? stored[RECENT_KEY] : [];
@@ -93,6 +133,38 @@ async function saveCandidate(kind, text) {
   return { capture, result };
 }
 
+async function saveContextSelection(info = {}, tab = null) {
+  const capture = await collectPageFromContext(info, tab);
+  const selection = String(info.selectionText || capture.page.selection || '').trim();
+  const linkUrl = String(info.linkUrl || '').trim();
+  const title = selection ? `选中文本：${capture.page.title}` : `网页链接：${capture.page.title}`;
+  const content = selection
+    ? `浏览器选中文本候选：${selection}\n来源：${capture.page.title}\nURL：${capture.page.url}`
+    : `浏览器链接候选：${linkUrl || capture.page.url}\n来源页面：${capture.page.title}\nURL：${capture.page.url}`;
+  const basePayload = captureToMemoryPayload(capture);
+  const payload = {
+    ...basePayload,
+    content,
+    concepts: [
+      ...basePayload.concepts,
+      selection ? 'browser-context:selection' : 'browser-context:link'
+    ]
+  };
+  const result = await agentMemoryApi('/agentmemory/review', {
+    method: 'POST',
+    body: JSON.stringify({
+      kind: 'memory',
+      title,
+      content,
+      source: selection ? 'browser-extension-selection' : 'browser-extension-link',
+      page: capture.page,
+      payload
+    })
+  });
+  await rememberRecent(capture, 'review', result);
+  return { capture, result };
+}
+
 async function getRecentCaptures() {
   const stored = await chrome.storage.local.get([RECENT_KEY]);
   return Array.isArray(stored[RECENT_KEY]) ? stored[RECENT_KEY] : [];
@@ -125,8 +197,11 @@ async function setupContextMenus() {
 chrome.runtime.onInstalled.addListener(setupContextMenus);
 chrome.runtime.onStartup.addListener(setupContextMenus);
 
-chrome.contextMenus.onClicked.addListener((info) => {
-  if (info.menuItemId === 'save-page-memory') savePageMemory().catch(() => {});
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'save-page-memory') {
+    if (info.selectionText || info.linkUrl) saveContextSelection(info, tab).catch(() => {});
+    else savePageMemory().catch(() => {});
+  }
   if (info.menuItemId === 'open-workbench') openViewer('dashboard').catch(() => {});
 });
 

@@ -40,6 +40,7 @@ for (const size of [16, 32, 48, 128]) {
 }
 
 const contentScript = readFileSync('browser-extension/content-script.js', 'utf8');
+const serviceWorker = readFileSync('browser-extension/service-worker.js', 'utf8');
 const siteConfig = readFileSync('browser-extension/shared/site-config.js', 'utf8');
 if (!contentScript.includes('DEMO_MEMORIES') || !contentScript.includes("provider.id === 'agentmemoryDemo'")) {
   throw new Error('Content script must provide local demo memories for the Agent Memory Demo page.');
@@ -51,6 +52,17 @@ const missingInContent = sharedProviders.filter((id) => !contentProviders.includ
 const missingInShared = contentProviders.filter((id) => !sharedProviders.includes(id));
 if (missingInContent.length || missingInShared.length) {
   throw new Error(`Provider config mismatch. Missing in content: ${missingInContent.join(', ') || 'none'}; missing in shared: ${missingInShared.join(', ') || 'none'}`);
+}
+
+const menuContexts = JSON.stringify(manifest.permissions || []) + serviceWorker;
+if (!serviceWorker.includes('saveContextSelection') || !serviceWorker.includes('browser-extension-selection')) {
+  throw new Error('Service worker must save selected text into the same review queue.');
+}
+if (!serviceWorker.includes('browser-extension-link') || !serviceWorker.includes('browser-context:link')) {
+  throw new Error('Service worker must preserve right-click link context.');
+}
+if (!menuContexts.includes("contexts: ['page', 'selection', 'link']")) {
+  throw new Error('Context menu must expose page, selection, and link save actions.');
 }
 
 console.log('browser extension checks ok');

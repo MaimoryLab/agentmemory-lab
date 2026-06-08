@@ -51,4 +51,18 @@
 npm run package:browser-extension && npm run check:delivery
 ```
 
+查看当前发布门槛：
+
+```bash
+npm run check:release-gates
+```
+
+公开发布前必须额外通过：
+
+```bash
+npm run check:release-public
+```
+
+在真实 AI 站点验收完成前，`check:release-public` 应该失败，避免误把外部试用版说成公开发布版。
+
 如果飞书源文档有变化，同步到线上飞书文档。

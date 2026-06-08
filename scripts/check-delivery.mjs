@@ -58,6 +58,7 @@ const requiredFiles = [
   'scripts/check-browser-extension-fixtures.mjs',
   'scripts/check-browser-extension-demo-interaction.mjs',
   'scripts/check-browser-extension-package.mjs',
+  'scripts/check-release-gates.mjs',
   'scripts/check-workbench-status.mjs',
   'scripts/package-browser-extension.mjs',
   'scripts/write-delivery-summary.mjs'
@@ -71,6 +72,8 @@ const readme = read('README.md');
 assert(readme.includes('npm run preview:browser-extension'), 'README must mention browser extension preview command.');
 assert(readme.includes('npm run build && npm run start'), 'README must mention full workbench start command.');
 assert(readme.includes('npm run check:workbench'), 'README must mention workbench status check command.');
+assert(readme.includes('npm run check:release-gates'), 'README must mention release gates check command.');
+assert(readme.includes('npm run check:release-public'), 'README must mention public release check command.');
 const imageRefs = [...readme.matchAll(/<img\s+src="([^"]+)"/g)].map((match) => match[1]);
 const allowedImages = new Set([
   'assets/banner.png',
@@ -96,7 +99,7 @@ for (const marker of ['审阅队列可用', 'AI 页面状态', '记忆建议', '
 }
 
 const testerGuide = read('docs/external-tester-guide-cn.md');
-for (const marker of ['外部试用指南', 'npm run preview:browser-extension', 'npm run check:workbench', '记忆建议', '诊断 JSON', '从仓库试用', '从 zip 试用', 'browser-extension/']) {
+for (const marker of ['外部试用指南', 'npm run preview:browser-extension', 'npm run check:workbench', 'npm run check:release-gates', '记忆建议', '诊断 JSON', '从仓库试用', '从 zip 试用', 'browser-extension/']) {
   assert(testerGuide.includes(marker), `External tester guide missing marker: ${marker}`);
 }
 
@@ -106,7 +109,7 @@ for (const marker of ['本地预览包', '权限与隐私说明', 'Skill 草稿'
 }
 
 const releaseGates = read('docs/release-gates-cn.md');
-for (const marker of ['本地可演示', '外部可试用', '公开可发布', '未达到', '真实 AI 站点逐站验收', '入口位置策略']) {
+for (const marker of ['本地可演示', '外部可试用', '公开可发布', '未达到', '真实 AI 站点逐站验收', '入口位置策略', 'npm run check:release-public']) {
   assert(releaseGates.includes(marker), `Release gates doc missing marker: ${marker}`);
 }
 
@@ -155,6 +158,7 @@ run(process.execPath, ['scripts/check-browser-extension-demo-interaction.mjs']);
 run(process.execPath, ['scripts/package-browser-extension.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-package.mjs']);
 run(process.execPath, ['scripts/write-delivery-summary.mjs']);
+run(process.execPath, ['scripts/check-release-gates.mjs']);
 assert(existsSync('artifacts/agent-memory-lab-extension.zip'), 'Browser extension package was not created.');
 assert(existsSync('artifacts/delivery-summary.md'), 'Delivery summary was not created.');
 assert(existsSync('artifacts/delivery-manifest.json'), 'Delivery manifest was not created.');

@@ -77,6 +77,7 @@
 - 插件 PNG 图标资产：`browser-extension/icons/icon16.png`、`icon32.png`、`icon48.png`、`icon128.png`
 - 本地检查：`npm run check:browser-extension`
 - 一键交付检查：`npm run check:delivery`
+- 发布门槛检查：`npm run check:release-gates`；公开发布前必须通过 `npm run check:release-public`
 - 免登录插件预览：`npm run preview:browser-extension`
 - 本地预览包：`npm run package:browser-extension`，输出 `artifacts/agent-memory-lab-extension.zip`
 - 交付摘要：`artifacts/delivery-summary.md`，记录版本、提交、产物、发布门槛和检查命令

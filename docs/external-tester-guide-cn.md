@@ -86,6 +86,20 @@ npm run check:workbench
 
 它会检查 API、Viewer 和插件 demo 页，并提示端口可能被占用还是需要重新启动。
 
+也可以检查当前发布门槛：
+
+```bash
+npm run check:release-gates
+```
+
+如果准备公开发布，再运行：
+
+```bash
+npm run check:release-public
+```
+
+在真实 AI 站点验收完成前，公开发布检查失败是预期结果。
+
 ## 真实 AI 页面验收
 
 对外发布前，需要在真实网页里验收这些产品：

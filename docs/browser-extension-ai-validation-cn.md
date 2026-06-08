@@ -29,6 +29,7 @@
 | 项目 | 命令 / 页面 | 通过标准 | 当前状态 | 证据 |
 | --- | --- | --- | --- | --- |
 | 插件结构检查 | `npm run check:browser-extension` | 内容脚本语法、站点配置、图标、右键 selection/link 保存检查通过 | 已通过 | 最近一次 `npm run package:browser-extension && npm run check:delivery` |
+| 免登录交互烟测 | `scripts/check-browser-extension-demo-interaction.mjs` | 模拟内容脚本在预览页创建“记忆建议”、渲染演示记忆，并把记忆插入输入框 | 已通过 | `check:browser-extension` 已包含 |
 | 插件包检查 | `npm run package:browser-extension` | 生成 `artifacts/agent-memory-lab-extension.zip`，且包含 manifest、content script、service worker、side panel、popup/options、shared files、PNG 图标 | 已通过 | package check: 25 entries |
 | 交付检查 | `npm run check:delivery` | 构建、README 图片引用、插件预览页、插件包检查均通过 | 已通过 | delivery checks ok |
 | 免登录预览页 | `http://localhost:3113/demo/browser-extension.html` | 页面可访问，并含 `Agent Memory Demo`、演示输入框和演示记忆 | 已通过 | `check:delivery` 会启动预览服务并抓取页面 |

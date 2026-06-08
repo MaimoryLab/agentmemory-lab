@@ -304,9 +304,16 @@
 
   function demoSearchResults(query) {
     const q = String(query || '').toLowerCase();
+    const compact = q.replace(/\s+/g, '');
+    const parts = q.split(/\s+/).filter(Boolean);
+    if (!parts.length && compact.length >= 2) parts.push(compact);
+    for (let i = 0; i < compact.length - 1; i += 1) {
+      parts.push(compact.slice(i, i + 2));
+      if (i < compact.length - 2) parts.push(compact.slice(i, i + 3));
+    }
     return DEMO_MEMORIES.filter((item) => {
       const haystack = `${item.title} ${item.text}`.toLowerCase();
-      return !q || q.split(/\s+/).some((part) => part && haystack.includes(part));
+      return !q || parts.some((part) => part && haystack.includes(part));
     }).slice(0, 3);
   }
 

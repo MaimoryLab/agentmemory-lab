@@ -56,6 +56,7 @@ const requiredFiles = [
   'browser-extension/icons/icon48.png',
   'browser-extension/icons/icon128.png',
   'scripts/check-browser-extension.mjs',
+  'scripts/check-browser-extension-review-draft.mjs',
   'scripts/check-browser-extension-fixtures.mjs',
   'scripts/check-browser-extension-demo-interaction.mjs',
   'scripts/check-browser-extension-package.mjs',
@@ -94,6 +95,7 @@ assert(browserReadme.includes('npm run preview:browser-extension'), 'Browser ext
 assert(browserReadme.includes('docs/browser-extension-privacy-cn.md'), 'Browser extension README must link privacy doc.');
 assert(browserReadme.includes('docs/browser-extension-mem0-reference-cn.md'), 'Browser extension README must link Mem0 reference doc.');
 assert(browserReadme.includes('保存前编辑'), 'Browser extension README must mention edit-before-save flow.');
+assert(browserReadme.includes('同步侧栏'), 'Browser extension README must mention the side panel flow.');
 assert(browserReadme.includes('/demo/browser-extension.html'), 'Browser extension README must mention local demo page.');
 
 const checklist = read('docs/demo-checklist-cn.md');
@@ -161,6 +163,7 @@ for (const marker of ['插件发布物料', 'AI 页面诊断', 'Skill 草稿', '
 }
 
 run(process.execPath, ['scripts/check-browser-extension.mjs']);
+run(process.execPath, ['scripts/check-browser-extension-review-draft.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-fixtures.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-demo-interaction.mjs']);
 run(process.execPath, ['scripts/package-browser-extension.mjs']);
@@ -176,6 +179,9 @@ for (const marker of ['Agent Memory Lab Delivery Summary', 'Extension zip', 'Ext
 }
 const deliveryManifest = JSON.parse(read('artifacts/delivery-manifest.json'));
 assert(deliveryManifest.product === 'Agent Memory Lab', 'Delivery manifest product mismatch.');
+assert(deliveryManifest.coreExperience?.reviewDraft?.popup === true, 'Delivery manifest must record popup review draft support.');
+assert(deliveryManifest.coreExperience?.reviewDraft?.sidePanel === true, 'Delivery manifest must record side panel review draft support.');
+assert(deliveryManifest.coreExperience?.reviewDraft?.savesToReviewQueue === true, 'Delivery manifest must record review queue save behavior.');
 assert(deliveryManifest.artifacts?.extensionZip?.exists, 'Delivery manifest must mark extension zip as existing.');
 assert(deliveryManifest.artifacts.extensionZip.bytes > 0, 'Delivery manifest extension zip size must be positive.');
 assert(/^[a-f0-9]{64}$/.test(deliveryManifest.artifacts.extensionZip.sha256 || ''), 'Delivery manifest extension zip sha256 is invalid.');

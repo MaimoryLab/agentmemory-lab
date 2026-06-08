@@ -120,6 +120,25 @@ const deliveryManifest = {
       skills: existsSync('docs/readme-assets/screenshots/skills.jpg')
     }
   },
+  coreExperience: {
+    reviewDraft: {
+      popup: true,
+      sidePanel: true,
+      editableTitle: true,
+      editableContent: true,
+      candidateToDraft: true,
+      savesToReviewQueue: true
+    },
+    aiInputMemoryHint: {
+      localDemo: true,
+      supportedSitesSource: 'browser-extension/shared/site-config.js',
+      diagnosticsCopy: true
+    },
+    reviewQueue: {
+      source: 'browser-extension',
+      longTermWriteRequiresViewerReview: true
+    }
+  },
   releaseState: {
     localDemo: 'ready',
     externalTesting: 'mostly-ready',
@@ -171,6 +190,17 @@ Generated: ${generatedAt}
 | Demo page | ${existsSync('dist/viewer/demo/browser-extension.html') ? 'dist/viewer/demo/browser-extension.html' : 'missing'} |
 | Dashboard screenshot | ${existsSync('docs/readme-assets/screenshots/dashboard.jpg') ? 'docs/readme-assets/screenshots/dashboard.jpg' : 'missing'} |
 | Skills screenshot | ${existsSync('docs/readme-assets/screenshots/skills.jpg') ? 'docs/readme-assets/screenshots/skills.jpg' : 'missing'} |
+
+## Core Experience
+
+| Capability | Status |
+| --- | --- |
+| Popup editable review draft | ready |
+| Side panel editable review draft | ready |
+| Candidate-to-draft flow | ready |
+| Save to Viewer review queue | ready |
+| Local AI input memory hint demo | ready |
+| Real AI site validation | ${passedAiRows.length}/${requiredAiProducts.length} passed |
 
 ## Release Gates
 

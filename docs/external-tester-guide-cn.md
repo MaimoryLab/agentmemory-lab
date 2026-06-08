@@ -137,9 +137,10 @@ docs/validation/browser-extension-ai-sites/
 
 ```bash
 npm run check:ai-validation-evidence
+npm run sync:ai-validation-table
 ```
 
-它会生成 `artifacts/ai-validation-evidence-summary.json`，用于汇总 ChatGPT、Claude、Gemini、Perplexity 是否已经具备公开发布所需的真实页面证据。
+第一条命令会生成 `artifacts/ai-validation-evidence-summary.json`，第二条命令会同步 `docs/browser-extension-ai-validation-cn.md` 的真实站点验收表，用于汇总 ChatGPT、Claude、Gemini、Perplexity 是否已经具备公开发布所需的真实页面证据。
 
 ## 反馈时请提供
 

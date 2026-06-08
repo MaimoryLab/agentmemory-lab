@@ -62,6 +62,7 @@ const requiredFiles = [
   'scripts/check-browser-extension-package.mjs',
   'scripts/check-release-gates.mjs',
   'scripts/check-ai-validation-evidence.mjs',
+  'scripts/sync-ai-validation-table.mjs',
   'scripts/check-workbench-status.mjs',
   'scripts/package-browser-extension.mjs',
   'scripts/write-delivery-summary.mjs'
@@ -170,6 +171,7 @@ run(process.execPath, ['scripts/check-browser-extension-demo-interaction.mjs']);
 run(process.execPath, ['scripts/package-browser-extension.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-package.mjs']);
 run(process.execPath, ['scripts/check-ai-validation-evidence.mjs']);
+run(process.execPath, ['scripts/sync-ai-validation-table.mjs', '--check']);
 run(process.execPath, ['scripts/write-delivery-summary.mjs']);
 run(process.execPath, ['scripts/check-release-gates.mjs']);
 assert(existsSync('artifacts/agent-memory-lab-extension.zip'), 'Browser extension package was not created.');

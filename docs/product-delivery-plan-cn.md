@@ -83,6 +83,7 @@
 - 一键交付检查：`npm run check:delivery`
 - 发布门槛检查：`npm run check:release-gates`；公开发布前必须通过 `npm run check:release-public`
 - 真实站点证据汇总：`npm run check:ai-validation-evidence`，输出 `artifacts/ai-validation-evidence-summary.json`
+- 真实站点表格同步：`npm run sync:ai-validation-table`，把证据 JSON 同步到 `docs/browser-extension-ai-validation-cn.md`
 - 免登录插件预览：`npm run preview:browser-extension`
 - 本地预览包：`npm run package:browser-extension`，输出 `artifacts/agent-memory-lab-extension.zip`
 - 交付摘要：`artifacts/delivery-summary.md`，记录版本、提交、产物、发布门槛和检查命令

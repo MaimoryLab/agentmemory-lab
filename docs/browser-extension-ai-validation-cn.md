@@ -15,6 +15,7 @@
 9. 点击“复制诊断”，把 JSON 保存到 `docs/validation/browser-extension-ai-sites/`，文件名建议 `YYYY-MM-DD-provider.json`。
 10. 记录截图、日期、浏览器版本和结果。
 11. 运行 `npm run check:ai-validation-evidence` 生成证据汇总。
+12. 运行 `npm run sync:ai-validation-table`，把证据同步回本页验收表。
 
 ## 通过标准
 
@@ -48,9 +49,10 @@
 
 ```bash
 npm run check:ai-validation-evidence
+npm run sync:ai-validation-table
 ```
 
-该命令会生成 `artifacts/ai-validation-evidence-summary.json`。它不会把待验收状态误判为通过；公开发布仍需 ChatGPT、Claude、Gemini、Perplexity 都有通过证据。
+第一条命令会生成 `artifacts/ai-validation-evidence-summary.json`。第二条命令会用证据目录更新本页真实站点验收表。它们不会把待验收状态误判为通过；公开发布仍需 ChatGPT、Claude、Gemini、Perplexity 都有通过证据。
 
 ## 本地可验证项
 
@@ -73,7 +75,6 @@ npm run check:ai-validation-evidence
 | Perplexity | `www.perplexity.ai` | 待验收 | 待验收 | 待验收 | 待验收 | 待验收 | 待验收 | - | - |
 | Grok | `grok.com` | 待验收 | 待验收 | 待验收 | 待验收 | 待验收 | 待验收 | - | - |
 | DeepSeek | `chat.deepseek.com` | 待验收 | 待验收 | 待验收 | 待验收 | 待验收 | 待验收 | - | - |
-
 ## 诊断 JSON 示例
 
 ```json

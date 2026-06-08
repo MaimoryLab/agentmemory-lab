@@ -9,7 +9,7 @@
 它不是普通的聊天记录列表，也不是只给工程师看的日志面板。这个版本更关注一个问题：当你和 Codex、Claude Code、Cursor 这类 Agent 长期协作时，哪些内容应该被自动留下来，哪些内容应该被你审阅、编辑、删除、沉淀成 Skill？
 
 <p align="center">
-  <img src="docs/readme-assets/workflow-map.svg" alt="Codex Memory Lab 工作流总图" width="860" />
+  <img src="docs/readme-assets/screenshots/dashboard.jpg" alt="Codex Memory Lab 总览页" width="860" />
 </p>
 
 ## 为什么做它
@@ -30,10 +30,6 @@
 
 总览页把最近会话、记忆、经验、状态放在一个入口里。项目卡片可以点击进入对应会话，适合作为每天打开的工作台。
 
-<p align="center">
-  <img src="website/public/dashboard.png" alt="总览页截图" width="860" />
-</p>
-
 ### 2. 记忆库：自动整理，但保留人工审阅
 
 记忆页会把原始记忆拆成更容易理解的卡片，例如身份档案、偏好、项目目标、经历。页面上的拆分只是展示层优化，不会破坏底层原始记忆。
@@ -49,9 +45,17 @@
 
 会话页按时间展示历史会话。点击某段会话后，可以看到用户输入、Agent 回复、工具调用和关键结果，适合复盘“为什么最后变成这样”。
 
+<p align="center">
+  <img src="docs/readme-assets/screenshots/sessions.jpg" alt="会话页截图" width="860" />
+</p>
+
 ### 4. Skill 管理台：管理本地能力
 
 Skill 页会扫描本机的 Codex、Agents 和插件 Skill 目录，展示每个 Skill 的来源、路径和详情。
+
+<p align="center">
+  <img src="docs/readme-assets/screenshots/skills.jpg" alt="Skill 管理台截图" width="860" />
+</p>
 
 它目前支持：
 
@@ -72,13 +76,13 @@ Skill 页会扫描本机的 Codex、Agents 和插件 Skill 目录，展示每个
 | 卡住了 | 需要用户输入、权限、资料或外部状态变化 |
 | 已完成 | 已经收尾，可以沉淀经验 |
 
+<p align="center">
+  <img src="docs/readme-assets/screenshots/actions.jpg" alt="待办页截图" width="860" />
+</p>
+
 ### 6. 活动页：看见工作节奏
 
 活动页用于观察最近工作密度和活动类型。现在会先加载本地会话，再补齐少量最近会话细节，避免页面像“卡住”一样等待。
-
-<p align="center">
-  <img src="website/public/states.png" alt="状态页截图" width="860" />
-</p>
 
 ## 推荐工作流
 

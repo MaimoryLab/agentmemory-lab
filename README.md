@@ -111,6 +111,17 @@ integrations/           OpenClaw、Hermes、pi、filesystem watcher 等集成
 src/viewer/             本地可视化工作台
 ```
 
+当前 Lab 版插件在原始记忆/召回能力之上，新增了几类面向产品工作流的 Skill：
+
+| Skill | 作用 |
+| --- | --- |
+| `open-workbench` | 打开本地工作台，并跳到总览、记忆、会话、Skill、待办等页面。 |
+| `sync-session` | 从当前对话里整理记忆线索、可沉淀经验和待跟进行动。 |
+| `promote-skill` | 判断某条经验适合进入哪个本地 Skill，并生成可审阅的修改建议。 |
+| `publish-kit` | 检查 GitHub README、飞书文档、截图和仓库定位是否同步。 |
+
+插件现在还缺两块更深的能力：自动后台同步当前聊天，以及把经验一键写入 Skill 文件。当前版本先提供可审阅的 Skill 入口，避免误存隐私或误改本地能力。
+
 ## 快速开始
 
 ### 1. 安装依赖

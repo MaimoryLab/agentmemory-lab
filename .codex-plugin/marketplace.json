@@ -1,16 +1,16 @@
 {
-  "name": "agentmemory",
+  "name": "codex-memory-lab",
   "interface": {
-    "displayName": "agentmemory"
+    "displayName": "Codex Memory Lab"
   },
   "plugins": [
     {
-      "name": "agentmemory",
+      "name": "codex-memory-lab",
       "source": {
         "source": "git-subdir",
-        "url": "https://github.com/rohitg00/agentmemory.git",
+        "url": "https://github.com/sznnnnn/agentmemory-lab.git",
         "path": "./plugin",
-        "ref": "main"
+        "ref": "szn-viewer-ui-iteration"
       },
       "policy": {
         "installation": "AVAILABLE",

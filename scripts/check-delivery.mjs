@@ -59,7 +59,8 @@ const requiredFiles = [
   'scripts/check-browser-extension-demo-interaction.mjs',
   'scripts/check-browser-extension-package.mjs',
   'scripts/check-workbench-status.mjs',
-  'scripts/package-browser-extension.mjs'
+  'scripts/package-browser-extension.mjs',
+  'scripts/write-delivery-summary.mjs'
 ];
 
 for (const file of requiredFiles) {
@@ -153,6 +154,12 @@ run(process.execPath, ['scripts/check-browser-extension-fixtures.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-demo-interaction.mjs']);
 run(process.execPath, ['scripts/package-browser-extension.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-package.mjs']);
+run(process.execPath, ['scripts/write-delivery-summary.mjs']);
 assert(existsSync('artifacts/agent-memory-lab-extension.zip'), 'Browser extension package was not created.');
+assert(existsSync('artifacts/delivery-summary.md'), 'Delivery summary was not created.');
+const deliverySummary = read('artifacts/delivery-summary.md');
+for (const marker of ['Agent Memory Lab Delivery Summary', 'Extension zip', 'Release Gates', 'External tester guide', 'AI validation log']) {
+  assert(deliverySummary.includes(marker), `Delivery summary missing marker: ${marker}`);
+}
 
 console.log('delivery checks ok');

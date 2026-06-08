@@ -17,6 +17,7 @@
 | 插件目录 | `browser-extension/` | Chrome / Edge 开发者模式加载 |
 | 插件预览页 | `http://localhost:3113/demo/browser-extension.html` | 免登录预览输入框旁记忆建议 |
 | 插件压缩包 | `artifacts/agent-memory-lab-extension.zip` | 给别人本地加载或归档 |
+| 交付摘要 | `artifacts/delivery-summary.md` | 查看当前版本、产物、发布门槛和检查命令 |
 | 演示检查清单 | `docs/demo-checklist-cn.md` | 演示前自查 |
 | AI 站点验收记录 | `docs/browser-extension-ai-validation-cn.md` | 记录真实 AI 网页适配结果 |
 | 隐私说明 | `docs/browser-extension-privacy-cn.md` | 解释插件权限和数据边界 |

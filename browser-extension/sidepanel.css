@@ -67,6 +67,48 @@ body {
   background: var(--paper);
 }
 
+.connection-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.connection-card.connected {
+  border-color: #d7e5d8;
+  background: var(--soft-green);
+}
+
+.connection-card.offline {
+  border-color: #f0d7b8;
+  background: var(--warn-bg);
+}
+
+.connection-title {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.connection-text {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.connection-card button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
 .section-head {
   display: flex;
   align-items: center;

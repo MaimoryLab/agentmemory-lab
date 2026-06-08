@@ -1,9 +1,9 @@
 (() => {
   const AI_PROVIDERS = [
-    { id: 'chatgpt', label: 'ChatGPT', hosts: ['chatgpt.com', 'chat.openai.com'], editorSelectors: ['#prompt-textarea', 'textarea', '[contenteditable="true"]'], turnSelectors: ['[data-message-author-role]', '[data-testid*="conversation-turn"]'] },
-    { id: 'claude', label: 'Claude', hosts: ['claude.ai'], editorSelectors: ['div[contenteditable="true"]', 'textarea', 'p[data-placeholder]'], turnSelectors: ['[data-testid*="message"]', 'main [class*="font-claude"]', 'main article'] },
-    { id: 'gemini', label: 'Gemini', hosts: ['gemini.google.com'], editorSelectors: ['rich-textarea [contenteditable="true"]', '[contenteditable="true"]', 'textarea'], turnSelectors: ['user-query', 'model-response', 'message-content', 'main article'] },
-    { id: 'perplexity', label: 'Perplexity', hosts: ['perplexity.ai', 'www.perplexity.ai'], editorSelectors: ['textarea', '[contenteditable="true"]'], turnSelectors: ['[data-testid*="thread"]', '[class*="prose"]', 'main article'] },
+    { id: 'chatgpt', label: 'ChatGPT', hosts: ['chatgpt.com', 'chat.openai.com'], editorSelectors: ['#prompt-textarea', '[data-testid="prompt-textarea"]', 'textarea[placeholder]', 'textarea', '[contenteditable="true"]'], turnSelectors: ['[data-message-author-role]', '[data-testid*="conversation-turn"]', 'main article'] },
+    { id: 'claude', label: 'Claude', hosts: ['claude.ai'], editorSelectors: ['div.ProseMirror[contenteditable="true"]', 'div[contenteditable="true"]', 'textarea', 'p[data-placeholder]'], turnSelectors: ['[data-testid*="message"]', 'main [class*="font-claude"]', 'main article'] },
+    { id: 'gemini', label: 'Gemini', hosts: ['gemini.google.com'], editorSelectors: ['rich-textarea [contenteditable="true"]', 'rich-textarea textarea', '[contenteditable="true"]', 'textarea'], turnSelectors: ['user-query', 'model-response', 'message-content', 'main article'] },
+    { id: 'perplexity', label: 'Perplexity', hosts: ['perplexity.ai', 'www.perplexity.ai'], editorSelectors: ['textarea[placeholder]', 'textarea', '[contenteditable="true"]'], turnSelectors: ['[data-testid*="thread"]', '[class*="prose"]', 'main article'] },
     { id: 'grok', label: 'Grok', hosts: ['grok.com', 'x.ai'], editorSelectors: ['textarea', '[contenteditable="true"]'], turnSelectors: ['[data-testid*="message"]', 'main article'] },
     { id: 'deepseek', label: 'DeepSeek', hosts: ['chat.deepseek.com', 'deepseek.com'], editorSelectors: ['textarea', '[contenteditable="true"]'], turnSelectors: ['[class*="message"]', 'main article'] }
   ];
@@ -170,6 +170,7 @@
     const editor = findEditor(provider);
     if (!editor) return false;
     const snippet = memorySnippet(item);
+    const insertion = `\n\n${snippet}`;
     if ('value' in editor) {
       const start = typeof editor.selectionStart === 'number' ? editor.selectionStart : editor.value.length;
       const end = typeof editor.selectionEnd === 'number' ? editor.selectionEnd : editor.value.length;
@@ -182,10 +183,40 @@
       return true;
     }
     editor.focus();
-    const current = (editor.innerText || editor.textContent || '').trimEnd();
-    editor.textContent = `${current}\n\n${snippet}`.trim();
-    editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: snippet }));
+    const ok = insertTextWithSelection(editor, insertion);
+    if (!ok) {
+      const current = (editor.innerText || editor.textContent || '').trimEnd();
+      editor.textContent = `${current}\n\n${snippet}`.trim();
+    }
+    editor.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, inputType: 'insertText', data: insertion }));
+    editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: insertion }));
     return true;
+  }
+
+  function insertTextWithSelection(editor, text) {
+    try {
+      const selection = window.getSelection();
+      if (!selection) return false;
+      if (!selection.rangeCount || !editor.contains(selection.anchorNode)) {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+        return document.execCommand('insertText', false, text);
+      }
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+      range.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return true;
+    } catch (_err) {
+      return false;
+    }
   }
 
   function normalizeSearchResults(data) {

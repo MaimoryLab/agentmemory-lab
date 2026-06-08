@@ -17,6 +17,28 @@ function setMessage(text, kind = '') {
   $('message').className = `message ${kind}`.trim();
 }
 
+function setConnectionState(state, text) {
+  const card = $('connectionCard');
+  card.className = `connection-card ${state}`;
+  if (state === 'connected') {
+    $('connectionTitle').textContent = '审阅队列可用';
+    $('connectionText').textContent = text || '保存内容会先进入本地工作台，由你确认后再写入长期记忆。';
+    $('connectionAction').textContent = '刷新';
+    $('savePage').disabled = false;
+    return;
+  }
+  if (state === 'offline') {
+    $('connectionTitle').textContent = '本地工作台未连接';
+    $('connectionText').textContent = text || '先启动 Agent Memory Lab，再把网页内容送去审阅。';
+    $('connectionAction').textContent = '重试';
+    $('savePage').disabled = true;
+    return;
+  }
+  $('connectionTitle').textContent = '检查连接中';
+  $('connectionText').textContent = '正在确认本地审阅队列是否可用。';
+  $('connectionAction').textContent = '重试';
+}
+
 function renderCandidateList(node, items, kind) {
   if (!items || !items.length) {
     node.className = 'candidate-list empty';
@@ -83,11 +105,14 @@ function renderCapture(capture) {
 
 async function refresh() {
   setMessage('');
+  setConnectionState('checking');
   try {
     const health = await send('HEALTH');
     $('status').textContent = health && health.status === 'ok' ? '本地工作台已连接' : '本地工作台可访问';
+    setConnectionState('connected');
   } catch {
     $('status').textContent = '未连接本地工作台';
+    setConnectionState('offline');
   }
   try {
     renderCapture(await send('COLLECT_PAGE'));
@@ -119,6 +144,7 @@ document.addEventListener('click', async (event) => {
 });
 
 $('refresh').addEventListener('click', refresh);
+$('connectionAction').addEventListener('click', refresh);
 $('savePage').addEventListener('click', async () => {
   $('savePage').disabled = true;
   setMessage('正在加入待审阅...');

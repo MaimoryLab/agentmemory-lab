@@ -44,7 +44,7 @@ sidepanel.html/js/css   浏览器侧边栏同步面板
 options.html/js         本地连接设置
 shared/schema.js        统一 PageCapture 数据结构
 shared/page-types.js    页面类型与 AI 产品识别
-shared/site-config.js   ChatGPT / Claude / Gemini / Perplexity 等站点配置
+shared/site-config.js   ChatGPT / Claude / Gemini / Perplexity 等站点配置；content-script 需保持同一 provider 口径
 shared/api.js           统一本地 Agent Memory Lab API 调用
 icons/                  插件图标
 ```
@@ -96,12 +96,25 @@ icons/                  插件图标
 6. 点击浏览器工具栏里的 Agent Memory Lab 图标
 7. 点击“打开同步侧栏”预览完整插件工作流
 
+侧栏顶部会显示连接状态：
+
+- “审阅队列可用”：可以把当前页面送去 Viewer 审阅。
+- “本地工作台未连接”：先启动本地 Viewer / API，再点“重试”。
+
 建议试用路线：
 
 1. 打开 ChatGPT / Claude / Gemini / Perplexity 任一页面。
 2. 在输入框输入一个和本地项目相关的问题。
 3. 查看输入框附近的“本地记忆”提示，尝试插入或复制相关记忆。
 4. 用弹窗或同步侧栏把当前网页加入待审阅，再回到 Viewer 记忆库确认保存。
+
+交付检查：
+
+```bash
+npm run check:browser-extension
+```
+
+这个检查会确认扩展脚本语法、Manifest V3 content script 配置，以及 `shared/site-config.js` 和运行脚本里的 AI provider 没有分叉。
 
 默认连接：
 

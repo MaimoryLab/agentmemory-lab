@@ -39,6 +39,8 @@ npm run record:ai-validation-evidence -- --clipboard --browser "Chrome 版本号
 
 真实站点证据目录：`docs/validation/browser-extension-ai-sites/`。
 
+逐站测试卡：`docs/browser-extension-ai-site-test-cards-cn.md`。外部试用者应按测试卡逐个验证 ChatGPT、Claude、Gemini、Perplexity，而不是只凭本地 demo 判断插件可发布。
+
 每份诊断 JSON 会自带 `manualValidation` 模板。保存证据前，请把下面这些字段按真实验收结果改好：
 
 ```json

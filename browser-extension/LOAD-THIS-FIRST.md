@@ -53,7 +53,9 @@ npm run preview:browser-extension
 
 ## 6. 真实 AI 页面证据
 
-如果你在 ChatGPT、Claude、Gemini 或 Perplexity 上试用，请打开同步侧栏并点击“复制诊断”。复制后可以用命令保存证据：
+如果你在 ChatGPT、Claude、Gemini 或 Perplexity 上试用，请先打开本目录里的 `AI-SITE-TEST-CARDS.md`，按每个站点的测试卡确认输入框、记忆建议、插入、复制诊断和原站输入都正常。
+
+验收时打开同步侧栏并点击“复制诊断”。复制后可以用命令保存证据：
 
 ```bash
 npm run record:ai-validation-evidence -- --clipboard --browser "Chrome 版本号" --notes "无隐私信息的备注"

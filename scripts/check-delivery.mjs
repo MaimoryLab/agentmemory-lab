@@ -44,6 +44,7 @@ const requiredFiles = [
   '.github/ISSUE_TEMPLATE/external-tester-feedback-cn.yml',
   'docs/release-gates-cn.md',
   'docs/browser-extension-ai-validation-cn.md',
+  'docs/browser-extension-ai-site-test-cards-cn.md',
   'docs/browser-extension-mem0-reference-cn.md',
   'docs/browser-extension-privacy-en.md',
   'docs/browser-extension-store-listing-en.md',
@@ -55,6 +56,7 @@ const requiredFiles = [
   'dist/viewer/demo/browser-extension.html',
   'browser-extension/manifest.json',
   'browser-extension/LOAD-THIS-FIRST.md',
+  'browser-extension/AI-SITE-TEST-CARDS.md',
   'browser-extension/icons/icon16.png',
   'browser-extension/icons/icon32.png',
   'browser-extension/icons/icon48.png',
@@ -107,6 +109,7 @@ assert(browserReadme.includes('npm run status:delivery'), 'Browser extension REA
 assert(browserReadme.includes('npm run preview:browser-extension'), 'Browser extension README must mention preview command.');
 assert(browserReadme.includes('docs/browser-extension-privacy-cn.md'), 'Browser extension README must link privacy doc.');
 assert(browserReadme.includes('docs/browser-extension-mem0-reference-cn.md'), 'Browser extension README must link Mem0 reference doc.');
+assert(browserReadme.includes('docs/browser-extension-ai-site-test-cards-cn.md'), 'Browser extension README must link AI site test cards doc.');
 assert(browserReadme.includes('保存前编辑'), 'Browser extension README must mention edit-before-save flow.');
 for (const marker of ['项目', '标签', '经验候选']) {
   assert(browserReadme.includes(marker), `Browser extension README must mention draft ${marker}.`);
@@ -115,8 +118,17 @@ assert(browserReadme.includes('同步侧栏'), 'Browser extension README must me
 assert(browserReadme.includes('/demo/browser-extension.html'), 'Browser extension README must mention local demo page.');
 
 const loadGuide = read('browser-extension/LOAD-THIS-FIRST.md');
-for (const marker of ['五步验收', '项目、标签', '经验候选', 'npm run record:ai-validation-evidence', 'external-tester-feedback-cn.yml']) {
+for (const marker of ['五步验收', '项目、标签', '经验候选', 'AI-SITE-TEST-CARDS.md', 'npm run record:ai-validation-evidence', 'external-tester-feedback-cn.yml']) {
   assert(loadGuide.includes(marker), `Zip loading guide missing marker: ${marker}`);
+}
+
+const siteCards = read('docs/browser-extension-ai-site-test-cards-cn.md');
+for (const marker of ['真实 AI 站点测试卡', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'manualValidation.memoryInsertPassed', 'manualValidation.diagnosticsCopied', 'manualValidation.siteInputStillWorks', 'npm run record:ai-validation-evidence']) {
+  assert(siteCards.includes(marker), `AI site test cards missing marker: ${marker}`);
+}
+const zipSiteCards = read('browser-extension/AI-SITE-TEST-CARDS.md');
+for (const marker of ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', '公开发布', 'npm run record:ai-validation-evidence']) {
+  assert(zipSiteCards.includes(marker), `Zip AI site test cards missing marker: ${marker}`);
 }
 
 const checklist = read('docs/demo-checklist-cn.md');
@@ -125,7 +137,7 @@ for (const marker of ['审阅队列可用', 'AI 页面状态', '记忆建议', '
 }
 
 const testerGuide = read('docs/external-tester-guide-cn.md');
-for (const marker of ['外部试用指南', 'npm run preview:browser-extension', 'npm run check:workbench', 'npm run check:release-gates', '记忆建议', '诊断 JSON', '从仓库试用', '从 zip 试用', 'browser-extension/', '外部试用反馈模板', 'external-tester-feedback-cn.yml', '外部反馈分诊指南']) {
+for (const marker of ['外部试用指南', 'npm run preview:browser-extension', 'npm run check:workbench', 'npm run check:release-gates', '记忆建议', '诊断 JSON', '从仓库试用', '从 zip 试用', 'browser-extension/', '外部试用反馈模板', 'external-tester-feedback-cn.yml', '外部反馈分诊指南', 'browser-extension-ai-site-test-cards-cn.md']) {
   assert(testerGuide.includes(marker), `External tester guide missing marker: ${marker}`);
 }
 
@@ -145,7 +157,7 @@ for (const marker of ['外部反馈分诊指南', 'docs/external-feedback-templa
 }
 
 const plan = read('docs/product-delivery-plan-cn.md');
-for (const marker of ['本地预览包', '权限与隐私说明', '插件对标说明', '外部反馈分诊指南', 'GitHub 外部试用 Issue 模板', 'Skill 草稿', 'AI 页面诊断']) {
+for (const marker of ['本地预览包', '权限与隐私说明', '插件对标说明', '外部反馈分诊指南', 'GitHub 外部试用 Issue 模板', 'Skill 草稿', 'AI 页面诊断', '真实站点测试卡', 'AI-SITE-TEST-CARDS.md']) {
   assert(plan.includes(marker), `Product delivery plan missing marker: ${marker}`);
 }
 
@@ -160,7 +172,7 @@ for (const marker of ['本地可演示', '外部可试用', '公开可发布', '
 }
 
 const aiValidation = read('docs/browser-extension-ai-validation-cn.md');
-for (const marker of ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', '复制诊断', '通过标准', 'npm run record:ai-validation-evidence', 'anchorFound', 'placement', 'memoryWidgetVisible']) {
+for (const marker of ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', '复制诊断', '通过标准', 'npm run record:ai-validation-evidence', 'anchorFound', 'placement', 'memoryWidgetVisible', 'browser-extension-ai-site-test-cards-cn.md']) {
   assert(aiValidation.includes(marker), `AI validation doc missing marker: ${marker}`);
 }
 

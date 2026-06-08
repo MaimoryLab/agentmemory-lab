@@ -27,7 +27,8 @@ const required = [
   'browser-extension/icons/icon48.png',
   'browser-extension/icons/icon128.png',
   'browser-extension/README.md',
-  'browser-extension/LOAD-THIS-FIRST.md'
+  'browser-extension/LOAD-THIS-FIRST.md',
+  'browser-extension/AI-SITE-TEST-CARDS.md'
 ];
 
 const missing = required.filter((entry) => !entrySet.has(entry));
@@ -41,8 +42,13 @@ if (!entries.every((entry) => entry === 'browser-extension/' || entry.startsWith
 }
 
 const loadGuide = readFileSync('browser-extension/LOAD-THIS-FIRST.md', 'utf8');
-for (const marker of ['五步验收', '项目、标签', '经验候选', 'npm run record:ai-validation-evidence', 'external-tester-feedback-cn.yml']) {
+for (const marker of ['五步验收', '项目、标签', '经验候选', 'AI-SITE-TEST-CARDS.md', 'npm run record:ai-validation-evidence', 'external-tester-feedback-cn.yml']) {
   if (!loadGuide.includes(marker)) throw new Error(`Zip loading guide missing marker: ${marker}`);
+}
+
+const siteCards = readFileSync('browser-extension/AI-SITE-TEST-CARDS.md', 'utf8');
+for (const marker of ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'manualValidation', '公开发布']) {
+  if (!siteCards.includes(marker)) throw new Error(`AI site test cards missing marker: ${marker}`);
 }
 
 console.log(`browser extension package checks ok (${entries.length} entries)`);

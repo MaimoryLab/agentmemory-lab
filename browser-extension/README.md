@@ -164,6 +164,8 @@ npm run preview:browser-extension
 
 真实 AI 站点验收记录见：[`docs/browser-extension-ai-validation-cn.md`](../docs/browser-extension-ai-validation-cn.md)。
 
+真实 AI 站点测试卡见：[`docs/browser-extension-ai-site-test-cards-cn.md`](../docs/browser-extension-ai-site-test-cards-cn.md)。zip 试用包里也包含 `AI-SITE-TEST-CARDS.md`，方便测试者不回到仓库也能逐站验收。
+
 默认连接：
 
 ```text

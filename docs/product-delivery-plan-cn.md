@@ -78,6 +78,7 @@
 - 外部反馈分诊指南：`docs/external-feedback-triage-cn.md`
 - 发布门槛：`docs/release-gates-cn.md`
 - 真实站点验收记录：`docs/browser-extension-ai-validation-cn.md`
+- 真实站点测试卡：`docs/browser-extension-ai-site-test-cards-cn.md`，把 ChatGPT、Claude、Gemini、Perplexity 拆成外部试用任务
 - 真实站点证据目录：`docs/validation/browser-extension-ai-sites/`
 - 真实站点证据记录命令：`npm run record:ai-validation-evidence`
 - 插件 PNG 图标资产：`browser-extension/icons/icon16.png`、`icon32.png`、`icon48.png`、`icon128.png`
@@ -98,7 +99,7 @@
 - AI fixture 验收：`check:browser-extension` 会用本地最小页面模型检查 ChatGPT、Claude、Gemini、Perplexity、Grok、DeepSeek 的输入框和对话 selector
 - 本地免登录预览：`http://localhost:3113/demo/browser-extension.html`，用于快速展示输入框旁“记忆建议”、演示记忆、插入/复制
 - 试用者从仓库加载时选择仓库内 `browser-extension/`；从 zip 试用时先解压，再选择解压出来的 `browser-extension/`
-- zip 内含 `browser-extension/LOAD-THIS-FIRST.md`，试用者解压后能直接看到加载步骤和当前边界
+- zip 内含 `browser-extension/LOAD-THIS-FIRST.md` 和 `browser-extension/AI-SITE-TEST-CARDS.md`，试用者解压后能直接看到加载步骤、当前边界和逐站验收任务
 - AI 站点适配材料：同步侧栏“复制诊断”输出的 JSON，可用于补 selector 和真实网页验收
 - 未来商店发布仍需稳定公开隐私政策 URL、发布截图和逐站真实网页验收
 

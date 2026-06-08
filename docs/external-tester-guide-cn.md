@@ -21,6 +21,7 @@
 | 交付清单 | `artifacts/delivery-manifest.json` | 机器可读的版本、提交、zip 大小、sha256 和真实 AI 站点验收计数 |
 | 演示检查清单 | `docs/demo-checklist-cn.md` | 演示前自查 |
 | AI 站点验收记录 | `docs/browser-extension-ai-validation-cn.md` | 记录真实 AI 网页适配结果 |
+| AI 站点测试卡 | `docs/browser-extension-ai-site-test-cards-cn.md` | 按 ChatGPT、Claude、Gemini、Perplexity 拆分真实页面验收任务 |
 | 隐私说明 | `docs/browser-extension-privacy-cn.md` | 解释插件权限和数据边界 |
 
 本地交付检查还包含一个免登录交互烟测：它会模拟插件内容脚本在预览页创建“记忆建议”、渲染演示记忆，并确认插入按钮能把记忆写进输入框。这个检查不能替代真实 AI 网页验收，但能证明演示页的核心交互没有退化。
@@ -119,6 +120,8 @@ npm run check:release-public
 - Perplexity: `www.perplexity.ai`
 - Grok: `grok.com`
 - DeepSeek: `chat.deepseek.com`
+
+逐站操作请按 `docs/browser-extension-ai-site-test-cards-cn.md` 执行。它把 ChatGPT、Claude、Gemini、Perplexity 四个公开发布必测站点拆成测试卡，并说明每个站点要观察输入框、发送按钮、模型选择和附件入口是否被插件影响。
 
 每个站点至少确认：
 

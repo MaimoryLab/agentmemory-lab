@@ -1,4 +1,5 @@
 import { getSettings } from './config.js';
+import { buildBrowserMemoryDraft } from './shared/schema.js';
 
 const $ = (id) => document.getElementById(id);
 const EXTERNAL_TESTER_GUIDE_URL = 'https://github.com/sznnnnn/agentmemory-lab/blob/szn-viewer-ui-iteration/docs/external-tester-guide-cn.md';
@@ -26,11 +27,6 @@ function renderPage(capture) {
   const page = capture && capture.page ? capture.page : capture;
   $('pageTitle').textContent = page.title || '当前页面';
   $('pageUrl').textContent = page.url || '';
-}
-
-function getPrimaryMemoryCandidate(capture) {
-  const memories = capture && capture.candidates && Array.isArray(capture.candidates.memories) ? capture.candidates.memories : [];
-  return memories.find((item) => String(item || '').trim()) || '';
 }
 
 function normalizeTags(tags) {
@@ -79,19 +75,10 @@ function getDraftMetaFields() {
 }
 
 function buildDraft(capture) {
-  const page = capture && capture.page ? capture.page : {};
-  const candidate = getPrimaryMemoryCandidate(capture);
-  const description = String(page.description || '').trim();
-  const selection = String(page.selection || '').trim();
-  const body = [
-    candidate || `网页线索：${page.title || '当前页面'}`,
-    description ? `摘要：${description}` : '',
-    selection ? `选中文本：${selection.slice(0, 600)}` : '',
-    page.url ? `来源：${page.url}` : ''
-  ].filter(Boolean).join('\n');
+  const draft = buildBrowserMemoryDraft(capture);
   return {
-    title: page.title || '浏览器记忆候选',
-    content: body,
+    title: draft.title || '浏览器记忆候选',
+    content: draft.content,
     meta: buildDraftMetaFields(capture, 'memory')
   };
 }
@@ -147,11 +134,11 @@ async function refreshRecent() {
 async function refresh() {
   try {
     const health = await send('HEALTH');
-    $('status').textContent = health && health.status === 'ok' ? '本地服务已连接' : '本地服务可访问';
-    $('trialText').textContent = '已连接本地工作台。保存内容会先进入待审阅队列，公开发布前仍需真实 AI 站点验收。';
+    $('status').textContent = health && health.status === 'ok' ? '本地工作台已连接' : '本地工作台可访问';
+    $('trialText').textContent = '保存内容会先进入待审阅队列，你确认后才会写入长期记忆。';
   } catch {
-    $('status').textContent = '未连接本地服务';
-    $('trialText').textContent = '未连接本地工作台。先启动 Agent Memory Lab，再保存网页或查看审阅队列。';
+    $('status').textContent = '未连接本地工作台';
+    $('trialText').textContent = '先启动 Agent Memory Lab 工作台，再保存网页或查看审阅队列。';
   }
 
   try {
@@ -180,7 +167,7 @@ $('saveMemory').addEventListener('click', async () => {
     const meta = getDraftMetaFields();
     await send('SAVE_CANDIDATE', { kind: meta.asLesson ? 'lesson' : 'memory', title, text, meta });
     await refreshRecent();
-    setMessage('已加入待审阅队列', 'ok');
+    setMessage('已送到工作台待审阅', 'ok');
   } catch (err) {
     setMessage(err.message || '保存失败', 'error');
   } finally {
@@ -217,7 +204,7 @@ $('saveLesson').addEventListener('click', async () => {
   }
 });
 
-$('openWorkbench').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'dashboard' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#dashboard` })));
+$('openWorkbench').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'memories' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#memories` })));
 $('openSkills').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'lessons' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#lessons` })));
 $('openGuide').addEventListener('click', () => chrome.tabs.create({ url: EXTERNAL_TESTER_GUIDE_URL }));
 $('openSidePanel').addEventListener('click', async () => {

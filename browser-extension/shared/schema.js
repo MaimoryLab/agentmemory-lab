@@ -90,18 +90,80 @@ function normalizeTurn(turn) {
   };
 }
 
+function cleanCandidateText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .replace(/^(用户|User|我)[:：]\s*/i, '')
+    .trim();
+}
+
+function isUsefulFact(text) {
+  if (!text || text.length < 6) return false;
+  if (/^https?:\/\//i.test(text)) return false;
+  if (/^(摘要|来源|URL|页面结构|网页记忆线索|浏览器候选记忆)[:：]/.test(text)) return false;
+  return /(我|我的|我们|用户|希望|想要|需要|正在|计划|偏好|喜欢|不喜欢|不要|应该|必须|学习|备考|项目|产品|设计|插件|记忆|Skill|飞书|GitHub|雅思|IELTS)/i.test(text);
+}
+
+function splitFactSentences(text) {
+  return String(text || '')
+    .split(/[。！？!?\n]+/)
+    .map(cleanCandidateText)
+    .filter(isUsefulFact)
+    .filter((item) => item.length <= 220);
+}
+
+function uniqueCandidates(items) {
+  const seen = new Set();
+  return items
+    .map(cleanCandidateText)
+    .filter(Boolean)
+    .filter((item) => {
+      const key = item.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function buildSourceNote(page) {
+  const title = String(page.title || '当前页面').trim();
+  const url = String(page.url || '').trim();
+  return [title ? `来源页面：${title}` : '', url ? `来源链接：${url}` : ''].filter(Boolean).join('\n');
+}
+
+export function buildBrowserMemoryDraft(capture) {
+  const page = capture && capture.page ? capture.page : {};
+  const conversation = capture && capture.conversation ? capture.conversation : {};
+  const candidates = capture && capture.candidates && Array.isArray(capture.candidates.memories) ? capture.candidates.memories : [];
+  const first = candidates.find((item) => String(item || '').trim()) || '';
+  const fact = cleanCandidateText(first) || `请从这个页面提炼一条具体事实：${page.title || '当前页面'}`;
+  const source = buildSourceNote(page);
+  const provider = conversation.provider || page.typeLabel || page.host || '浏览器';
+  return {
+    title: fact.length > 42 ? `${fact.slice(0, 42)}...` : fact,
+    content: [`候选事实：${fact}`, source, `来源类型：${provider}`].filter(Boolean).join('\n'),
+    fact,
+    source
+  };
+}
+
 function buildMemoryCandidates(page, normalized) {
   const type = detectPageType({ ...page, ...normalized });
   const provider = detectAiProvider({ ...page, ...normalized });
-  const candidates = [];
+  const turns = Array.isArray(page.turns) ? page.turns : [];
+  const userTurns = turns.filter((turn) => turn && turn.role === 'user').map((turn) => turn.text);
+  const candidates = uniqueCandidates([
+    ...splitFactSentences(page.selection),
+    ...userTurns.flatMap(splitFactSentences),
+    ...splitFactSentences(page.promptDraft)
+  ]);
   if (provider) {
-    candidates.push(`在 ${provider} 中继续跟进：${String(page.title || '当前对话').trim()}`);
-    if (page.promptDraft) candidates.push(`当前输入可能需要记忆辅助：${String(page.promptDraft).trim().slice(0, 180)}`);
+    if (!candidates.length && page.promptDraft) candidates.push(`用户在 ${provider} 中正在处理：${cleanCandidateText(page.promptDraft).slice(0, 180)}`);
   }
-  if (page.selection) candidates.push(`选中文本可能值得保留：${String(page.selection).trim().slice(0, 180)}`);
+  if (page.selection && !candidates.length) candidates.push(cleanCandidateText(page.selection).slice(0, 180));
   if (type === 'github') candidates.push(`GitHub 项目线索：${String(page.title || '').trim()}`);
   if (type === 'paper') candidates.push(`论文 / PDF 阅读线索：${String(page.title || '').trim()}`);
-  if (!candidates.length) candidates.push(`网页线索：${String(page.title || '当前页面').trim()}`);
+  if (!candidates.length) candidates.push(`从当前页面提炼具体事实：${String(page.title || '当前页面').trim()}`);
   return candidates.slice(0, 4);
 }
 
@@ -133,12 +195,11 @@ function detectPrivacyRisk(page) {
 
 export function captureToMemoryPayload(capture) {
   const page = capture.page;
-  const selected = page.selection ? `\n\n选中文本：\n${page.selection}` : '';
-  const headings = page.headings.length ? `\n\n页面结构：${page.headings.join(' / ')}` : '';
   const provider = capture.conversation && capture.conversation.provider ? capture.conversation.provider : '';
   const sourceKind = provider || page.typeLabel || page.host || '浏览器';
+  const draft = buildBrowserMemoryDraft(capture);
   return {
-    content: `网页记忆线索：${page.title}\nURL：${page.url}\n摘要：${page.description || '无'}${selected}${headings}`,
+    content: draft.content,
     concepts: ['browser-context', page.host, `browser-page:${page.type}`, provider ? `browser-source:${provider.toLowerCase()}` : ''].filter(Boolean),
     files: [],
     project: 'browser',

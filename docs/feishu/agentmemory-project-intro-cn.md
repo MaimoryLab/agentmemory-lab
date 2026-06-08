@@ -105,7 +105,7 @@ npm run preview:browser-extension
 http://localhost:3113/demo/browser-extension.html
 ```
 
-完整工作台启动方式：`npm run build && npm run start`。默认 API 是 `http://localhost:3111`，Viewer 是 `http://localhost:3113`；如果默认端口已被占用，先确认是否已有 Agent Memory Lab 在运行。
+完整工作台启动方式：`cd /Users/szn/agentmemory && npm run build && npm run start:local-memory`。这个命令读取 `/Users/szn/记忆/data` 里的本地记忆。默认 API 是 `http://localhost:3111`，Viewer 是 `http://localhost:3113`；如果默认端口已被占用，先确认是否已有 Agent Memory Lab 在运行。
 
 默认连接：
 

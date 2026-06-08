@@ -25,7 +25,7 @@ Viewer: http://localhost:3113
 
 ```bash
 cd /Users/szn/agentmemory
-npm run build && npm run start
+npm run build && npm run start:local-memory
 ```
 
 ## 3. 开始使用
@@ -48,7 +48,7 @@ npm run preview:browser-extension
 
 打开页面后，插件会在输入框附近显示“记忆建议”。
 
-这个自检页只用于确认插件注入和“记忆建议”入口是否正常；真实使用仍以真实网页和 AI 页面为准。
+这个启动方式会读取 `/Users/szn/记忆/data` 里的本地记忆。这个自检页只用于确认插件注入和“记忆建议”入口是否正常；真实使用仍以真实网页和 AI 页面为准。
 
 ## 5. 试用重点
 

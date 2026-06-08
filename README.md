@@ -45,7 +45,7 @@ Agent 复用层
 
 第一次打开项目时，可以先按这条路线跑通核心体验：
 
-1. 启动完整工作台：`cd /Users/szn/agentmemory && npm run build && npm run start`，打开 `http://localhost:3113/#dashboard`。
+1. 启动完整工作台：`cd /Users/szn/agentmemory && npm run build && npm run start:local-memory`，打开 `http://localhost:3113/#dashboard`。
 2. 加载浏览器插件：Chrome / Edge → `chrome://extensions` → 开发者模式 → 加载 `browser-extension/`。
 3. 在 ChatGPT / Claude / Gemini / Perplexity 或普通网页里直接使用插件：打开同步侧栏，查看页面识别、候选记忆和“记忆建议”。
 4. 用插件把当前网页或选中文本加入待审阅，回到 Viewer 的记忆库确认保存。
@@ -111,9 +111,18 @@ Agent Memory Lab 更像“工作记忆层”：它关心这段内容以后怎么
 ```text
 cd /Users/szn/agentmemory
 Chrome / Edge -> chrome://extensions -> 开发者模式 -> 加载已解压的扩展程序 -> 选择 browser-extension/
-npm run build && npm run start
+npm run build && npm run start:local-memory
 http://localhost:3113/#dashboard
 ```
+
+如果要查看这台机器上已经沉淀的本地记忆，请用：
+
+```bash
+cd /Users/szn/agentmemory
+npm run build && npm run start:local-memory
+```
+
+这个命令会使用 `/Users/szn/记忆/data`，也就是之前积累本地记忆的那套数据目录。直接运行 `npm run start` 会使用当前仓库里的 `data/`，可能只看到一套新的空白记忆库。
 
 `npm run preview:browser-extension` 只用于自检插件注入和“记忆建议”入口；日常使用应直接在真实网页和 AI 页面里打开插件。
 

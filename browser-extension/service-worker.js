@@ -1,4 +1,4 @@
-import { createCaptureRecord, createPageCapture, captureToLessonPayload, captureToMemoryPayload } from './shared/schema.js';
+import { createCaptureRecord, createPageCapture, captureToLessonPayload, captureToMemoryPayload, buildBrowserMemoryDraft } from './shared/schema.js';
 import { agentMemoryApi, openViewer } from './shared/api.js';
 
 const RECENT_KEY = 'recentCaptures';
@@ -153,7 +153,8 @@ async function savePageLesson(note) {
 async function saveCandidate(kind, text, title = '', meta = {}) {
   const capture = await collectPage();
   const trimmed = String(text || '').trim();
-  const draftTitle = String(title || '').trim() || capture.page.title;
+  const draft = buildBrowserMemoryDraft(capture);
+  const draftTitle = String(title || '').trim() || draft.title || capture.page.title;
   const requestedKind = kind === 'lesson' || meta.asLesson ? 'lesson' : 'memory';
   if (!trimmed) throw new Error('没有可保存的候选内容');
   if (requestedKind === 'lesson') {
@@ -167,7 +168,7 @@ async function saveCandidate(kind, text, title = '', meta = {}) {
   }
   const payload = applyCandidateMeta({
     ...captureToMemoryPayload(capture),
-    content: `浏览器候选记忆：${trimmed}\n来源：${capture.page.title}\nURL：${capture.page.url}`
+    content: trimmed
   }, meta, capture, 'memory');
   const result = await agentMemoryApi('/agentmemory/review', {
     method: 'POST',

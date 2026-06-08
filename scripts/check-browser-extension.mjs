@@ -82,11 +82,14 @@ if (!popupJs.includes('buildDraft') || !popupJs.includes('SAVE_CANDIDATE') || !p
 if (!popupJs.includes('getDraftMetaFields') || !serviceWorker.includes('message.meta')) {
   throw new Error('Popup draft metadata must be sent with review candidates.');
 }
-if (!popupHtml.includes('本地试用版') || !popupHtml.includes('versionInfo') || !popupHtml.includes('openGuide')) {
-  throw new Error('Popup must expose external testing status, version, and guide entry.');
+if (!popupHtml.includes('本地工作台') || !popupHtml.includes('versionInfo') || !popupHtml.includes('openGuide')) {
+  throw new Error('Popup must expose local workbench status, version, and guide entry.');
 }
 if (!popupJs.includes('getManifest') || !popupJs.includes('external-tester-guide-cn.md')) {
-  throw new Error('Popup must render extension version and link the external tester guide.');
+  throw new Error('Popup must render extension version and link the guide.');
+}
+if (!popupJs.includes('buildBrowserMemoryDraft') || !serviceWorker.includes('buildBrowserMemoryDraft') || !sidepanel.includes('buildMemoryDraft')) {
+  throw new Error('Browser extension must draft concrete facts before sending review candidates.');
 }
 if (!sidepanelHtml.includes('审阅草稿') || !sidepanelHtml.includes('draftContent') || !sidepanelHtml.includes('resetDraft')) {
   throw new Error('Side panel must expose an editable review draft before saving.');

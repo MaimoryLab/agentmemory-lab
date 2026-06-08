@@ -25,7 +25,7 @@ Agent 使用：通过 Skill / API / MCP 取回上下文
 
 - 检查本地 Agent Memory Lab 服务是否在线
 - 在弹窗和同步侧栏保存前编辑候选记忆标题、正文、项目、标签和经验候选状态，再送入本地待审阅队列
-- 弹窗显示扩展版本、本地连接状态和外部试用指南入口，方便别人加载 zip 后自查
+- 弹窗显示扩展版本、本地连接状态和使用指南入口，方便加载后自查
 - 把当前网页加入待审阅记忆队列
 - 把当前网页上的一条观察加入待审阅经验队列
 - 侧边栏查看当前页面类型、候选记忆、候选经验和隐私提示
@@ -123,7 +123,7 @@ icons/                  插件图标
 
 ## 本地使用
 
-1. 进入项目目录并启动工作台：`cd /Users/szn/agentmemory && npm run build && npm run start`
+1. 进入项目目录并启动工作台：`cd /Users/szn/agentmemory && npm run build && npm run start:local-memory`
 2. 打开 Chrome / Edge：`chrome://extensions`
 3. 打开“开发者模式”
 4. 点击“加载已解压的扩展程序”
@@ -138,7 +138,7 @@ icons/                  插件图标
 http://localhost:3113/demo/browser-extension.html
 ```
 
-这个页面只用于排查插件注入和“记忆建议”入口是否正常。真正使用时，应该在真实网页和 AI 页面里打开插件，再回到 Viewer 待审阅队列确认保存。
+`start:local-memory` 会读取 `/Users/szn/记忆/data` 里的本地记忆。自检页只用于排查插件注入和“记忆建议”入口是否正常。真正使用时，应该在真实网页和 AI 页面里打开插件，再回到 Viewer 待审阅队列确认保存。
 
 默认 API 是 `http://localhost:3111`，Viewer 是 `http://localhost:3113`。如果默认端口已被占用，先确认是否已有 Agent Memory Lab 在运行；必要时停止旧进程后再启动。
 

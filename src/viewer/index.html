@@ -4378,10 +4378,11 @@
       if (value === 'ready') return '可发布';
       return '等待证据';
     }
-    function renderDeliveryStatusCard(delivery) {
+    function renderDeliveryStatusCard(delivery, options) {
+      var showDebug = options && options.debug;
       if (!delivery) return '';
       if (delivery.available === false) {
-        return '<div class="card" style="margin-bottom:16px;"><div class="card-title">外部试用状态</div><div style="font-size:13px;color:var(--ink-muted);line-height:1.55;">还没有生成交付包。先运行 <code>npm run package:browser-extension</code>，这里会显示插件包和真实 AI 页面证据进度。</div></div>';
+        return '<div class="card" style="margin-bottom:16px;"><div class="card-title">浏览器入口</div><div style="font-size:13px;color:var(--ink-muted);line-height:1.55;">浏览器入口还没有打包。现在可以先在本机加载 <code>browser-extension/</code> 文件夹使用。</div></div>';
       }
       var real = delivery.realSiteValidation || {};
       var passed = Number(real.passedCount || 0);
@@ -4397,15 +4398,22 @@
       var next = notPassed.length ? notPassed.join('、') : '真实站点已齐';
       var html = '<div class="card" style="margin-bottom:16px;">';
       html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
-      html += '<div><div class="card-title" style="margin-bottom:4px;">外部试用入口</div><div style="font-size:12px;color:var(--ink-muted);line-height:1.45;">浏览器入口 ' + esc(version) + ' · ' + esc(zipLabel) + '</div></div>';
-      html += '<span class="badge ' + deliveryBadgeClass(external) + '">' + esc(deliveryStatusLabel(external)) + '</span>';
+      html += '<div><div class="card-title" style="margin-bottom:4px;">浏览器记忆入口</div><div style="font-size:12px;color:var(--ink-muted);line-height:1.45;">从网页和 AI 对话提取具体事实，先送审，再写入记忆库。</div></div>';
+      html += '<span class="badge ' + deliveryBadgeClass(external) + '">可本地使用</span>';
       html += '</div>';
-      html += '<div style="margin:-2px 0 14px;font-size:13px;color:var(--ink-secondary);line-height:1.55;">插件是浏览器入口层，负责把网页和 AI 对话送入本地审阅；本地工作台是记忆中枢，负责记忆库、Skill、文档和交付检查。</div>';
+      html += '<div style="margin:-2px 0 14px;font-size:13px;color:var(--ink-secondary);line-height:1.55;">不要把链接当记忆。浏览器入口会把页面里的事实、偏好和待办变成候选，回到这里审阅后才进入长期记忆。</div>';
       html += '<div class="memory-card-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:14px;">';
-      html += '<div class="stat-card" style="padding:12px;"><div class="label">1. 加载到浏览器</div><div style="font-size:13px;color:var(--ink-secondary);line-height:1.45;margin:6px 0 10px;">用开发者模式加载插件目录或交付包。</div><a class="btn" href="/docs/external-tester-guide-cn.md" target="_blank" rel="noopener">使用指南</a></div>';
-      html += '<div class="stat-card" style="padding:12px;"><div class="label">2. 在真实页面使用</div><div style="font-size:13px;color:var(--ink-secondary);line-height:1.45;margin:6px 0 10px;">打开网页或 AI 对话，保存候选并回到记忆库审阅。</div><a class="btn" href="#memories">去记忆库</a></div>';
-      html += '<div class="stat-card" style="padding:12px;"><div class="label">3. 真实 AI 页面验收</div><div style="font-size:13px;color:var(--ink-secondary);line-height:1.45;margin:6px 0 10px;">逐站检查 ChatGPT、Claude、Gemini、Perplexity。</div><a class="btn" href="/docs/browser-extension-ai-site-test-cards-cn.md" target="_blank" rel="noopener">验收清单</a></div>';
+      html += '<div class="stat-card" style="padding:14px;"><div class="label">1. 装到浏览器</div><div style="font-size:13px;color:var(--ink-secondary);line-height:1.45;margin:6px 0 10px;">加载 <code>browser-extension/</code>，让输入框旁出现记忆入口。</div><a class="btn" href="/browser-extension/LOAD-THIS-FIRST.md" target="_blank" rel="noopener">安装说明</a></div>';
+      html += '<div class="stat-card" style="padding:14px;"><div class="label">2. 保存具体事实</div><div style="font-size:13px;color:var(--ink-secondary);line-height:1.45;margin:6px 0 10px;">在真实网页或 AI 对话里选候选，先改成一句可记住的事实。</div><a class="btn" href="#memories">查看待审阅</a></div>';
+      html += '<div class="stat-card" style="padding:14px;"><div class="label">3. 沉淀为经验</div><div style="font-size:13px;color:var(--ink-secondary);line-height:1.45;margin:6px 0 10px;">确认后的内容进入记忆库，也可以继续整理成本地 Skill。</div><a class="btn" href="#lessons">去 Skill</a></div>';
       html += '</div>';
+      if (!showDebug) {
+        html += '<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-top:2px;">';
+        html += '<div style="font-size:12px;color:var(--ink-muted);">' + esc(version) + ' · ' + esc(zipLabel) + '</div>';
+        html += '<a class="btn" href="/docs/browser-extension-ai-site-test-cards-cn.md" target="_blank" rel="noopener">适配检查</a>';
+        html += '</div></div>';
+        return html;
+      }
       html += '<div class="stats-grid" style="margin-bottom:12px;">';
       html += '<div class="stat-card"><div class="label">插件自检</div><div class="value" style="font-size:22px;">' + esc(deliveryStatusLabel(delivery.localDemo)) + '</div><div class="sub">排错用预览页</div></div>';
       html += '<div class="stat-card"><div class="label">真实 AI 证据</div><div class="value" style="font-size:24px;">' + passed + '/' + required + '</div><div class="sub">公开发布必需</div></div>';
@@ -4489,7 +4497,7 @@
       if (savings < 0) savings = 0;
       html += '</div>';
 
-      html += renderDeliveryStatusCard(d.delivery);
+      html += renderDeliveryStatusCard(d.delivery, { debug: showDebug });
 
       if (showDebug && (snap.memory || snap.cpu)) {
         html += '<div class="card" style="margin-bottom:16px"><div class="card-title">系统资源</div>';

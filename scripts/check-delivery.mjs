@@ -85,9 +85,10 @@ for (const file of requiredFiles) {
 
 const readme = read('README.md');
 assert(readme.includes('npm run preview:browser-extension'), 'README must mention browser extension self-check command.');
-assert(readme.includes('npm run build && npm run start'), 'README must mention full workbench start command.');
+assert(readme.includes('npm run build && npm run start:local-memory'), 'README must mention local memory workbench start command.');
 assert(readme.includes('npm run check:workbench'), 'README must mention workbench status check command.');
 assert(readme.includes('cd /Users/szn/agentmemory'), 'README must show project directory before npm commands.');
+assert(readme.includes('/Users/szn/记忆/data'), 'README must explain which local memory store is used.');
 for (const marker of ['本地可用路径', '真实网页和 AI 页面', '回到 Viewer 的记忆库确认保存', '自检页']) {
   assert(readme.includes(marker), `README missing usable workflow marker: ${marker}`);
 }
@@ -112,6 +113,10 @@ assert(imageRefs.includes('docs/readme-assets/screenshots/dashboard.jpg'), 'READ
 assert(imageRefs.includes('docs/readme-assets/screenshots/skills.jpg'), 'README must include skills screenshot.');
 
 const browserReadme = read('browser-extension/README.md');
+assert(existsSync('iii-config.local-memory.yaml'), 'Local memory config must exist.');
+const localMemoryConfig = read('iii-config.local-memory.yaml');
+assert(localMemoryConfig.includes('/Users/szn/记忆/data/state_store.db'), 'Local memory config must point to the existing memory state store.');
+assert(read('package.json').includes('start:local-memory'), 'package.json must expose start:local-memory.');
 assert(browserReadme.includes('npm run package:browser-extension'), 'Browser extension README must mention packaging command.');
 assert(browserReadme.includes('npm run status:delivery'), 'Browser extension README must mention delivery status command.');
 assert(browserReadme.includes('npm run preview:browser-extension'), 'Browser extension README must mention self-check command.');
@@ -208,7 +213,7 @@ const viewer = read('src/viewer/index.html');
 for (const marker of ['function reviewProject', 'function reviewTags', 'function reviewSourceLabel', 'payload.asLesson', '经验候选']) {
   assert(viewer.includes(marker), `Viewer review queue missing browser draft metadata marker: ${marker}`);
 }
-for (const marker of ['delivery-status', 'renderDeliveryStatusCard', '外部试用入口', '使用指南', '在真实页面使用', '真实页面验收', '真实 AI 证据', '基本可试', '等待证据', '插件是浏览器入口层', '本地工作台是记忆中枢', '待验收', '待修复', '/docs/browser-extension-ai-site-test-cards-cn.md']) {
+for (const marker of ['delivery-status', 'renderDeliveryStatusCard', '浏览器记忆入口', '安装说明', '保存具体事实', '沉淀为经验', '不要把链接当记忆', '真实 AI 证据', '等待证据', '待验收', '待修复', '/docs/browser-extension-ai-site-test-cards-cn.md']) {
   assert(viewer.includes(marker), `Viewer dashboard missing delivery status marker: ${marker}`);
 }
 

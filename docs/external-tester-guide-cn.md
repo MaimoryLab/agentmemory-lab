@@ -35,7 +35,7 @@
 
 ```bash
 cd /Users/szn/agentmemory
-npm run build && npm run start
+npm run build && npm run start:local-memory
 ```
 
 3. 打开 Chrome / Edge 的扩展管理页。
@@ -63,7 +63,7 @@ http://localhost:3113/demo/browser-extension.html
 
 ```bash
 cd /Users/szn/agentmemory
-npm run build && npm run start
+npm run build && npm run start:local-memory
 ```
 
 默认地址：

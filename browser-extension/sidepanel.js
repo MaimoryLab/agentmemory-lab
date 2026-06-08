@@ -193,20 +193,34 @@ function getDraftMetaFields() {
   };
 }
 
-function buildDefaultDraft(capture) {
+function cleanDraftText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function buildSourceNote(page) {
+  const title = String(page.title || '当前页面').trim();
+  const url = String(page.url || '').trim();
+  return [title ? `来源页面：${title}` : '', url ? `来源链接：${url}` : ''].filter(Boolean).join('\n');
+}
+
+function buildMemoryDraft(capture) {
   const page = capture && capture.page ? capture.page : {};
+  const conversation = capture && capture.conversation ? capture.conversation : {};
   const memories = capture && capture.candidates && Array.isArray(capture.candidates.memories) ? capture.candidates.memories : [];
-  const firstMemory = memories.find((item) => String(item || '').trim()) || '';
-  const parts = [
-    firstMemory || `网页线索：${page.title || '当前页面'}`,
-    page.description ? `摘要：${page.description}` : '',
-    page.selection ? `选中文本：${String(page.selection).slice(0, 600)}` : '',
-    page.url ? `来源：${page.url}` : ''
-  ].filter(Boolean);
+  const fact = cleanDraftText(memories.find((item) => String(item || '').trim()) || `请从这个页面提炼一条具体事实：${page.title || '当前页面'}`);
+  const provider = conversation.provider || page.typeLabel || page.host || '浏览器';
+  return {
+    title: fact.length > 42 ? `${fact.slice(0, 42)}...` : fact,
+    content: [`候选事实：${fact}`, buildSourceNote(page), `来源类型：${provider}`].filter(Boolean).join('\n')
+  };
+}
+
+function buildDefaultDraft(capture) {
+  const draft = buildMemoryDraft(capture);
   return {
     kind: 'memory',
-    title: page.title || '浏览器记忆候选',
-    content: parts.join('\n'),
+    title: draft.title || '浏览器记忆候选',
+    content: draft.content,
     meta: buildDraftMetaFields(capture, 'memory')
   };
 }

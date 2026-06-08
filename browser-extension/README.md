@@ -129,7 +129,9 @@ npm run check:browser-extension
 npm run package:browser-extension
 ```
 
-第一个命令会确认扩展脚本语法、Manifest V3 content script 配置，以及 `shared/site-config.js` 和运行脚本里的 AI provider 没有分叉。第二个命令会生成可分发的本地预览包：`artifacts/agent-memory-lab-extension.zip`。
+第一个命令会确认扩展脚本语法、Manifest V3 content script 配置、`shared/site-config.js` 和运行脚本里的 AI provider 没有分叉，并用本地 fixture 检查 ChatGPT、Claude、Gemini、Perplexity、Grok、DeepSeek 的输入框和对话 selector 至少能命中最小页面模型。第二个命令会生成可分发的本地预览包：`artifacts/agent-memory-lab-extension.zip`。
+
+本地 fixture 不是正式站点验收的替代品，只是防回归网。真正发布前仍需在真实 AI 页面打开插件，确认输入框旁提示、插入、复制和侧栏诊断都可用。
 
 把 zip 发给别人本地试用时，解压后选择里面的 `browser-extension/` 文件夹加载。
 

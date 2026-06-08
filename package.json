@@ -22,7 +22,7 @@
     "start": "node dist/cli.mjs",
     "migrate": "node dist/functions/migrate.js",
     "test": "vitest run --exclude test/integration.test.ts",
-    "check:browser-extension": "node scripts/check-browser-extension.mjs",
+    "check:browser-extension": "node scripts/check-browser-extension.mjs && node scripts/check-browser-extension-fixtures.mjs",
     "package:browser-extension": "npm run check:browser-extension && node scripts/package-browser-extension.mjs",
     "check:delivery": "npm run build && node scripts/check-delivery.mjs",
     "test:watch": "vitest --exclude test/integration.test.ts",

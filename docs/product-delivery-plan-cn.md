@@ -69,6 +69,7 @@
 - 本地检查：`npm run check:browser-extension`
 - 一键交付检查：`npm run check:delivery`
 - 本地预览包：`npm run package:browser-extension`，输出 `artifacts/agent-memory-lab-extension.zip`
+- AI fixture 验收：`check:browser-extension` 会用本地最小页面模型检查 ChatGPT、Claude、Gemini、Perplexity、Grok、DeepSeek 的输入框和对话 selector
 - 试用者解压后选择包内 `browser-extension/` 文件夹加载
 - AI 站点适配材料：同步侧栏“复制诊断”输出的 JSON，可用于补 selector 和真实网页验收
 - 未来商店发布仍需英文隐私政策、发布截图和逐站真实网页验收

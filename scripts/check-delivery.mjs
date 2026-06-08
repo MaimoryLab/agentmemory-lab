@@ -25,6 +25,7 @@ const requiredFiles = [
   'docs/readme-assets/screenshots/skills.jpg',
   'browser-extension/manifest.json',
   'scripts/check-browser-extension.mjs',
+  'scripts/check-browser-extension-fixtures.mjs',
   'scripts/package-browser-extension.mjs'
 ];
 
@@ -66,6 +67,7 @@ for (const marker of ['插件发布物料', 'AI 页面诊断', 'Skill 草稿', '
 }
 
 run(process.execPath, ['scripts/check-browser-extension.mjs']);
+run(process.execPath, ['scripts/check-browser-extension-fixtures.mjs']);
 run(process.execPath, ['scripts/package-browser-extension.mjs']);
 assert(existsSync('artifacts/agent-memory-lab-extension.zip'), 'Browser extension package was not created.');
 

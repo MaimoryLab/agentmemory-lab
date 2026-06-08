@@ -224,7 +224,7 @@ assert(existsSync('artifacts/delivery-summary.md'), 'Delivery summary was not cr
 assert(existsSync('artifacts/delivery-manifest.json'), 'Delivery manifest was not created.');
 assert(existsSync('artifacts/ai-validation-evidence-summary.json'), 'AI validation evidence summary was not created.');
 const deliverySummary = read('artifacts/delivery-summary.md');
-for (const marker of ['Agent Memory Lab Delivery Summary', 'Extension zip', 'Extension zip sha256', 'Delivery manifest', 'Release Gates', 'Real AI Site Validation', 'External tester guide', 'AI validation log']) {
+for (const marker of ['Agent Memory Lab Delivery Summary', 'Extension zip', 'Extension zip sha256', 'Delivery manifest', 'External Testing Loop', 'Release Gates', 'Real AI Site Validation', 'External tester guide', 'External tester issue template', 'AI validation log']) {
   assert(deliverySummary.includes(marker), `Delivery summary missing marker: ${marker}`);
 }
 const deliveryManifest = JSON.parse(read('artifacts/delivery-manifest.json'));
@@ -238,6 +238,11 @@ assert(deliveryManifest.coreExperience?.reviewDraft?.editableProject === true, '
 assert(deliveryManifest.coreExperience?.reviewDraft?.editableTags === true, 'Delivery manifest must record editable tags support.');
 assert(deliveryManifest.coreExperience?.reviewDraft?.editableLessonFlag === true, 'Delivery manifest must record editable lesson flag support.');
 assert(deliveryManifest.coreExperience?.reviewDraft?.savesToReviewQueue === true, 'Delivery manifest must record review queue save behavior.');
+assert(deliveryManifest.externalTesting?.zipLoadChecklist?.exists === true, 'Delivery manifest must record zip load checklist support.');
+assert(deliveryManifest.externalTesting?.feedbackTemplate?.exists === true, 'Delivery manifest must record external feedback template support.');
+assert(deliveryManifest.externalTesting?.issueTemplate?.exists === true, 'Delivery manifest must record external issue template support.');
+assert(deliveryManifest.externalTesting?.feedbackTriage?.exists === true, 'Delivery manifest must record feedback triage support.');
+assert(deliveryManifest.externalTesting?.evidenceRecorder?.exists === true, 'Delivery manifest must record AI evidence recorder support.');
 assert(deliveryManifest.artifacts?.extensionZip?.exists, 'Delivery manifest must mark extension zip as existing.');
 assert(deliveryManifest.artifacts?.loadInstructions?.exists, 'Delivery manifest must mark zip load instructions as existing.');
 assert(deliveryManifest.artifacts.extensionZip.bytes > 0, 'Delivery manifest extension zip size must be positive.');

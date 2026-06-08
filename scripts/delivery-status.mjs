@@ -28,6 +28,11 @@ const zipBytes = fileSize(zipPath);
 const release = manifest.releaseState || {};
 const realSite = release.realSiteValidation || {};
 const core = manifest.coreExperience || {};
+const external = manifest.externalTesting || {};
+
+function readyFromEntry(entry) {
+  return !!(entry && entry.exists !== false && (entry.path || entry.command));
+}
 
 console.log('Agent Memory Lab delivery status');
 console.log(`commit: ${manifest.git?.commit || 'unknown'}${manifest.git?.trackedChangesPending ? ' (tracked changes pending)' : ''}`);
@@ -37,6 +42,9 @@ printStatus('local demo', release.localDemo === 'ready');
 console.log(`external testing: ${release.externalTesting || 'not-ready'}`);
 printStatus('review draft flow', !!(core.reviewDraft?.popup && core.reviewDraft?.sidePanel && core.reviewDraft?.savesToReviewQueue));
 printStatus('tester entry', !!(core.externalTestingEntry?.popupVersionVisible && core.externalTestingEntry?.testerGuideUrl));
+printStatus('zip tester checklist', readyFromEntry(external.zipLoadChecklist));
+printStatus('feedback loop', !!(readyFromEntry(external.feedbackTemplate) && readyFromEntry(external.issueTemplate) && readyFromEntry(external.feedbackTriage)));
+printStatus('AI evidence recorder', readyFromEntry(external.evidenceRecorder));
 console.log(`real site validation table: ${realSite.passedCount || 0}/${realSite.requiredCount || 4}`);
 console.log(`real site evidence: ${evidence.passedCount || 0}/${evidence.requiredCount || 4}`);
 printStatus('public release', release.publicRelease === 'ready' && evidence.publicReleaseReadyByEvidence);

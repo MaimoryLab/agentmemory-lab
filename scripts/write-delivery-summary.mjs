@@ -153,6 +153,32 @@ const deliveryManifest = {
       longTermWriteRequiresViewerReview: true
     }
   },
+  externalTesting: {
+    zipLoadChecklist: {
+      path: 'browser-extension/LOAD-THIS-FIRST.md',
+      exists: existsSync('browser-extension/LOAD-THIS-FIRST.md')
+    },
+    testerGuide: {
+      path: 'docs/external-tester-guide-cn.md',
+      exists: existsSync('docs/external-tester-guide-cn.md')
+    },
+    feedbackTemplate: {
+      path: 'docs/external-feedback-template-cn.md',
+      exists: existsSync('docs/external-feedback-template-cn.md')
+    },
+    issueTemplate: {
+      path: '.github/ISSUE_TEMPLATE/external-tester-feedback-cn.yml',
+      exists: existsSync('.github/ISSUE_TEMPLATE/external-tester-feedback-cn.yml')
+    },
+    feedbackTriage: {
+      path: 'docs/external-feedback-triage-cn.md',
+      exists: existsSync('docs/external-feedback-triage-cn.md')
+    },
+    evidenceRecorder: {
+      command: 'npm run record:ai-validation-evidence',
+      exists: existsSync('scripts/record-ai-validation-evidence.mjs')
+    }
+  },
   releaseState: {
     localDemo: 'ready',
     externalTesting: 'mostly-ready',
@@ -224,6 +250,17 @@ Generated: ${generatedAt}
 | Local AI input memory hint demo | ready |
 | Real AI site validation | ${passedAiRows.length}/${requiredAiProducts.length} passed |
 
+## External Testing Loop
+
+| Item | Status |
+| --- | --- |
+| Zip load checklist | ${existsSync('browser-extension/LOAD-THIS-FIRST.md') ? 'ready' : 'missing'} |
+| External tester guide | ${existsSync('docs/external-tester-guide-cn.md') ? 'ready' : 'missing'} |
+| Feedback template | ${existsSync('docs/external-feedback-template-cn.md') ? 'ready' : 'missing'} |
+| GitHub issue template | ${existsSync('.github/ISSUE_TEMPLATE/external-tester-feedback-cn.yml') ? 'ready' : 'missing'} |
+| Feedback triage guide | ${existsSync('docs/external-feedback-triage-cn.md') ? 'ready' : 'missing'} |
+| AI evidence recorder | ${existsSync('scripts/record-ai-validation-evidence.mjs') ? 'ready' : 'missing'} |
+
 ## Release Gates
 
 ${extractGateTable(releaseGates)}
@@ -254,6 +291,7 @@ ${extractGateTable(releaseGates)}
 - README: \`README.md\`
 - External tester guide: \`docs/external-tester-guide-cn.md\`
 - External feedback template: \`docs/external-feedback-template-cn.md\`
+- External tester issue template: \`.github/ISSUE_TEMPLATE/external-tester-feedback-cn.yml\`
 - External feedback triage: \`docs/external-feedback-triage-cn.md\`
 - AI validation log: \`docs/browser-extension-ai-validation-cn.md\`
 - Release gates: \`docs/release-gates-cn.md\`

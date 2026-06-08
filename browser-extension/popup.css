@@ -21,7 +21,7 @@ header { display: flex; justify-content: space-between; gap: 12px; align-items: 
 h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
 p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
 .icon-btn { width: 34px; height: 34px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; }
-.page-card, .lesson-box { display: block; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.82); margin-bottom: 10px; }
+.page-card, .lesson-box, .recent-card { display: block; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.82); margin-bottom: 10px; }
 .label, .lesson-box span { color: var(--faint); font-size: 12px; }
 .title { margin-top: 4px; font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .url { margin-top: 2px; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -33,3 +33,8 @@ textarea { width: 100%; margin: 8px 0; resize: vertical; border: 1px solid var(-
 .message { min-height: 18px; color: var(--muted); font-size: 12px; }
 .message.error { color: #9d342f; }
 .message.ok { color: #517355; }
+.recent-list { display: grid; gap: 7px; margin-top: 8px; }
+.recent-item { min-width: 0; padding-top: 7px; border-top: 1px solid var(--line); }
+.recent-item:first-child { padding-top: 0; border-top: 0; }
+.recent-title { color: var(--ink); font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-meta { color: var(--faint); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

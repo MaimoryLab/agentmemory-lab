@@ -9,7 +9,7 @@
     "default_popup": "popup.html"
   },
   "options_page": "options.html",
-  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "permissions": ["activeTab", "contextMenus", "scripting", "storage", "tabs"],
   "host_permissions": ["http://localhost:3111/*", "http://127.0.0.1:3111/*", "http://localhost:3113/*", "http://127.0.0.1:3113/*"],
   "background": {
     "service_worker": "service-worker.js",

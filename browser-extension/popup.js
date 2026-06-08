@@ -14,6 +14,39 @@ async function send(type, payload = {}) {
   return response.data;
 }
 
+function renderPage(capture) {
+  const page = capture && capture.page ? capture.page : capture;
+  $('pageTitle').textContent = page.title || '当前页面';
+  $('pageUrl').textContent = page.url || '';
+}
+
+function renderRecent(items) {
+  if (!items || !items.length) {
+    $('recentList').textContent = '暂无记录';
+    return;
+  }
+  $('recentList').innerHTML = items.slice(0, 4).map((item) => `
+    <div class="recent-item">
+      <div class="recent-title">${escapeHtml(item.title || '未命名页面')}</div>
+      <div class="recent-meta">${item.kind === 'lesson' ? '经验' : '记忆'} · ${escapeHtml(item.host || '')}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[char]));
+}
+
+async function refreshRecent() {
+  try {
+    renderRecent(await send('RECENT_CAPTURES'));
+  } catch {
+    renderRecent([]);
+  }
+}
+
 async function refresh() {
   try {
     const health = await send('HEALTH');
@@ -23,13 +56,13 @@ async function refresh() {
   }
 
   try {
-    const page = await send('COLLECT_PAGE');
-    $('pageTitle').textContent = page.title || '当前页面';
-    $('pageUrl').textContent = page.url || '';
+    renderPage(await send('COLLECT_PAGE'));
   } catch (err) {
     $('pageTitle').textContent = '无法读取当前页面';
     $('pageUrl').textContent = err.message || '';
   }
+
+  await refreshRecent();
 }
 
 $('saveMemory').addEventListener('click', async () => {
@@ -37,6 +70,7 @@ $('saveMemory').addEventListener('click', async () => {
   setMessage('正在保存网页线索...');
   try {
     await send('SAVE_PAGE_MEMORY');
+    await refreshRecent();
     setMessage('已保存为记忆线索', 'ok');
   } catch (err) {
     setMessage(err.message || '保存失败', 'error');
@@ -53,6 +87,7 @@ $('saveLesson').addEventListener('click', async () => {
   try {
     await send('SAVE_PAGE_LESSON', { note });
     $('lessonNote').value = '';
+    await refreshRecent();
     setMessage('经验已保存', 'ok');
   } catch (err) {
     setMessage(err.message || '保存失败', 'error');
@@ -61,8 +96,8 @@ $('saveLesson').addEventListener('click', async () => {
   }
 });
 
-$('openWorkbench').addEventListener('click', () => chrome.tabs.create({ url: `${settings.viewerBase}/#dashboard` }));
-$('openSkills').addEventListener('click', () => chrome.tabs.create({ url: `${settings.viewerBase}/#lessons` }));
+$('openWorkbench').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'dashboard' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#dashboard` })));
+$('openSkills').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'lessons' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#lessons` })));
 $('openOptions').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 refresh();

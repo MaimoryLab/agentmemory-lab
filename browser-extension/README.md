@@ -101,13 +101,14 @@ icons/                  插件图标
 
 ## 本地预览
 
-1. 打开 Chrome / Edge：`chrome://extensions`
-2. 打开“开发者模式”
-3. 点击“加载已解压的扩展程序”
-4. 选择本目录：`browser-extension`
-5. 确保本地服务已启动：`agentmemory viewer`
-6. 点击浏览器工具栏里的 Agent Memory Lab 图标
-7. 点击“打开同步侧栏”预览完整插件工作流
+1. 运行 `npm run preview:browser-extension`
+2. 打开 Chrome / Edge：`chrome://extensions`
+3. 打开“开发者模式”
+4. 点击“加载已解压的扩展程序”
+5. 选择本目录：`browser-extension`
+6. 打开 `http://localhost:3113/demo/browser-extension.html`
+7. 点击浏览器工具栏里的 Agent Memory Lab 图标
+8. 点击“打开同步侧栏”预览完整插件工作流
 
 本地免登录预览页：
 
@@ -116,6 +117,8 @@ http://localhost:3113/demo/browser-extension.html
 ```
 
 这个页面会模拟一个 AI 对话输入框。加载插件后，在输入框输入问题，应能看到“本地记忆”提示，并可在同步侧栏看到 `Agent Memory Demo` 的 AI 页面状态。它用于快速预览插件体验，不能替代真实 ChatGPT / Claude / Gemini / Perplexity 的逐站验收。
+
+如果要跑完整工作台和待审阅队列，再运行 `npm run build && npm run start`，默认 API 是 `http://localhost:3111`，Viewer 是 `http://localhost:3113`。如果默认端口已被占用，先确认是否已有 Agent Memory Lab 在运行；必要时停止旧进程后再启动。
 
 侧栏顶部会显示连接状态：
 
@@ -136,6 +139,7 @@ http://localhost:3113/demo/browser-extension.html
 ```bash
 npm run check:browser-extension
 npm run package:browser-extension
+npm run preview:browser-extension
 ```
 
 第一个命令会确认扩展脚本语法、Manifest V3 content script 配置、`shared/site-config.js` 和运行脚本里的 AI provider 没有分叉，并用本地 fixture 检查 ChatGPT、Claude、Gemini、Perplexity、Grok、DeepSeek 的输入框和对话 selector 至少能命中最小页面模型。第二个命令会生成可分发的本地预览包：`artifacts/agent-memory-lab-extension.zip`。

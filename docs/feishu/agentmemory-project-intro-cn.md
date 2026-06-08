@@ -100,8 +100,11 @@ Skill 页会扫描本机的 Codex、Agents 和插件 Skill 目录，展示每个
 
 ```text
 Chrome / Edge → chrome://extensions → 开发者模式 → 加载已解压的扩展程序 → 选择 browser-extension/
+npm run preview:browser-extension
 http://localhost:3113/demo/browser-extension.html
 ```
+
+完整工作台启动方式：`npm run build && npm run start`。默认 API 是 `http://localhost:3111`，Viewer 是 `http://localhost:3113`；如果默认端口已被占用，先确认是否已有 Agent Memory Lab 在运行。
 
 默认连接：
 

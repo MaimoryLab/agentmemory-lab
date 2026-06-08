@@ -42,11 +42,11 @@
 
 第一次打开项目时，可以先按这条路线跑通核心体验：
 
-1. 启动本地 Viewer：`npm run dev`，打开 `http://localhost:3113/#dashboard`。
+1. 先预览浏览器插件：`npm run preview:browser-extension`，打开 `http://localhost:3113/demo/browser-extension.html`。
 2. 加载浏览器插件：Chrome / Edge → `chrome://extensions` → 开发者模式 → 加载 `browser-extension/`。
-3. 打开免登录插件预览页 `http://localhost:3113/demo/browser-extension.html`，查看输入框附近的“本地记忆”提示。
-4. 在 ChatGPT / Claude / Gemini / Perplexity 页面输入一个问题，检查真实站点是否识别输入框，并尝试插入相关记忆。
-5. 用插件把当前网页加入待审阅，回到 Viewer 的记忆库，在顶部审阅后保存，再用“浏览器”来源筛选找到它。
+3. 在预览页输入一个问题，查看输入框附近的“本地记忆”提示。
+4. 启动完整工作台：`npm run build && npm run start`，打开 `http://localhost:3113/#dashboard`。
+5. 在 ChatGPT / Claude / Gemini / Perplexity 页面输入一个问题，检查真实站点是否识别输入框；再用插件把当前网页加入待审阅，回到 Viewer 的记忆库确认保存。
 
 演示前可以按 [演示检查清单](docs/demo-checklist-cn.md) 自查。
 
@@ -96,6 +96,7 @@ Agent Memory Lab 更像“工作记忆层”：它关心这段内容以后怎么
 
 ```text
 Chrome / Edge -> chrome://extensions -> 开发者模式 -> 加载已解压的扩展程序 -> 选择 browser-extension/
+npm run preview:browser-extension
 http://localhost:3113/demo/browser-extension.html
 ```
 

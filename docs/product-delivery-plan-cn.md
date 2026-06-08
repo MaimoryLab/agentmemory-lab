@@ -72,6 +72,7 @@
 - 真实站点验收记录：`docs/browser-extension-ai-validation-cn.md`
 - 本地检查：`npm run check:browser-extension`
 - 一键交付检查：`npm run check:delivery`
+- 免登录插件预览：`npm run preview:browser-extension`
 - 本地预览包：`npm run package:browser-extension`，输出 `artifacts/agent-memory-lab-extension.zip`
 - AI fixture 验收：`check:browser-extension` 会用本地最小页面模型检查 ChatGPT、Claude、Gemini、Perplexity、Grok、DeepSeek 的输入框和对话 selector
 - 本地免登录预览：`http://localhost:3113/demo/browser-extension.html`，用于快速展示输入框旁记忆提示
@@ -88,7 +89,8 @@
 3. 同步 README、插件 README，必要时同步飞书源文档。
 4. 只使用真实产品截图，默认首页和 Skill 管理台。
 5. 运行轻量检查和构建。
-6. 提交并推送到 GitHub。
+6. 能打开免登录插件预览页，完整工作台路径另行验证。
+7. 提交并推送到 GitHub。
 
 ## 插件对标原则
 

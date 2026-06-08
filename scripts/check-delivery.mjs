@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -12,6 +12,25 @@ function read(path) {
 function run(command, args) {
   const result = spawnSync(command, args, { stdio: 'inherit' });
   assert(result.status === 0, `${command} ${args.join(' ')} failed`);
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchText(url, attempts = 20) {
+  let lastError;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await res.text();
+      lastError = new Error(`${url} returned ${res.status}`);
+    } catch (err) {
+      lastError = err;
+    }
+    await wait(150);
+  }
+  throw lastError || new Error(`Failed to fetch ${url}`);
 }
 
 const requiredFiles = [
@@ -39,6 +58,8 @@ for (const file of requiredFiles) {
 }
 
 const readme = read('README.md');
+assert(readme.includes('npm run preview:browser-extension'), 'README must mention browser extension preview command.');
+assert(readme.includes('npm run build && npm run start'), 'README must mention full workbench start command.');
 const imageRefs = [...readme.matchAll(/<img\s+src="([^"]+)"/g)].map((match) => match[1]);
 const allowedImages = new Set([
   'assets/banner.png',
@@ -54,6 +75,7 @@ assert(imageRefs.includes('docs/readme-assets/screenshots/skills.jpg'), 'README 
 
 const browserReadme = read('browser-extension/README.md');
 assert(browserReadme.includes('npm run package:browser-extension'), 'Browser extension README must mention packaging command.');
+assert(browserReadme.includes('npm run preview:browser-extension'), 'Browser extension README must mention preview command.');
 assert(browserReadme.includes('docs/browser-extension-privacy-cn.md'), 'Browser extension README must link privacy doc.');
 assert(browserReadme.includes('/demo/browser-extension.html'), 'Browser extension README must mention local demo page.');
 
@@ -85,6 +107,20 @@ for (const marker of ['Privacy Policy', 'local-first', 'Data We Process', 'Where
 const storeListing = read('docs/browser-extension-store-listing-en.md');
 for (const marker of ['Store Listing Draft', 'Short Description', 'Permission Justification', 'Pre-release Checklist']) {
   assert(storeListing.includes(marker), `Store listing draft missing marker: ${marker}`);
+}
+
+const previewPort = 32113;
+const preview = spawn(process.execPath, ['scripts/preview-browser-extension.mjs'], {
+  stdio: 'ignore',
+  env: { ...process.env, AGENTMEMORY_EXTENSION_PREVIEW_PORT: String(previewPort) }
+});
+try {
+  const html = await fetchText(`http://127.0.0.1:${previewPort}/demo/browser-extension.html`);
+  for (const marker of ['agentmemory-demo-input', 'Agent Memory Demo', '本地记忆']) {
+    assert(html.includes(marker), `Preview server response missing marker: ${marker}`);
+  }
+} finally {
+  preview.kill();
 }
 
 const feishu = read('docs/feishu/agentmemory-project-intro-cn.md');

@@ -564,14 +564,14 @@ export function startViewerServer(
       return;
     }
 
-    if (method === "GET" && pathname === "/demo/browser-extension.html") {
+    if ((method === "GET" || method === "HEAD") && pathname === "/demo/browser-extension.html") {
       const demo = readViewerAsset(join("demo", "browser-extension.html"));
       if (demo) {
         res.writeHead(200, {
           "Content-Type": "text/html; charset=utf-8",
           "Cache-Control": "no-cache",
         });
-        res.end(demo);
+        res.end(method === "HEAD" ? undefined : demo);
         return;
       }
       res.writeHead(404, { "Content-Type": "text/plain" });

@@ -30,7 +30,8 @@
     "test:all": "vitest run",
     "bench:load": "node --import tsx benchmark/load-100k.ts",
     "eval:longmemeval": "tsx eval/runner/longmemeval.ts",
-    "eval:coding-life": "tsx eval/runner/coding-life.ts"
+    "eval:coding-life": "tsx eval/runner/coding-life.ts",
+    "preview:browser-extension": "npm run build && node scripts/preview-browser-extension.mjs"
   },
   "keywords": [
     "ai",

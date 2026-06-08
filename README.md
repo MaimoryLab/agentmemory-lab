@@ -9,7 +9,7 @@
 它不是普通的聊天记录列表，也不是只给工程师看的日志面板。这个版本更关注一个问题：当你和 Codex、Claude Code、Cursor 这类 Agent 长期协作时，哪些内容应该被自动留下来，哪些内容应该被你审阅、编辑、删除、沉淀成 Skill？
 
 <p align="center">
-  <img src="website/public/dashboard.png" alt="总览页截图" width="860" />
+  <img src="docs/readme-assets/workflow-map.svg" alt="Codex Memory Lab 工作流总图" width="860" />
 </p>
 
 ## 为什么做它
@@ -31,7 +31,7 @@
 总览页把最近会话、记忆、经验、状态放在一个入口里。项目卡片可以点击进入对应会话，适合作为每天打开的工作台。
 
 <p align="center">
-  <img src="docs/feishu/dashboard.png" alt="总览页" width="860" />
+  <img src="website/public/dashboard.png" alt="总览页截图" width="860" />
 </p>
 
 ### 2. 记忆库：自动整理，但保留人工审阅
@@ -81,17 +81,6 @@ Skill 页会扫描本机的 Codex、Agents 和插件 Skill 目录，展示每个
 </p>
 
 ## 推荐工作流
-
-```mermaid
-flowchart LR
-  A[和 Agent 对话] --> B[记录会话与工具轨迹]
-  B --> C[整理记忆]
-  B --> D[生成待办]
-  B --> E[提炼经验]
-  E --> F[合并进 Skill]
-  C --> G[下次对话自动带入上下文]
-  F --> G
-```
 
 更接近真实使用时，它像一个循环：
 

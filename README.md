@@ -45,10 +45,6 @@
 
 会话页按时间展示历史会话。点击某段会话后，可以看到用户输入、Agent 回复、工具调用和关键结果，适合复盘“为什么最后变成这样”。
 
-<p align="center">
-  <img src="docs/readme-assets/screenshots/sessions.jpg" alt="会话页截图" width="860" />
-</p>
-
 ### 4. Skill 管理台：管理本地能力
 
 Skill 页会扫描本机的 Codex、Agents 和插件 Skill 目录，展示每个 Skill 的来源、路径和详情。
@@ -75,10 +71,6 @@ Skill 页会扫描本机的 Codex、Agents 和插件 Skill 目录，展示每个
 | 正在做 | 当前仍在推进的事项 |
 | 卡住了 | 需要用户输入、权限、资料或外部状态变化 |
 | 已完成 | 已经收尾，可以沉淀经验 |
-
-<p align="center">
-  <img src="docs/readme-assets/screenshots/actions.jpg" alt="待办页截图" width="860" />
-</p>
 
 ### 6. 活动页：看见工作节奏
 

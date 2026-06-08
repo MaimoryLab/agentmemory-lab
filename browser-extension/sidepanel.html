@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Memory Lab Side Panel</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">M</div>
+      <div class="brand-copy">
+        <h1>记忆同步</h1>
+        <p id="status">正在连接本地工作台...</p>
+      </div>
+      <button id="refresh" class="icon-button" title="刷新" aria-label="刷新">↻</button>
+    </header>
+
+    <section class="section current-page">
+      <div class="section-head">
+        <span class="eyebrow">当前页面</span>
+        <span id="pageType" class="type-pill">网页</span>
+      </div>
+      <h2 id="pageTitle">读取中...</h2>
+      <p id="pageUrl" class="url"></p>
+      <div id="privacy" class="privacy low">隐私风险低</div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="eyebrow">候选记忆</span>
+        <span class="count" id="memoryCount">0</span>
+      </div>
+      <div id="memoryCandidates" class="candidate-list empty">暂无候选</div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="eyebrow">候选经验</span>
+        <span class="count" id="lessonCount">0</span>
+      </div>
+      <div id="lessonCandidates" class="candidate-list empty">暂无候选</div>
+    </section>
+
+    <section class="section chat-section" id="chatSection" hidden>
+      <div class="section-head">
+        <span class="eyebrow">最近对话</span>
+        <span class="count" id="turnCount">0</span>
+      </div>
+      <div id="turnList" class="turn-list"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="eyebrow">最近同步</span>
+      </div>
+      <div id="recentList" class="recent-list empty">暂无记录</div>
+    </section>
+
+    <footer class="footer-actions">
+      <button id="savePage" class="primary">保存页面</button>
+      <button id="openWorkbench">工作台</button>
+      <button id="openSkills">Skill</button>
+    </footer>
+
+    <div id="message" class="message"></div>
+  </main>
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>

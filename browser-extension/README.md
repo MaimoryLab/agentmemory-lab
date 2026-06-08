@@ -1,12 +1,15 @@
 # Agent Memory Lab 浏览器插件
 
-这是 Agent Memory Lab 的浏览器插件 MVP，用来把网页上下文保存到本地记忆工作台。
+这是 Agent Memory Lab 的浏览器插件 MVP，用来把网页、AI 对话和项目文档同步到本地记忆工作台。它不是一个普通 Web Clipper，而是“多网页 / 多 Agent 产品记忆同步”的入口：在 ChatGPT、Claude、Gemini、Perplexity、GitHub、飞书、Notion 等页面里先识别上下文，再生成可审阅的记忆候选。
 
 ## 现在支持
 
 - 检查本地 Agent Memory Lab 服务是否在线
 - 保存当前网页为记忆线索
 - 把当前网页上的一条观察保存为经验
+- 侧边栏查看当前页面类型、候选记忆、候选经验和隐私提示
+- 初步识别 ChatGPT、Claude、Gemini、Perplexity、Grok 等 AI 对话页面
+- 初步识别 GitHub、飞书、Notion、论文 / PDF、插件商店等网页类型
 - 右键菜单保存当前页面
 - 弹窗里查看最近保存记录
 - 一键打开本地工作台首页
@@ -20,8 +23,10 @@ manifest.json           Chrome / Edge 扩展入口
 service-worker.js       后台协调：API 请求、右键菜单、最近保存记录
 content-script.js       只负责采集当前网页上下文
 popup.html/js/css       弹窗 UI
+sidepanel.html/js/css   浏览器侧边栏同步面板
 options.html/js         本地连接设置
 shared/schema.js        统一 PageCapture 数据结构
+shared/page-types.js    页面类型与 AI 产品识别
 shared/api.js           统一本地 Agent Memory Lab API 调用
 icons/                  插件图标
 ```
@@ -40,9 +45,23 @@ icons/                  插件图标
     url: "https://example.com",
     host: "example.com",
     origin: "https://example.com",
+    type: "ai-chat",
+    typeLabel: "AI 对话",
     description: "页面摘要",
     selection: "用户选中的文本",
     headings: ["页面标题结构"]
+  },
+  conversation: {
+    provider: "ChatGPT",
+    turns: [{ role: "user", text: "最近可见的一轮对话" }]
+  },
+  candidates: {
+    memories: ["可保存的记忆候选"],
+    lessons: ["可沉淀的经验候选"]
+  },
+  privacy: {
+    risk: "low",
+    reasons: []
   }
 }
 ```
@@ -57,6 +76,7 @@ icons/                  插件图标
 4. 选择本目录：`browser-extension`
 5. 确保本地服务已启动：`agentmemory viewer`
 6. 点击浏览器工具栏里的 Agent Memory Lab 图标
+7. 点击“打开同步侧栏”预览完整插件工作流
 
 默认连接：
 
@@ -67,8 +87,13 @@ Viewer: http://localhost:3113
 
 ## 还缺什么
 
-- 页面右键菜单：保存选中文本为记忆
-- 网页侧边栏：边浏览边整理
-- 自动识别论文、GitHub、飞书、Notion 等页面类型
-- 保存前隐私预览
+- 更精确的 AI 对话抽取器：不同产品用不同规则，减少误抓
+- 保存前编辑候选内容：让用户能改标题、标签、项目归属
 - 与 Viewer 的“待审阅记忆”队列联动
+- 跨 Agent 注入：在 Claude / ChatGPT / Perplexity 页面提示可用记忆
+
+## 参考方向
+
+- Mem0 / OpenMemory：Cross-LLM memory，把记忆带到 ChatGPT、Claude、Perplexity 等产品里。
+- Rethread / Nico / ContextBridge / Personal AI Memory：都在强调跨 AI 产品的上下文延续。
+- Agent Memory Lab 的取向：本地优先、保存前可审阅、和主工作台统一数据，而不是把浏览器里看到的内容直接上传到云端。

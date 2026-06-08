@@ -52,6 +52,29 @@ async function savePageLesson(note) {
   return { capture, result };
 }
 
+async function saveCandidate(kind, text) {
+  const capture = await collectPage();
+  const trimmed = String(text || '').trim();
+  if (!trimmed) throw new Error('没有可保存的候选内容');
+  if (kind === 'lesson') {
+    const result = await agentMemoryApi('/agentmemory/lessons', {
+      method: 'POST',
+      body: JSON.stringify(captureToLessonPayload(capture, trimmed))
+    });
+    await rememberRecent(capture, 'lesson', result);
+    return { capture, result };
+  }
+  const result = await agentMemoryApi('/agentmemory/remember', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...captureToMemoryPayload(capture),
+      content: `浏览器候选记忆：${trimmed}\n来源：${capture.page.title}\nURL：${capture.page.url}`
+    })
+  });
+  await rememberRecent(capture, 'memory', result);
+  return { capture, result };
+}
+
 async function getRecentCaptures() {
   const stored = await chrome.storage.local.get([RECENT_KEY]);
   return Array.isArray(stored[RECENT_KEY]) ? stored[RECENT_KEY] : [];
@@ -87,6 +110,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === 'RECENT_CAPTURES') return getRecentCaptures();
     if (message.type === 'SAVE_PAGE_MEMORY') return savePageMemory();
     if (message.type === 'SAVE_PAGE_LESSON') return savePageLesson(message.note || '');
+    if (message.type === 'SAVE_CANDIDATE') return saveCandidate(message.kind || 'memory', message.text || '');
+    if (message.type === 'OPEN_SIDE_PANEL') return chrome.sidePanel.open({ windowId: message.windowId });
     if (message.type === 'OPEN_VIEWER') return openViewer(message.tab || 'dashboard');
     throw new Error('未知操作');
   })().then((data) => sendResponse({ ok: true, data })).catch((err) => sendResponse({ ok: false, error: err.message || String(err) }));

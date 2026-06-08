@@ -98,6 +98,11 @@ $('saveLesson').addEventListener('click', async () => {
 
 $('openWorkbench').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'dashboard' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#dashboard` })));
 $('openSkills').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'lessons' }).catch(() => chrome.tabs.create({ url: `${settings.viewerBase}/#lessons` })));
+$('openSidePanel').addEventListener('click', async () => {
+  const win = await chrome.windows.getCurrent();
+  await send('OPEN_SIDE_PANEL', { windowId: win.id });
+  window.close();
+});
 $('openOptions').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 refresh();

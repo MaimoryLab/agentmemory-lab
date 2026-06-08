@@ -113,6 +113,11 @@ for (const marker of ['项目', '标签', '经验候选']) {
 assert(browserReadme.includes('同步侧栏'), 'Browser extension README must mention the side panel flow.');
 assert(browserReadme.includes('/demo/browser-extension.html'), 'Browser extension README must mention local demo page.');
 
+const loadGuide = read('browser-extension/LOAD-THIS-FIRST.md');
+for (const marker of ['五步验收', '项目、标签', '经验候选', 'npm run record:ai-validation-evidence', 'external-tester-feedback-cn.yml']) {
+  assert(loadGuide.includes(marker), `Zip loading guide missing marker: ${marker}`);
+}
+
 const checklist = read('docs/demo-checklist-cn.md');
 for (const marker of ['审阅队列可用', 'AI 页面状态', '记忆建议', 'Skill 管理台']) {
   assert(checklist.includes(marker), `Demo checklist missing marker: ${marker}`);

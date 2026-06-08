@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const zipPath = 'artifacts/agent-memory-lab-extension.zip';
 if (!existsSync(zipPath)) throw new Error(`Missing ${zipPath}. Run npm run package:browser-extension first.`);
@@ -38,6 +38,11 @@ if (forbidden.length) throw new Error(`Extension package includes forbidden macO
 
 if (!entries.every((entry) => entry === 'browser-extension/' || entry.startsWith('browser-extension/'))) {
   throw new Error('Extension package must contain only the browser-extension folder.');
+}
+
+const loadGuide = readFileSync('browser-extension/LOAD-THIS-FIRST.md', 'utf8');
+for (const marker of ['五步验收', '项目、标签', '经验候选', 'npm run record:ai-validation-evidence', 'external-tester-feedback-cn.yml']) {
+  if (!loadGuide.includes(marker)) throw new Error(`Zip loading guide missing marker: ${marker}`);
 }
 
 console.log(`browser extension package checks ok (${entries.length} entries)`);

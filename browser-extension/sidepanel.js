@@ -1,5 +1,6 @@
 const $ = (id) => document.getElementById(id);
 let latestCapture = null;
+let defaultDraft = { kind: 'memory', title: '', content: '' };
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (char) => ({
@@ -102,9 +103,43 @@ function renderCandidateList(node, items, kind) {
   node.innerHTML = items.map((text) => `
     <article class="candidate">
       <p>${escapeHtml(text)}</p>
-      <button data-save-kind="${kind}" data-save-text="${escapeHtml(text)}">送去审阅</button>
+      <button data-draft-kind="${kind}" data-draft-text="${escapeHtml(text)}">填入草稿</button>
     </article>
   `).join('');
+}
+
+function buildDefaultDraft(capture) {
+  const page = capture && capture.page ? capture.page : {};
+  const memories = capture && capture.candidates && Array.isArray(capture.candidates.memories) ? capture.candidates.memories : [];
+  const firstMemory = memories.find((item) => String(item || '').trim()) || '';
+  const parts = [
+    firstMemory || `网页线索：${page.title || '当前页面'}`,
+    page.description ? `摘要：${page.description}` : '',
+    page.selection ? `选中文本：${String(page.selection).slice(0, 600)}` : '',
+    page.url ? `来源：${page.url}` : ''
+  ].filter(Boolean);
+  return {
+    kind: 'memory',
+    title: page.title || '浏览器记忆候选',
+    content: parts.join('\n')
+  };
+}
+
+function draftMetaText(capture, kind) {
+  const page = capture && capture.page ? capture.page : {};
+  const provider = capture && capture.conversation && capture.conversation.provider ? capture.conversation.provider : '';
+  const source = provider || page.typeLabel || page.host || '浏览器';
+  const type = kind === 'lesson' ? '经验候选' : '记忆候选';
+  const privacy = capture && capture.privacy && capture.privacy.risk === 'medium' ? '可能含敏感信息，建议先删改' : '保存后仍需在工作台确认';
+  return `${source} · ${type} · ${privacy}`;
+}
+
+function setDraft(draft, options = {}) {
+  defaultDraft = options.defaultDraft ? draft : defaultDraft;
+  $('draftTitle').value = draft.title || '';
+  $('draftContent').value = draft.content || '';
+  $('draftContent').dataset.kind = draft.kind || 'memory';
+  $('draftMeta').textContent = draftMetaText(latestCapture, draft.kind || 'memory');
 }
 
 function renderTurns(turns) {
@@ -182,6 +217,7 @@ function renderCapture(capture) {
   $('lessonCount').textContent = String(lessons.length);
   renderCandidateList($('memoryCandidates'), memories, 'memory');
   renderCandidateList($('lessonCandidates'), lessons, 'lesson');
+  setDraft(buildDefaultDraft(capture), { defaultDraft: true });
   renderDiagnostics(capture);
   renderTurns(capture.conversation && capture.conversation.turns ? capture.conversation.turns : []);
 }
@@ -211,19 +247,16 @@ async function refresh() {
 }
 
 document.addEventListener('click', async (event) => {
-  const target = event.target.closest('[data-save-kind]');
+  const target = event.target.closest('[data-draft-kind]');
   if (!target) return;
-  target.disabled = true;
-  setMessage('正在同步...');
-  try {
-    await send('SAVE_CANDIDATE', { kind: target.dataset.saveKind, text: target.dataset.saveText });
-    setMessage('已加入待审阅队列', 'ok');
-    await refresh();
-  } catch (err) {
-    setMessage(err.message || '同步失败', 'error');
-  } finally {
-    target.disabled = false;
-  }
+  const kind = target.dataset.draftKind || 'memory';
+  const page = latestCapture && latestCapture.page ? latestCapture.page : {};
+  setDraft({
+    kind,
+    title: page.title || (kind === 'lesson' ? '经验候选' : '记忆候选'),
+    content: target.dataset.draftText || ''
+  });
+  setMessage('已填入审阅草稿');
 });
 
 $('refresh').addEventListener('click', refresh);
@@ -240,7 +273,11 @@ $('savePage').addEventListener('click', async () => {
   $('savePage').disabled = true;
   setMessage('正在加入待审阅...');
   try {
-    await send('SAVE_PAGE_MEMORY');
+    const title = $('draftTitle').value.trim();
+    const text = $('draftContent').value.trim();
+    const kind = $('draftContent').dataset.kind || 'memory';
+    if (!text) throw new Error('先确认一条要送审的内容');
+    await send('SAVE_CANDIDATE', { kind, title, text });
     setMessage('页面已加入待审阅', 'ok');
     await refresh();
   } catch (err) {
@@ -248,6 +285,10 @@ $('savePage').addEventListener('click', async () => {
   } finally {
     $('savePage').disabled = false;
   }
+});
+$('resetDraft').addEventListener('click', () => {
+  setDraft(defaultDraft);
+  setMessage('已恢复为自动生成草稿');
 });
 $('openWorkbench').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'dashboard' }).catch(() => {}));
 $('openSkills').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'lessons' }).catch(() => {}));

@@ -43,6 +43,7 @@ const contentScript = readFileSync('browser-extension/content-script.js', 'utf8'
 const serviceWorker = readFileSync('browser-extension/service-worker.js', 'utf8');
 const popupHtml = readFileSync('browser-extension/popup.html', 'utf8');
 const popupJs = readFileSync('browser-extension/popup.js', 'utf8');
+const sidepanelHtml = readFileSync('browser-extension/sidepanel.html', 'utf8');
 const sidepanel = readFileSync('browser-extension/sidepanel.js', 'utf8');
 const schema = readFileSync('browser-extension/shared/schema.js', 'utf8');
 const siteConfig = readFileSync('browser-extension/shared/site-config.js', 'utf8');
@@ -73,6 +74,12 @@ if (!popupHtml.includes('待审阅草稿') || !popupHtml.includes('draftContent'
 }
 if (!popupJs.includes('buildDraft') || !popupJs.includes('SAVE_CANDIDATE') || !popupJs.includes('resetDraft')) {
   throw new Error('Popup must save the edited review draft via SAVE_CANDIDATE.');
+}
+if (!sidepanelHtml.includes('审阅草稿') || !sidepanelHtml.includes('draftContent') || !sidepanelHtml.includes('resetDraft')) {
+  throw new Error('Side panel must expose an editable review draft before saving.');
+}
+if (!sidepanel.includes('buildDefaultDraft') || !sidepanel.includes('data-draft-kind') || !sidepanel.includes('SAVE_CANDIDATE')) {
+  throw new Error('Side panel must route candidates through the editable review draft.');
 }
 
 for (const field of ['anchorFound', 'placement', 'memoryWidgetVisible', 'checkedAt']) {

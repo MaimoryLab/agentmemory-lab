@@ -228,6 +228,32 @@ body {
   font-size: 12px;
 }
 
+.draft-input,
+.review-draft textarea {
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.draft-input {
+  font-weight: 700;
+}
+
+.review-draft textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.draft-meta {
+  color: var(--faint);
+  font-size: 11px;
+}
+
 .turn-label, .recent-meta {
   margin-bottom: 3px;
   color: var(--faint);

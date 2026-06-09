@@ -300,6 +300,8 @@ Generated: ${generatedAt}
 | Side panel editable review draft | ready |
 | Draft project / tags / lesson flag | ready |
 | Candidate-to-draft flow | ready |
+| AI memory candidates require concrete conversation or selection | ready |
+| Empty AI memory state explains next step | ready |
 | Save to Viewer review queue | ready |
 | Local AI input memory hint demo | ready |
 | Real AI site validation | ${passedAiRows.length}/${requiredAiProducts.length} passed |
@@ -326,6 +328,7 @@ ${extractGateTable(releaseGates)}
 - Open the Viewer dashboard and confirm the browser entry card exposes: extension zip, external handout, AI tester pack, feedback template, and triage guide.
 - Open \`/demo/browser-extension.html\` and confirm the local memory hint demo still shows “记忆建议”.
 - Load \`browser-extension/\` in Chrome / Edge developer mode, then confirm popup and side panel both keep the editable review draft before saving.
+- On an AI page with no captured conversation, confirm the side panel explains that it cannot generate memory until a real conversation is expanded or concrete text is selected.
 - Review \`docs/feishu/agentmemory-project-intro-cn.md\` and the three whiteboard sources under \`docs/feishu/whiteboards/\` for product narrative consistency.
 - Do not mark public release ready until \`npm run check:release-public\` passes with ChatGPT, Claude, Gemini, and Perplexity evidence at 4/4.
 
@@ -391,6 +394,7 @@ const externalHandout = `# Agent Memory Lab 外部试用说明
 
 - 插件弹窗能显示版本和本地连接状态。
 - 同步侧栏能显示当前页面、候选记忆、候选经验和隐私提示。
+- AI 页面只有输入框草稿或网页介绍时，不会生成记忆候选；侧栏会说明需要展开真实对话或选中具体内容。
 - 记忆建议能出现在 demo 输入框旁，并能插入或复制。
 - 保存内容不会直接写入长期记忆，而是先进入 Viewer 待审阅队列。
 - Viewer 待审阅卡片能看到保存范围、分类备注、来源和经验候选状态。

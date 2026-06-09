@@ -66,6 +66,7 @@ const requiredFiles = [
   'scripts/check-browser-extension-site-config-sync.mjs',
   'scripts/check-browser-extension-review-draft.mjs',
   'scripts/check-browser-extension-memory-drafts.mjs',
+  'scripts/check-browser-extension-diagnostics-privacy.mjs',
   'scripts/check-browser-extension-fixtures.mjs',
   'scripts/check-browser-extension-demo-interaction.mjs',
   'scripts/check-browser-extension-package.mjs',
@@ -209,7 +210,7 @@ for (const marker of ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', '复制问题
 }
 
 const evidenceReadme = read('docs/validation/browser-extension-ai-sites/README.md');
-for (const marker of ['npm run wizard:ai-validation-evidence', '--clipboard', '--file diagnostics.json', '--pass', '证据质量门槛', 'matchedSelectors.editor', 'matchedSelectors.anchor', 'matchedSelectors.send', 'matchedSelectors.turn', '可以删掉 prompt 草稿']) {
+for (const marker of ['npm run wizard:ai-validation-evidence', '--clipboard', '--file diagnostics.json', '--pass', '证据质量门槛', 'matchedSelectors.editor', 'matchedSelectors.anchor', 'matchedSelectors.send', 'matchedSelectors.turn', '诊断默认不包含 prompt 草稿']) {
   assert(evidenceReadme.includes(marker), `AI validation evidence README missing marker: ${marker}`);
 }
 
@@ -264,12 +265,12 @@ for (const marker of ['workerRecoveryNote', 'stop --force', 'npm run start:local
 }
 
 const privacyEn = read('docs/browser-extension-privacy-en.md');
-for (const marker of ['Privacy Policy', 'local-first', 'Data We Process', 'Where Data Goes', 'AI Diagnostics', 'External testers may redact', 'matchedSelectors.editor/anchor/send/turn']) {
+for (const marker of ['Privacy Policy', 'local-first', 'Data We Process', 'Where Data Goes', 'AI Diagnostics', 'does not include prompt draft text', 'matchedSelectors.editor/anchor/send/turn']) {
   assert(privacyEn.includes(marker), `English privacy policy missing marker: ${marker}`);
 }
 
 const privacyCn = read('docs/browser-extension-privacy-cn.md');
-for (const marker of ['外部测试诊断脱敏', 'ai.matchedSelectors.editor', 'ai.matchedSelectors.anchor', 'ai.matchedSelectors.send', 'ai.matchedSelectors.turn', '不需要包含 Cookie']) {
+for (const marker of ['外部测试诊断脱敏', 'ai.matchedSelectors.editor', 'ai.matchedSelectors.anchor', 'ai.matchedSelectors.send', 'ai.matchedSelectors.turn', '不会复制输入框草稿']) {
   assert(privacyCn.includes(marker), `Chinese privacy policy missing marker: ${marker}`);
 }
 
@@ -299,6 +300,7 @@ for (const marker of ['插件发布物料', 'AI 页面诊断', 'Skill 草稿', '
 
 run(process.execPath, ['scripts/check-browser-extension.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-review-draft.mjs']);
+run(process.execPath, ['scripts/check-browser-extension-diagnostics-privacy.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-fixtures.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-demo-interaction.mjs']);
 run(process.execPath, ['scripts/record-ai-validation-evidence.mjs', '--file', 'scripts/fixtures/ai-validation-diagnostic.json', '--out', 'artifacts/example-ai-validation-evidence.json', '--force']);

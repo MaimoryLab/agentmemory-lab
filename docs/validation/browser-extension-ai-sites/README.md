@@ -103,7 +103,7 @@ YYYY-MM-DD-provider.json
 - `manualValidation.memoryInsertPassed`、`manualValidation.diagnosticsCopied`、`manualValidation.siteInputStillWorks` 都为通过。
 - `browser` 和 `notes` 写清楚无隐私的浏览器版本与测试备注。
 
-如果担心隐私，可以删掉 prompt 草稿、会话片段和页面标题中的敏感内容，但不要删掉 `ai` 里的 selector 和布尔状态。selector 证据不会包含 Cookie、Token 或账号密码，却能帮助我们复现和修复站点适配问题。
+复制出来的诊断默认不包含 prompt 草稿、完整会话正文或候选记忆正文；它只保留页面标题、URL、selector、计数和人工验收字段。如果页面标题或 URL 暴露敏感项目名、账号路径或内部链接，可以先删改，但不要删掉 `ai` 里的 selector 和布尔状态。selector 证据不会包含 Cookie、Token 或账号密码，却能帮助我们复现和修复站点适配问题。
 
 ## 隐私提醒
 

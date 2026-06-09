@@ -127,7 +127,8 @@ npm run sync:ai-validation-table
 - Mem0 / OpenMemory 参考：`docs/browser-extension-mem0-reference-cn.md`
 - 飞书文档：<https://my.feishu.cn/docx/Ys7qdCP3mo1KOtxpVZuc8nPCnZI>
 - 飞书文档源稿：`docs/feishu/agentmemory-project-intro-cn.md`
-- 飞书白板源稿：`docs/feishu/whiteboards/workflow.mmd`、`docs/feishu/whiteboards/structure.mmd`
+- 飞书白板源稿：`docs/feishu/whiteboards/workflow.mmd`、`docs/feishu/whiteboards/workbench-workflow.mmd`、`docs/feishu/whiteboards/structure.mmd`
+- 飞书白板 token：产品工作流 `VIRrwMaNxhiDgebb6Jdc2joSnyd`；本地工作台工作流 `U0TNwUKUShVYNEbog66ciGntnLT`；仓库结构 `R7wiwQTrMhv6hib5U6fcbr8Gn0f`
 
 ## 维护建议
 

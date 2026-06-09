@@ -84,7 +84,29 @@ const structure = shell({
   `
 });
 
-for (const [name, svg] of Object.entries({ workflow, structure })) {
+const workbenchWorkflow = shell({
+  title: '本地工作台工作流',
+  subtitle: '候选内容先审阅，再进入记忆、经验、待办和 Skill 草稿，避免自动乱存。',
+  content: `
+    ${card({ x: 80, y: 210, w: 310, h: 210, title: '待审阅队列', body: ['来自浏览器插件', '来自会话导入', '也可手动添加'], accent: '#ff6b35' })}
+    ${card({ x: 465, y: 210, w: 310, h: 210, title: '人工确认', body: ['编辑标题和正文', '选择类型和范围', '删掉临时噪音'], accent: '#0f766e' })}
+    ${card({ x: 850, y: 165, w: 290, h: 180, title: '记忆库', body: ['稳定事实 / 偏好', '按来源和项目筛选', '保留可追溯来源'], accent: '#2563eb' })}
+    ${card({ x: 850, y: 410, w: 290, h: 180, title: '经验库', body: ['可复用方法', '形成操作原则', '减少重复解释'], accent: '#f59e0b' })}
+    ${card({ x: 850, y: 655, w: 290, h: 180, title: '待办', body: ['待跟进', '正在推进', '需要处理 / 已完成'], accent: '#8b5cf6' })}
+    ${card({ x: 1220, y: 165, w: 300, h: 180, title: '会话时间线', body: ['回看浏览器对话', '回看 Agent 会话', '补全上下文'], accent: '#111827' })}
+    ${card({ x: 1220, y: 410, w: 300, h: 180, title: 'Skill 草稿', body: ['生成可复制 SKILL.md', '人工确认后写入本地', '不自动改目录'], accent: '#dc2626' })}
+    ${card({ x: 1220, y: 655, w: 300, h: 180, title: '下一步行动', body: ['回到项目推进', '继续更新记忆', '持续形成闭环'], accent: '#2f6f73' })}
+    ${arrow(390, 315, 465, 315, '送审')}
+    ${arrow(775, 305, 850, 255, '记忆')}
+    ${arrow(775, 315, 850, 500, '经验')}
+    ${arrow(775, 335, 850, 745, '行动')}
+    ${arrow(1140, 255, 1220, 255, '回看')}
+    ${arrow(1140, 500, 1220, 500, '生成')}
+    ${arrow(1140, 745, 1220, 745, '推进')}
+  `
+});
+
+for (const [name, svg] of Object.entries({ workflow, structure, 'workbench-workflow': workbenchWorkflow })) {
   const svgPath = `${outDir}/${name}.svg`;
   const pngPath = `${outDir}/${name}.png`;
   writeFileSync(svgPath, svg);

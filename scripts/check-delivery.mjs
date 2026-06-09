@@ -50,6 +50,9 @@ const requiredFiles = [
   'docs/browser-extension-privacy-en.md',
   'docs/browser-extension-store-listing-en.md',
   'docs/feishu/agentmemory-project-intro-cn.md',
+  'docs/feishu/whiteboards/workflow.mmd',
+  'docs/feishu/whiteboards/workbench-workflow.mmd',
+  'docs/feishu/whiteboards/structure.mmd',
   'docs/browser-extension-privacy-cn.md',
   'docs/readme-assets/screenshots/dashboard.jpg',
   'docs/readme-assets/screenshots/skills.jpg',
@@ -303,8 +306,12 @@ try {
 }
 
 const feishu = read('docs/feishu/agentmemory-project-intro-cn.md');
-for (const marker of ['插件发布物料', 'AI 页面诊断', 'Skill 草稿', 'artifacts/agent-memory-lab-extension.zip']) {
+for (const marker of ['插件发布物料', 'AI 页面诊断', '本地工作台工作流', '待审阅队列', 'Skill 草稿', 'artifacts/agent-memory-lab-extension.zip']) {
   assert(feishu.includes(marker), `Feishu source doc missing marker: ${marker}`);
+}
+const workbenchWhiteboard = read('docs/feishu/whiteboards/workbench-workflow.mmd');
+for (const marker of ['待审阅队列', '人工确认', '记忆库', '经验库', 'Skill 草稿', '会话时间线']) {
+  assert(workbenchWhiteboard.includes(marker), `Workbench whiteboard missing marker: ${marker}`);
 }
 
 run(process.execPath, ['scripts/check-browser-extension.mjs']);

@@ -131,6 +131,12 @@ if (!sidepanelHtml.includes('openTestCards') || !sidepanel.includes('AI_SITE_TES
 if (!sidepanelHtml.includes('copyEvidenceCommand') || !sidepanelHtml.includes('复制检查步骤') || !sidepanel.includes('buildEvidenceCommand') || !sidepanel.includes('wizard:ai-validation-evidence')) {
   throw new Error('Side panel must expose a copyable AI validation evidence wizard command.');
 }
+for (const field of ['aiValidationSummary', 'aiValidationSteps', 'validation-summary', 'validation-step']) {
+  if (!sidepanelHtml.includes(field) && !sidepanel.includes(field) && !sidepanelCss.includes(field)) throw new Error(`Side panel must expose the AI validation card field: ${field}.`);
+}
+for (const label of ['站点验收', '这个页面可以开始验收', '加入一条候选记忆并回工作台审阅', '补齐验收记录']) {
+  if (!sidepanelHtml.includes(label) && !sidepanel.includes(label)) throw new Error(`Side panel AI validation card missing label: ${label}.`);
+}
 if (!sharedApi.includes('path =') || !serviceWorker.includes('message.path')) {
   throw new Error('OPEN_VIEWER must support local viewer document paths.');
 }

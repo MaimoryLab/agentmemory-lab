@@ -398,6 +398,27 @@ function renderDiagnostics(capture) {
   $('copyEvidenceCommand').disabled = false;
   $('evidenceCommandHint').hidden = false;
   $('aiProvider').textContent = diagnostics.provider || 'AI 页面';
+  const readyForTrial = !!(diagnostics.editorFound && diagnostics.anchorFound && diagnostics.memoryWidgetVisible && diagnostics.sendFound);
+  const missing = [];
+  if (!diagnostics.editorFound) missing.push('输入框');
+  if (!diagnostics.anchorFound || !diagnostics.memoryWidgetVisible) missing.push('记忆入口');
+  if (!diagnostics.sendFound) missing.push('发送按钮');
+  $('aiValidationSummary').className = `validation-summary ${readyForTrial ? 'ready' : 'needs-check'}`;
+  $('aiValidationSummary').innerHTML = `
+    <strong>${readyForTrial ? '这个页面可以开始验收' : '这个页面还需要确认'}</strong>
+    <span>${readyForTrial ? '请按下面三步完成一次真实页面检查。' : `还缺：${escapeHtml(missing.join('、') || '页面结构确认')}`}</span>
+  `;
+  const steps = [
+    { label: '1', text: '在输入框附近确认记忆入口可见', done: !!(diagnostics.anchorFound && diagnostics.memoryWidgetVisible) },
+    { label: '2', text: '加入一条候选记忆并回工作台审阅', done: false },
+    { label: '3', text: '复制问题信息和检查步骤，补齐验收记录', done: false }
+  ];
+  $('aiValidationSteps').innerHTML = steps.map((step) => `
+    <div class="validation-step${step.done ? ' done' : ''}">
+      <span>${step.label}</span>
+      <p>${escapeHtml(step.text)}</p>
+    </div>
+  `).join('');
   const rows = [
     { label: '页面', value: diagnostics.provider || '已识别', ok: true },
     { label: '输入框', value: diagnostics.editorFound ? '可用' : '未找到', ok: !!diagnostics.editorFound },

@@ -172,7 +172,7 @@ for (const marker of ['审阅队列可用', 'AI 页面状态', '记忆建议', '
 }
 
 const testerGuide = read('docs/external-tester-guide-cn.md');
-for (const marker of ['外部试用指南', '外部测试闭环', 'cd agentmemory-lab', 'npm run build && npm run start', 'npm run check:workbench', 'npm run check:release-gates', '记忆建议', '诊断 JSON', '复制检查步骤', '从仓库试用', '从 zip 试用', 'browser-extension/', '插件自检页', '/demo/browser-extension.html', '外部试用反馈模板', 'external-tester-feedback-cn.yml', '外部反馈分诊指南', 'browser-extension-ai-site-test-cards-cn.md', 'npm run make:ai-validation-tester-pack', 'tester-pack-cn.md']) {
+for (const marker of ['外部试用指南', '外部测试闭环', 'cd agentmemory-lab', 'npm run build && npm run start', 'npm run check:workbench', 'npm run check:release-gates', '记忆建议', '诊断 JSON', '复制检查步骤', '从仓库试用', '从 zip 试用', 'browser-extension/', '插件自检页', '/demo/browser-extension.html', 'Viewer 首页', '下载插件包', '反馈模板', '分诊指南', '外部试用反馈模板', 'external-tester-feedback-cn.yml', '外部反馈分诊指南', 'browser-extension-ai-site-test-cards-cn.md', 'npm run make:ai-validation-tester-pack', 'tester-pack-cn.md']) {
   assert(testerGuide.includes(marker), `External tester guide missing marker: ${marker}`);
 }
 

@@ -352,14 +352,15 @@ const externalHandout = `# Agent Memory Lab 外部试用说明
 ## 你会拿到什么
 
 - 插件压缩包：\`artifacts/agent-memory-lab-extension.zip\`
+- Viewer 首页入口：打开“浏览器记忆入口”，可直接下载插件包、外测手册、AI 验收包、反馈模板和分诊指南
 - 插件版本：${manifest.name} ${manifest.version}
 - 当前提交：${commit}${dirty ? '（本地还有未提交改动）' : ''}
 - zip sha256：\`${zipSha256 || 'missing'}\`
 
 ## 先做这 5 步
 
-1. 解压 \`artifacts/agent-memory-lab-extension.zip\`。
-2. 打开解压后的 \`browser-extension/LOAD-THIS-FIRST.md\`。
+1. 从 Viewer 首页下载插件包，或使用维护者发来的 \`artifacts/agent-memory-lab-extension.zip\`。
+2. 解压插件包，并打开解压后的 \`browser-extension/LOAD-THIS-FIRST.md\`。
 3. 在 Chrome / Edge 开发者模式加载解压后的 \`browser-extension/\` 文件夹。
 4. 打开 \`启动输出里的 Viewer 地址 + /demo/browser-extension.html\`，确认输入框旁出现“记忆建议”。
 5. 在弹窗或同步侧栏里编辑草稿的标题、正文、保存范围、分类备注和经验候选状态，再加入 Viewer 待审阅。

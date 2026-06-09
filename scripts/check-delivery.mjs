@@ -219,6 +219,11 @@ for (const marker of ['npm run wizard:ai-validation-evidence', '--clipboard', '-
 }
 
 const evidenceWizard = read('scripts/wizard-ai-validation-evidence.mjs');
+
+const viewerHtml = read('src/viewer/index.html');
+for (const marker of ['1. 先看预览', '/demo/browser-extension.html', '2. 装到浏览器', '3. 验收 AI 页面', '4. 回来审阅']) {
+  assert(viewerHtml.includes(marker), `Viewer dashboard trial route missing marker: ${marker}`);
+}
 for (const marker of ['createInterface', '--yes', 'Did inserting/copying a local memory work?', 'siteInputStillWorks', 'npm run check:ai-validation-evidence']) {
   assert(evidenceWizard.includes(marker), `AI validation evidence wizard missing marker: ${marker}`);
 }
@@ -244,7 +249,7 @@ const apiSource = read('src/triggers/api.ts');
 for (const marker of ['recordBrowserSessionFromReview', 'browserSessionId', 'browser_conversation', 'browser_memory_candidate']) {
   assert(apiSource.includes(marker), `Browser reviews must be recorded as real sessions first: ${marker}`);
 }
-for (const marker of ['delivery-status', 'renderDeliveryStatusCard', '浏览器记忆入口', '安装说明', '保存具体事实', '沉淀为经验', '不要把链接当记忆', '真实 AI 证据', '等待证据', '待验收', '待修复', '/docs/browser-extension-ai-site-test-cards-cn.md']) {
+for (const marker of ['delivery-status', 'renderDeliveryStatusCard', '浏览器记忆入口', '打开预览', '安装说明', '测试卡', '查看待审阅', '不要把链接当记忆', '真实 AI 证据', '等待证据', '待验收', '待修复', '/docs/browser-extension-ai-site-test-cards-cn.md']) {
   assert(viewer.includes(marker), `Viewer dashboard missing delivery status marker: ${marker}`);
 }
 

@@ -74,6 +74,7 @@ npm run check:browser-extension
 npm run check:delivery
 npm run package:browser-extension
 npm run status:delivery
+npm run prepare:ai-validation
 npm run check:company-delivery
 ```
 
@@ -81,6 +82,7 @@ npm run check:company-delivery
 
 - 插件语法、站点配置、审阅草稿、具体对话记忆草稿、本地 demo 交互。
 - README、截图、文档、插件包、交付状态、发布门槛。
+- 当前提交对应的真实 AI 站点验收清单。
 - 公司远端是否包含当前提交，插件包是否对齐当前提交。
 
 ## 真实 AI 站点验收
@@ -103,6 +105,7 @@ docs/validation/browser-extension-ai-sites/
 测试时打开插件同步侧栏，点击“复制问题信息”和“复制检查步骤”。推荐用：
 
 ```bash
+npm run prepare:ai-validation
 npm run wizard:ai-validation-evidence -- --clipboard
 npm run check:ai-validation-evidence
 npm run sync:ai-validation-table

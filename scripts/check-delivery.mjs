@@ -73,6 +73,7 @@ const requiredFiles = [
   'scripts/check-release-gates.mjs',
   'scripts/record-ai-validation-evidence.mjs',
   'scripts/wizard-ai-validation-evidence.mjs',
+  'scripts/prepare-ai-validation-run.mjs',
   'scripts/check-ai-validation-evidence.mjs',
   'scripts/sync-ai-validation-table.mjs',
   'scripts/delivery-status.mjs',
@@ -149,7 +150,7 @@ for (const marker of ['五步验收', '保存范围、分类备注', '经验候�
 }
 
 const siteCards = read('docs/browser-extension-ai-site-test-cards-cn.md');
-for (const marker of ['真实 AI 站点测试卡', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', '复制检查步骤', 'manualValidation.memoryInsertPassed', 'manualValidation.diagnosticsCopied', 'manualValidation.siteInputStillWorks', 'npm run wizard:ai-validation-evidence']) {
+for (const marker of ['真实 AI 站点测试卡', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', '复制检查步骤', 'manualValidation.memoryInsertPassed', 'manualValidation.diagnosticsCopied', 'manualValidation.siteInputStillWorks', 'npm run wizard:ai-validation-evidence', 'npm run prepare:ai-validation']) {
   assert(siteCards.includes(marker), `AI site test cards missing marker: ${marker}`);
 }
 const zipSiteCards = read('browser-extension/AI-SITE-TEST-CARDS.md');
@@ -215,6 +216,11 @@ for (const marker of ['npm run wizard:ai-validation-evidence', '--clipboard', '-
 const evidenceWizard = read('scripts/wizard-ai-validation-evidence.mjs');
 for (const marker of ['createInterface', '--yes', 'Did inserting/copying a local memory work?', 'siteInputStillWorks', 'npm run check:ai-validation-evidence']) {
   assert(evidenceWizard.includes(marker), `AI validation evidence wizard missing marker: ${marker}`);
+}
+
+const validationPrep = read('scripts/prepare-ai-validation-run.mjs');
+for (const marker of ['ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'artifacts/ai-validation-run', 'wizard:ai-validation-evidence']) {
+  assert(validationPrep.includes(marker), `AI validation preparation script missing marker: ${marker}`);
 }
 
 const demoPage = read('src/viewer/demo/browser-extension.html');

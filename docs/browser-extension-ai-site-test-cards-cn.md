@@ -13,6 +13,14 @@
 5. 如果真实页面没有出现“记忆建议”，再打开 `启动输出里的 Viewer 地址 + /demo/browser-extension.html` 做自检，用来区分是站点适配问题还是插件注入整体异常。
 6. 每测完一个真实 AI 页面，都先复制侧栏诊断，再复制侧栏生成的保存命令，把证据保存到 `docs/validation/browser-extension-ai-sites/`。
 
+开始逐站验收前，建议先生成本次验收清单：
+
+```bash
+npm run prepare:ai-validation
+```
+
+它会在 `artifacts/ai-validation-run/` 下生成当前提交对应的必测站点、建议 prompt 和证据文件路径，避免多人验收时漏站点或混用旧提交。
+
 保存诊断的推荐命令：
 
 ```bash

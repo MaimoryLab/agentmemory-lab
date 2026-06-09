@@ -398,6 +398,9 @@ const handout = read('artifacts/external-tester-handout.md');
 for (const marker of ['Agent Memory Lab 外部试用说明', 'agent-memory-lab-extension.zip', '先做这 5 步', '真实 AI 页面验收', 'GitHub Issue 模板', '公开发布：not-ready']) {
   assert(handout.includes(marker), `External tester handout missing marker: ${marker}`);
 }
+for (const marker of ['turnCount', 'matchedSelectors.turn', '具体对话', '用户选中文本']) {
+  assert(handout.includes(marker), `External tester handout missing conversation evidence marker: ${marker}`);
+}
 
 const testerPack = read('artifacts/ai-validation-run/tester-pack-cn.md');
 for (const marker of ['真实 AI 站点外测包', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', '不能替代', 'prompt 草稿', '具体对话', '输入框草稿', '真实对话计数', 'npm run wizard:ai-validation-evidence', 'manualValidation']) {
@@ -409,7 +412,7 @@ for (const marker of ['真实 AI 站点验收一页纸', 'ChatGPT', 'Claude', 'G
 }
 
 const releaseNotes = read('artifacts/release-notes.md');
-for (const marker of ['Release Notes', '版本信息', 'Extension zip', '本版新增和已就绪能力', '已知边界', '真实 AI 页面证据', 'npm run check:delivery', 'npm run check:release-public', '反馈入口']) {
+for (const marker of ['Release Notes', '版本信息', 'Extension zip', '本版新增和已就绪能力', '已知边界', '真实 AI 页面证据', 'turnCount > 0', '输入框草稿', '反馈模板', 'npm run check:delivery', 'npm run check:release-public', '反馈入口']) {
   assert(releaseNotes.includes(marker), `Release notes missing marker: ${marker}`);
 }
 

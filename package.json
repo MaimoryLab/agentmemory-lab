@@ -42,7 +42,8 @@
     "check:ai-validation-evidence": "node scripts/check-ai-validation-evidence.mjs",
     "sync:ai-validation-table": "node scripts/sync-ai-validation-table.mjs --write",
     "check:ai-validation-table": "node scripts/sync-ai-validation-table.mjs --check",
-    "status:delivery": "node scripts/delivery-status.mjs"
+    "status:delivery": "node scripts/delivery-status.mjs",
+    "check:company-delivery": "node scripts/check-company-delivery.mjs"
   },
   "keywords": [
     "ai",

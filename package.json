@@ -42,6 +42,7 @@
     "prepare:ai-validation": "node scripts/prepare-ai-validation-run.mjs",
     "make:ai-validation-tester-pack": "node scripts/make-ai-validation-tester-pack.mjs",
     "check:ai-validation-evidence": "node scripts/check-ai-validation-evidence.mjs",
+    "check:ai-validation-evidence-guards": "node scripts/check-ai-validation-evidence-guards.mjs",
     "sync:ai-validation-table": "node scripts/sync-ai-validation-table.mjs --write",
     "check:ai-validation-table": "node scripts/sync-ai-validation-table.mjs --check",
     "status:delivery": "node scripts/delivery-status.mjs",

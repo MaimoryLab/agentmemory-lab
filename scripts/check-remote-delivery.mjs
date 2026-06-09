@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 const DELIVERY_REMOTE_URL = 'https://github.com/novitalabs/agentmemory-lab.git';
-const REQUIRED_BRANCH = 'szn-viewer-ui-iteration';
+const BASE_BRANCH = 'szn-viewer-ui-iteration';
 const DELIVERY_PR_BRANCH = process.env.AGENTMEMORY_DELIVERY_PR_BRANCH || 'codex/diagnostic-privacy-20260609';
 
 function runGit(args, options = {}) {
@@ -67,7 +67,7 @@ const artifactCommit = manifest.git?.commit || '';
 const deliveredDirectly = remoteRef.startsWith(head);
 const deliveredByPr = prRef.startsWith(head);
 
-assert(branch === REQUIRED_BRANCH, `Expected branch ${REQUIRED_BRANCH}, got ${branch || 'unknown'}.`);
+assert([BASE_BRANCH, DELIVERY_PR_BRANCH].includes(branch), `Expected branch ${BASE_BRANCH} or ${DELIVERY_PR_BRANCH}, got ${branch || 'unknown'}.`);
 assert(normalizeRemoteUrl(remoteUrl) === normalizeRemoteUrl(DELIVERY_REMOTE_URL), `Delivery remote ${deliveryRemote} must point to ${DELIVERY_REMOTE_URL}, got ${remoteUrl || 'missing'}.`);
 assert(deliveredDirectly || deliveredByPr, `Delivery remote does not contain current commit ${shortHead}. Push to ${deliveryRemote}/${branch} or PR branch ${deliveryRemote}/${DELIVERY_PR_BRANCH}.`);
 assert(artifactCommit === shortHead, `Delivery artifact commit is ${artifactCommit || 'missing'}, expected ${shortHead}. Run npm run package:browser-extension.`);

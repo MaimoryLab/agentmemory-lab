@@ -77,6 +77,7 @@ const requiredFiles = [
   'scripts/prepare-ai-validation-run.mjs',
   'scripts/make-ai-validation-tester-pack.mjs',
   'scripts/check-ai-validation-evidence.mjs',
+  'scripts/check-ai-validation-evidence-guards.mjs',
   'scripts/sync-ai-validation-table.mjs',
   'scripts/delivery-status.mjs',
   'scripts/check-viewer-delivery-runtime.mjs',
@@ -311,6 +312,7 @@ run(process.execPath, ['scripts/prepare-ai-validation-run.mjs']);
 run(process.execPath, ['scripts/package-browser-extension.mjs']);
 run(process.execPath, ['scripts/check-browser-extension-package.mjs']);
 run(process.execPath, ['scripts/check-ai-validation-evidence.mjs']);
+run(process.execPath, ['scripts/check-ai-validation-evidence-guards.mjs']);
 run(process.execPath, ['scripts/sync-ai-validation-table.mjs', '--check']);
 run(process.execPath, ['scripts/write-delivery-summary.mjs']);
 run(process.execPath, ['scripts/make-ai-validation-tester-pack.mjs']);

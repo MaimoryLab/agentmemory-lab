@@ -85,7 +85,8 @@ function evidencePassed(item) {
   );
 }
 
-const evidenceDir = 'docs/validation/browser-extension-ai-sites';
+const evidenceDir = process.env.AGENTMEMORY_AI_EVIDENCE_DIR || 'docs/validation/browser-extension-ai-sites';
+const evidenceSummaryPath = process.env.AGENTMEMORY_AI_EVIDENCE_SUMMARY || 'artifacts/ai-validation-evidence-summary.json';
 const requiredProducts = ['ChatGPT', 'Claude', 'Gemini', 'Perplexity'];
 const optionalProducts = ['Grok', 'DeepSeek'];
 const files = existsSync(evidenceDir)
@@ -143,9 +144,9 @@ const summary = {
   publicReleaseReadyByEvidence: passedRequired.length === requiredProducts.length
 };
 
-mkdirSync('artifacts', { recursive: true });
-writeFileSync('artifacts/ai-validation-evidence-summary.json', `${JSON.stringify(summary, null, 2)}\n`);
+mkdirSync(path.dirname(evidenceSummaryPath), { recursive: true });
+writeFileSync(evidenceSummaryPath, `${JSON.stringify(summary, null, 2)}\n`);
 
 console.log(`AI validation evidence: ${passedRequired.length}/${requiredProducts.length} required products passed`);
 if (notPassedRequired.length) console.log(`not passed: ${notPassedRequired.join(', ')}`);
-console.log('evidence summary: artifacts/ai-validation-evidence-summary.json');
+console.log(`evidence summary: ${evidenceSummaryPath}`);

@@ -1,3 +1,5 @@
+import { buildBrowserLessonDraft, buildBrowserMemoryDraft } from './shared/schema.js';
+
 const $ = (id) => document.getElementById(id);
 const AI_SITE_TEST_CARDS_PATH = '/docs/browser-extension-ai-site-test-cards-cn.md';
 let latestCapture = null;
@@ -212,144 +214,8 @@ function getDraftMetaFields() {
   };
 }
 
-function cleanDraftText(value) {
-  return String(value || '')
-    .replace(/\s+/g, ' ')
-    .replace(/^(Gemini|ChatGPT|Claude|Perplexity)\s+said\s+/i, '')
-    .replace(/^(用户|User|我)[:：]\s*/i, '')
-    .replace(/^我知道你是([^，。；;]+)([，。；;])/i, '$1$2')
-    .replace(/^你是([^，。；;]+)([，。；;])/i, '$1$2')
-    .trim();
-}
-
-function truncateText(text, limit = 180) {
-  const value = cleanDraftText(text);
-  return value.length > limit ? `${value.slice(0, limit)}...` : value;
-}
-
-function isUsefulFact(text) {
-  if (!text || text.length < 6) return false;
-  if (/^https?:\/\//i.test(text)) return false;
-  if (/^(摘要|来源|URL|页面结构|网页记忆线索|浏览器候选记忆|浏览器候选经验|在\s*ChatGPT\s*中继续跟进)[:：]?/.test(text)) return false;
-  if (/ChatGPT\s*是一款供日常使用的\s*AI\s*聊天机器人/i.test(text)) return false;
-  return /(我|我的|我们|你是|你叫|用户|刘欣|Liu Xin|coco|szn|背景|学生|设计师|UI\/?UX|交互设计|产品设计|希望|想要|需要|正在|计划|偏好|喜欢|不喜欢|不要|应该|必须|学习|备考|项目|产品|设计|插件|记忆|Skill|飞书|GitHub|雅思|IELTS)/i.test(text);
-}
-
-function splitFactSentences(text) {
-  return String(text || '')
-    .split(/[。！？!?\n]+/)
-    .map(cleanDraftText)
-    .filter(isUsefulFact)
-    .filter((item) => item.length <= 220);
-}
-
-function uniqueTexts(items) {
-  const seen = new Set();
-  return items.map(cleanDraftText).filter(Boolean).filter((item) => {
-    const key = item.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function buildSourceNote(page) {
-  const title = String(page.title || '当前页面').trim();
-  const url = String(page.url || '').trim();
-  return [title ? `来源页面：${title}` : '', url ? `来源链接：${url}` : ''].filter(Boolean).join('\n');
-}
-
-function buildMemoryDraft(capture) {
-  const page = capture && capture.page ? capture.page : {};
-  const conversation = capture && capture.conversation ? capture.conversation : {};
-  const memories = capture && capture.candidates && Array.isArray(capture.candidates.memories) ? capture.candidates.memories : [];
-  const turns = Array.isArray(conversation.turns) ? conversation.turns : [];
-  const userTurns = turns.filter((turn) => turn && turn.role === 'user').map((turn) => turn.text);
-  const assistantTurns = turns.filter((turn) => turn && turn.role === 'assistant').map((turn) => turn.text);
-  const isAiPage = !!conversation.provider || page.type === 'ai-chat';
-  const evidence = uniqueTexts([
-    ...conversationSummaryFacts(turns),
-    ...splitFactSentences(page.selection),
-    ...userTurns.flatMap(splitFactSentences),
-    ...assistantTurns.flatMap(splitFactSentences),
-    ...(isAiPage ? [] : splitFactSentences(conversation.promptDraft))
-  ]);
-  const fact = cleanDraftText(evidence[0] || memories.find((item) => isUsefulFact(item)) || '');
-  if (!fact) {
-    return {
-      title: '需要具体对话后再保存',
-      content: '',
-      emptyReason: '这页还没有读到足够的具体对话，暂时不会生成记忆候选。请在 AI 页面展开真实对话，或选中一段具体内容后再保存。'
-    };
-  }
-  const provider = conversation.provider || page.typeLabel || page.host || '浏览器';
-  return {
-    title: fact.length > 42 ? `${fact.slice(0, 42)}...` : fact,
-    content: [`候选事实：${fact}`, `依据：来自 ${provider} 的具体对话`].filter(Boolean).join('\n')
-  };
-}
-
-function conversationSummaryFacts(turns = []) {
-  const text = turns.map((turn) => cleanDraftText(turn && turn.text ? turn.text : '')).filter(Boolean).join('。');
-  const facts = [];
-  const identity = text.match(/(?:你是|我知道你是|用户是)?\s*(刘欣（Liu Xin）|刘欣|Liu Xin|coco|szn)[，,、\s]*(?:是)?\s*([^。！？!?]{8,140})/i);
-  if (identity) {
-    const desc = cleanDraftText(identity[2]).replace(/^(是|一位|一个)\s*/, '');
-    if (desc) facts.push(`${identity[1]}是一位${desc}`);
-  }
-  const background = text.match(/(?:有着|具有|拥有)([^。！？!?]{0,120}?(?:UI\/?UX|交互设计|产品设计|用户体验)[^。！？!?]{0,120}?)(?:背景|经验|经历|能力)?/i);
-  if (background && !facts.some((item) => item.includes(background[1]))) facts.push(`用户具有${cleanDraftText(background[1])}背景`);
-  const preference = text.match(/(?:希望|想要|需要|偏好|喜欢|不喜欢|不要)([^。！？!?]{6,160})/i);
-  if (preference) facts.push(`用户偏好或需求：${cleanDraftText(preference[0])}`);
-  return facts.filter(isUsefulFact);
-}
-
-function makeLessonFromEvidence(primary = '') {
-  const text = cleanDraftText(primary);
-  if (!text) return '';
-  if (/(不要|不需要|看不懂|难以理解|太奇怪|太丑|加载.*慢|没懂)/.test(text)) return `界面经验：遇到用户反馈“${truncateText(text, 90)}”时，优先减少解释性/内部化元素，并把功能改成可直接理解的具体结果。`;
-  if (/(自动|自己更新|基于.*聊天|对话记录|具体对话|提炼)/.test(text)) return '记忆经验：候选记忆和经验必须来自具体对话内容，先呈现可复用事实或结论，再把来源保留为上下文依据。';
-  if (/(颜色|圆角|风格|卡片|排版|版式|icon|图标)/i.test(text)) return '设计经验：视觉调整要沿用既定风格，把颜色、圆角、图标和卡片层级统一到同一套界面语言里。';
-  if (/(插件|浏览器|extension|网页|同步)/i.test(text)) return '产品经验：浏览器插件应作为网页到本地工作台的入口，保存具体事实并进入审阅，而不是只保存页面链接。';
-  return `可沉淀经验：${truncateText(text, 160)}`;
-}
-
-function buildLessonDraft(capture, selectedText = '') {
-  const page = capture && capture.page ? capture.page : {};
-  const conversation = capture && capture.conversation ? capture.conversation : {};
-  const turns = Array.isArray(conversation.turns) ? conversation.turns : [];
-  const userTurns = turns.filter((turn) => turn && turn.role === 'user').map((turn) => turn.text);
-  const assistantTurns = turns.filter((turn) => turn && turn.role === 'assistant').map((turn) => turn.text);
-  const evidence = uniqueTexts([
-    ...splitFactSentences(page.selection),
-    ...userTurns.flatMap(splitFactSentences),
-    ...splitFactSentences(conversation.promptDraft),
-    ...assistantTurns.flatMap(splitFactSentences)
-  ]).slice(0, 3);
-  const selected = isUsefulFact(selectedText) ? selectedText : '';
-  const primary = selected || evidence[0] || '';
-  if (!primary) {
-    return {
-      title: '需要具体对话后再提炼',
-      content: '这段页面还没有读到足够的具体对话，暂时不能沉淀成经验。请先选择一段真实对话，或手动补充一句可复用结论。'
-    };
-  }
-  const lesson = selected && /^(界面经验|记忆经验|设计经验|产品经验|可沉淀经验)[:：]/.test(selected) ? selected : makeLessonFromEvidence(primary);
-  const lines = turns.slice(-4).map((turn) => {
-    const role = turn.role === 'assistant' ? 'AI' : turn.role === 'user' ? '用户' : '对话';
-    const text = truncateText(turn.text || '', 220);
-    return text ? `${role}：${text}` : '';
-  }).filter(Boolean);
-  const evidenceText = lines.length ? lines.join('\n') : evidence.map((item) => `用户：${item}`).join('\n');
-  const source = conversation.provider || page.typeLabel || page.host || '浏览器';
-  return {
-    title: lesson.replace(/^(界面经验|记忆经验|设计经验|产品经验|可沉淀经验)[:：]/, '').slice(0, 42),
-    content: [`经验：${lesson}`, evidenceText ? `对话依据：\n${evidenceText}` : '', `来源类型：${source}`].filter(Boolean).join('\n')
-  };
-}
-
 function buildDefaultDraft(capture) {
-  const draft = buildMemoryDraft(capture);
+  const draft = buildBrowserMemoryDraft(capture);
   return {
     kind: 'memory',
     title: draft.title || '浏览器记忆候选',
@@ -425,20 +291,9 @@ function renderDiagnostics(capture) {
   if (!diagnostics.sendFound) missing.push('发送按钮');
   $('aiValidationSummary').className = `validation-summary ${readyForTrial ? 'ready' : 'needs-check'}`;
   $('aiValidationSummary').innerHTML = `
-    <strong>${readyForTrial ? '这个页面可以开始验收' : '这个页面还需要确认'}</strong>
-    <span>${readyForTrial ? '请按下面三步完成一次真实页面检查。' : `还缺：${escapeHtml(missing.join('、') || '页面结构确认')}`}</span>
+    <strong>${readyForTrial ? '页面识别正常' : '页面识别待确认'}</strong>
+    <span>${readyForTrial ? '输入框、记忆入口和发送按钮都已识别。' : `还缺：${escapeHtml(missing.join('、') || '页面结构确认')}`}</span>
   `;
-  const steps = [
-    { label: '1', text: '在输入框附近确认记忆入口可见', done: !!(diagnostics.anchorFound && diagnostics.memoryWidgetVisible) },
-    { label: '2', text: '加入一条候选记忆并回工作台审阅', done: false },
-    { label: '3', text: '复制问题信息和检查步骤，补齐验收记录', done: false }
-  ];
-  $('aiValidationSteps').innerHTML = steps.map((step) => `
-    <div class="validation-step${step.done ? ' done' : ''}">
-      <span>${step.label}</span>
-      <p>${escapeHtml(step.text)}</p>
-    </div>
-  `).join('');
   const rows = [
     { label: '页面', value: diagnostics.provider || '已识别', ok: true },
     { label: '输入框', value: diagnostics.editorFound ? '可用' : '未找到', ok: !!diagnostics.editorFound },
@@ -521,11 +376,20 @@ document.addEventListener('click', async (event) => {
   const kind = target.dataset.draftKind || 'memory';
   const page = latestCapture && latestCapture.page ? latestCapture.page : {};
   const selectedText = target.dataset.draftText || '';
-  const lessonDraft = kind === 'lesson' ? buildLessonDraft(latestCapture, selectedText) : null;
+  const source = latestCapture && latestCapture.conversation && latestCapture.conversation.provider
+    ? latestCapture.conversation.provider
+    : page.typeLabel || page.host || '浏览器';
+  const lessonDraft = kind === 'lesson' ? buildBrowserLessonDraft({
+    ...latestCapture,
+    candidates: {
+      ...(latestCapture && latestCapture.candidates ? latestCapture.candidates : {}),
+      lessons: selectedText ? [selectedText] : []
+    }
+  }) : null;
   setDraft({
     kind,
-    title: lessonDraft ? lessonDraft.title : page.title || (kind === 'lesson' ? '经验候选' : '记忆候选'),
-    content: lessonDraft ? lessonDraft.content : selectedText,
+    title: lessonDraft ? lessonDraft.title : selectedText.slice(0, 42) || page.title || '记忆候选',
+    content: lessonDraft ? lessonDraft.content : [`候选事实：${selectedText}`, `依据：来自 ${source} 的具体内容`].filter(Boolean).join('\n'),
     meta: buildDraftMetaFields(latestCapture, kind)
   });
   setMessage('已放入准备保存区');
@@ -582,7 +446,6 @@ $('draftAsLesson').addEventListener('change', () => {
   $('draftMeta').textContent = draftMetaText(latestCapture, $('draftContent').dataset.kind || 'memory');
 });
 $('openWorkbench').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'dashboard' }).catch(() => {}));
-$('openSkills').addEventListener('click', () => send('OPEN_VIEWER', { tab: 'lessons' }).catch(() => {}));
 $('openTestCards').addEventListener('click', () => send('OPEN_VIEWER', { path: AI_SITE_TEST_CARDS_PATH }).catch(() => {}));
 
 refresh();

@@ -2,7 +2,6 @@ import { getSettings, resolveViewerBase } from './config.js';
 import { buildBrowserLessonDraft, buildBrowserMemoryDraft } from './shared/schema.js';
 
 const $ = (id) => document.getElementById(id);
-const EXTERNAL_TESTER_GUIDE_URL = 'https://github.com/novitalabs/agentmemory-lab/blob/szn-viewer-ui-iteration/docs/external-tester-guide-cn.md';
 let settings = await getSettings();
 let latestCapture = null;
 let defaultDraft = { title: '', content: '', meta: {} };
@@ -206,26 +205,7 @@ $('draftAsLesson').addEventListener('change', () => {
   renderDraftMeta(latestCapture);
 });
 
-$('saveLesson').addEventListener('click', async () => {
-  const note = $('lessonNote').value.trim();
-  if (!note) return setMessage('先写一条可以复用的经验', 'error');
-  $('saveLesson').disabled = true;
-  setMessage('正在加入待确认...');
-  try {
-    await send('SAVE_PAGE_LESSON', { note });
-    $('lessonNote').value = '';
-    await refreshRecent();
-    setMessage('已加入工作台，稍后确认即可保存', 'ok');
-  } catch (err) {
-    setMessage(err.message || '保存失败', 'error');
-  } finally {
-    $('saveLesson').disabled = false;
-  }
-});
-
-$('openWorkbench').addEventListener('click', async () => send('OPEN_VIEWER', { tab: 'memories' }).catch(async () => chrome.tabs.create({ url: `${await resolveViewerBase(settings)}/#memories` })));
-$('openSkills').addEventListener('click', async () => send('OPEN_VIEWER', { tab: 'lessons' }).catch(async () => chrome.tabs.create({ url: `${await resolveViewerBase(settings)}/#lessons` })));
-$('openGuide').addEventListener('click', () => chrome.tabs.create({ url: EXTERNAL_TESTER_GUIDE_URL }));
+$('openWorkbench').addEventListener('click', async () => send('OPEN_VIEWER', { tab: 'dashboard' }).catch(async () => chrome.tabs.create({ url: `${await resolveViewerBase(settings)}/#dashboard` })));
 $('openSidePanel').addEventListener('click', async () => {
   const win = await chrome.windows.getCurrent();
   await send('OPEN_SIDE_PANEL', { windowId: win.id });

@@ -63,7 +63,7 @@ body {
   margin-bottom: 10px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 8px;
   background: var(--paper);
 }
 
@@ -75,7 +75,7 @@ body {
   margin-bottom: 10px;
   padding: 10px 11px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 8px;
   background: var(--paper);
 }
 
@@ -120,7 +120,45 @@ body {
 .section-actions {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
+}
+
+.secondary-section {
+  padding: 0;
+  overflow: hidden;
+}
+
+.secondary-section summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.secondary-section summary::-webkit-details-marker { display: none; }
+
+.secondary-section summary::after {
+  content: '+';
+  color: var(--faint);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.secondary-section[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.secondary-section[open] summary::after {
+  content: '-';
+}
+
+.secondary-section > :not(summary) {
+  margin: 10px 12px 12px;
 }
 
 .eyebrow, .count {
@@ -263,7 +301,7 @@ body {
   margin-top: 8px;
   padding: 8px 9px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 8px;
   color: var(--muted);
   background: var(--paper);
   font-size: 12px;
@@ -285,7 +323,7 @@ body {
   gap: 4px;
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--subtle);
 }
 
@@ -304,18 +342,24 @@ body {
   min-width: 0;
   padding: 9px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 8px;
   background: #fff;
+}
+
+.candidate {
+  display: grid;
+  gap: 8px;
 }
 
 .candidate p, .turn p {
   margin: 0;
   color: var(--ink);
   font-size: 13px;
+  line-height: 1.45;
 }
 
 .candidate button {
-  margin-top: 8px;
+  justify-self: start;
   min-height: 30px;
   padding: 0 10px;
   font-size: 12px;
@@ -428,7 +472,7 @@ body {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: 1.3fr .8fr .7fr;
+  grid-template-columns: 1fr .72fr;
   gap: 8px;
   padding: 10px 14px 14px;
   border-top: 1px solid var(--line);

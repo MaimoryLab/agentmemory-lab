@@ -344,13 +344,10 @@ function buildLessonCandidates(page, normalized) {
   const type = detectPageType({ ...page, ...normalized });
   const { evidence } = lessonEvidenceFromPage(page);
   if (type === 'ai-chat') {
-    return evidence.length ? evidence.map(makeLessonFromEvidence).filter(Boolean).slice(0, 3) : ['这段对话还没有足够内容提炼经验，请选择具体对话或补充一句经验'];
+    return evidence.length ? evidence.map(makeLessonFromEvidence).filter(Boolean).slice(0, 3) : [];
   }
   if (evidence.length) return evidence.map(makeLessonFromEvidence).filter(Boolean).slice(0, 3);
-  if (type === 'github') return ['记录这个开源项目的结构、功能模块或可借鉴交互'];
-  if (type === 'feishu' || type === 'notion') return ['从这份文档提炼项目介绍、需求或决策记录'];
-  if (type === 'paper') return ['把论文观点整理成研究线索或设计依据'];
-  return ['从当前网页提炼一条可复用经验'];
+  return [];
 }
 
 function pageText(page) {

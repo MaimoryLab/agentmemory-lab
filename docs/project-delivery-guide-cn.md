@@ -1,15 +1,16 @@
-# Agent Memory Lab 公司接手说明
+# Agent Memory Lab 项目交付说明
 
-这份说明给公司同事接手当前分支使用。它不替代 README，而是把“现在能交付什么、怎么验证、还有什么不能承诺”放在一个入口里。
+这份说明给维护者和试用协作者使用。它不替代 README，而是把“当前能交付什么、怎么验证、还有什么不能承诺”放在一个入口里。
 
 ## 当前分支
 
 ```text
 repo: https://github.com/novitalabs/agentmemory-lab
 branch: szn-viewer-ui-iteration
+current PR: https://github.com/novitalabs/agentmemory-lab/pull/3
 ```
 
-这个分支是当前工作入口。浏览器插件、Viewer、中文 README、外部试用文档和交付检查都以这个分支为准。
+这个分支是当前工作入口。目标分支受保护，不能直接推送；交付改动先推到 PR 分支，再通过 PR 合并。浏览器插件、Viewer、中文 README、外部试用文档和交付检查都以这个分支为准。
 
 ## 当前可交付范围
 
@@ -43,7 +44,7 @@ npm run start
 http://localhost:3114/#dashboard
 ```
 
-如果你需要接入某台机器已有的本地记忆数据，可以参考 `iii-config.local-memory.yaml`，但不要把个人本机路径当作公司默认配置。
+如果需要接入某台机器已有的本地记忆数据，可以参考 `iii-config.local-memory.yaml`，但不要把个人本机路径当作默认配置。
 
 ## 加载浏览器插件
 
@@ -67,7 +68,7 @@ artifacts/agent-memory-lab-extension.zip
 
 ## 必跑检查
 
-每次准备交付给公司仓库前，建议按这个顺序跑：
+每次准备交付或合并前，建议按这个顺序跑：
 
 ```bash
 npm run check:browser-extension
@@ -75,7 +76,8 @@ npm run check:delivery
 npm run package:browser-extension
 npm run status:delivery
 npm run prepare:ai-validation
-npm run check:company-delivery
+npm run make:ai-validation-tester-pack
+npm run check:remote-delivery
 ```
 
 这些检查分别覆盖：
@@ -83,7 +85,8 @@ npm run check:company-delivery
 - 插件语法、站点配置、审阅草稿、具体对话记忆草稿、本地 demo 交互。
 - README、截图、文档、插件包、交付状态、发布门槛。
 - 当前提交对应的真实 AI 站点验收清单。
-- 公司远端是否包含当前提交，插件包是否对齐当前提交。
+- 给外测者的一页式真实 AI 站点验收包。
+- 远端仓库是否包含当前提交：已合并时看目标分支，未合并时看交付 PR 分支；同时检查插件包是否对齐当前提交。
 
 ## 真实 AI 站点验收
 
@@ -122,8 +125,12 @@ npm run sync:ai-validation-table
 - 产品交付计划：`docs/product-delivery-plan-cn.md`
 - 发布门槛：`docs/release-gates-cn.md`
 - Mem0 / OpenMemory 参考：`docs/browser-extension-mem0-reference-cn.md`
+- 飞书文档：<https://my.feishu.cn/docx/Ys7qdCP3mo1KOtxpVZuc8nPCnZI>
 - 飞书文档源稿：`docs/feishu/agentmemory-project-intro-cn.md`
+- 飞书白板源稿：`docs/feishu/whiteboards/workflow.mmd`、`docs/feishu/whiteboards/workbench-workflow.mmd`、`docs/feishu/whiteboards/structure.mmd`
+- 飞书白板 token：产品工作流 `SVjZwMwvXhOpxrbTCy7cLH9TnhC`；本地工作台工作流 `UiY9wZbpShh73CbRl8kcPbgcn9g`；仓库结构 `CbOlww8M9hIzJDblujBcHGb3nVd`
+- 注意：覆盖更新飞书文档正文会重新生成白板块；更新正文后需要用最新 token 重新写入三张可编辑白板。
 
-## 接手建议
+## 维护建议
 
 下一步优先做真实站点验收，而不是继续加新页面。现在最重要的是拿到 ChatGPT、Claude、Gemini、Perplexity 的可复现诊断和无隐私截图，确认插件在真实 AI 输入框附近稳定可用。

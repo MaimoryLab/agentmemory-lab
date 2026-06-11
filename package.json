@@ -23,8 +23,8 @@
     "start:local-memory": "AGENTMEMORY_III_CONFIG=./iii-config.local-memory.yaml node dist/cli.mjs",
     "migrate": "node dist/functions/migrate.js",
     "test": "vitest run --exclude test/integration.test.ts",
-    "check:browser-extension": "node scripts/check-browser-extension.mjs && node scripts/check-browser-extension-site-config-sync.mjs && node scripts/check-browser-extension-review-draft.mjs && node scripts/check-browser-extension-memory-drafts.mjs && node scripts/check-browser-extension-fixtures.mjs && node scripts/check-browser-extension-demo-interaction.mjs",
-    "package:browser-extension": "npm run check:browser-extension && node scripts/package-browser-extension.mjs && npm run check:browser-extension-package && npm run check:ai-validation-evidence && node scripts/write-delivery-summary.mjs",
+    "check:browser-extension": "node scripts/check-browser-extension.mjs && node scripts/check-browser-extension-site-config-sync.mjs && node scripts/check-browser-extension-review-draft.mjs && node scripts/check-browser-extension-memory-drafts.mjs && node scripts/check-browser-extension-diagnostics-privacy.mjs && node scripts/check-browser-extension-fixtures.mjs && node scripts/check-browser-extension-demo-interaction.mjs",
+    "package:browser-extension": "npm run check:browser-extension && node scripts/package-browser-extension.mjs && npm run check:browser-extension-package && npm run check:ai-validation-evidence && node scripts/write-delivery-summary.mjs && npm run make:ai-validation-tester-pack",
     "check:delivery": "npm run build && node scripts/check-delivery.mjs",
     "test:watch": "vitest --exclude test/integration.test.ts",
     "test:integration": "vitest run test/integration.test.ts",
@@ -40,11 +40,13 @@
     "record:ai-validation-evidence": "node scripts/record-ai-validation-evidence.mjs",
     "wizard:ai-validation-evidence": "node scripts/wizard-ai-validation-evidence.mjs",
     "prepare:ai-validation": "node scripts/prepare-ai-validation-run.mjs",
+    "make:ai-validation-tester-pack": "node scripts/make-ai-validation-tester-pack.mjs",
     "check:ai-validation-evidence": "node scripts/check-ai-validation-evidence.mjs",
+    "check:ai-validation-evidence-guards": "node scripts/check-ai-validation-evidence-guards.mjs",
     "sync:ai-validation-table": "node scripts/sync-ai-validation-table.mjs --write",
     "check:ai-validation-table": "node scripts/sync-ai-validation-table.mjs --check",
     "status:delivery": "node scripts/delivery-status.mjs",
-    "check:company-delivery": "node scripts/check-company-delivery.mjs"
+    "check:remote-delivery": "node scripts/check-remote-delivery.mjs"
   },
   "keywords": [
     "ai",

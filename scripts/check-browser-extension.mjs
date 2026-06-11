@@ -107,6 +107,9 @@ if (schema.includes('从当前页面提炼具体事实') || sidepanel.includes('
 if (!schema.includes('hasConcreteMemoryEvidence') || !schema.includes('需要具体对话后再保存') || !sidepanel.includes('emptyReason')) {
   throw new Error('Browser extension must show a clear empty state instead of saving vague memory candidates.');
 }
+for (const marker of ['还不能生成记忆', '还不能沉淀经验', '没有读到这页的具体对话', '展开真实对话', '选中一段具体内容']) {
+  if (!sidepanel.includes(marker)) throw new Error(`Side panel empty state missing concrete conversation guidance: ${marker}.`);
+}
 if (!schema.includes('刘欣（Liu Xin）') || !schema.includes('UI\\/?UX')) {
   throw new Error('Browser memory extraction must handle concrete identity/background facts from AI conversations.');
 }
@@ -130,6 +133,12 @@ if (!sidepanelHtml.includes('openTestCards') || !sidepanel.includes('AI_SITE_TES
 }
 if (!sidepanelHtml.includes('copyEvidenceCommand') || !sidepanelHtml.includes('复制检查步骤') || !sidepanel.includes('buildEvidenceCommand') || !sidepanel.includes('wizard:ai-validation-evidence')) {
   throw new Error('Side panel must expose a copyable AI validation evidence wizard command.');
+}
+for (const field of ['aiValidationSummary', 'aiValidationSteps', 'validation-summary', 'validation-step']) {
+  if (!sidepanelHtml.includes(field) && !sidepanel.includes(field) && !sidepanelCss.includes(field)) throw new Error(`Side panel must expose the AI validation card field: ${field}.`);
+}
+for (const label of ['站点验收', '这个页面可以开始验收', '加入一条候选记忆并回工作台审阅', '补齐验收记录']) {
+  if (!sidepanelHtml.includes(label) && !sidepanel.includes(label)) throw new Error(`Side panel AI validation card missing label: ${label}.`);
 }
 if (!sharedApi.includes('path =') || !serviceWorker.includes('message.path')) {
   throw new Error('OPEN_VIEWER must support local viewer document paths.');

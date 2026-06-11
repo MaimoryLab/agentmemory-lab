@@ -133,10 +133,29 @@ function setConnectionState(state, text) {
   $('connectionAction').textContent = '重试';
 }
 
+function candidateEmptyState(kind) {
+  const capture = latestCapture || {};
+  const page = capture.page || {};
+  const conversation = capture.conversation || {};
+  const turns = Array.isArray(conversation.turns) ? conversation.turns : [];
+  const provider = conversation.provider || '';
+  if (provider && !turns.length) {
+    return {
+      title: kind === 'lesson' ? '还不能沉淀经验' : '还不能生成记忆',
+      body: '插件还没有读到这页的具体对话。为了避免把网页介绍、链接或输入框草稿误存成记忆，请先展开真实对话，或选中一段具体内容后再保存。'
+    };
+  }
+  return {
+    title: kind === 'lesson' ? '暂时没有经验建议' : '暂时没有记忆建议',
+    body: page.selection ? '选中的内容还不够具体，可以手动改写后加入待确认。' : '当前页面还没有足够具体的信息，可以选中一段内容，或在准备保存区手动补充。'
+  };
+}
+
 function renderCandidateList(node, items, kind) {
   if (!items || !items.length) {
     node.className = 'candidate-list empty';
-    node.textContent = '暂时没有建议';
+    const empty = candidateEmptyState(kind);
+    node.innerHTML = `<div class="empty-card"><strong>${escapeHtml(empty.title)}</strong><span>${escapeHtml(empty.body)}</span></div>`;
     return;
   }
   node.className = 'candidate-list';
@@ -247,12 +266,13 @@ function buildMemoryDraft(capture) {
   const turns = Array.isArray(conversation.turns) ? conversation.turns : [];
   const userTurns = turns.filter((turn) => turn && turn.role === 'user').map((turn) => turn.text);
   const assistantTurns = turns.filter((turn) => turn && turn.role === 'assistant').map((turn) => turn.text);
+  const isAiPage = !!conversation.provider || page.type === 'ai-chat';
   const evidence = uniqueTexts([
     ...conversationSummaryFacts(turns),
     ...splitFactSentences(page.selection),
     ...userTurns.flatMap(splitFactSentences),
     ...assistantTurns.flatMap(splitFactSentences),
-    ...splitFactSentences(conversation.promptDraft)
+    ...(isAiPage ? [] : splitFactSentences(conversation.promptDraft))
   ]);
   const fact = cleanDraftText(evidence[0] || memories.find((item) => isUsefulFact(item)) || '');
   if (!fact) {
@@ -398,6 +418,27 @@ function renderDiagnostics(capture) {
   $('copyEvidenceCommand').disabled = false;
   $('evidenceCommandHint').hidden = false;
   $('aiProvider').textContent = diagnostics.provider || 'AI 页面';
+  const readyForTrial = !!(diagnostics.editorFound && diagnostics.anchorFound && diagnostics.memoryWidgetVisible && diagnostics.sendFound);
+  const missing = [];
+  if (!diagnostics.editorFound) missing.push('输入框');
+  if (!diagnostics.anchorFound || !diagnostics.memoryWidgetVisible) missing.push('记忆入口');
+  if (!diagnostics.sendFound) missing.push('发送按钮');
+  $('aiValidationSummary').className = `validation-summary ${readyForTrial ? 'ready' : 'needs-check'}`;
+  $('aiValidationSummary').innerHTML = `
+    <strong>${readyForTrial ? '这个页面可以开始验收' : '这个页面还需要确认'}</strong>
+    <span>${readyForTrial ? '请按下面三步完成一次真实页面检查。' : `还缺：${escapeHtml(missing.join('、') || '页面结构确认')}`}</span>
+  `;
+  const steps = [
+    { label: '1', text: '在输入框附近确认记忆入口可见', done: !!(diagnostics.anchorFound && diagnostics.memoryWidgetVisible) },
+    { label: '2', text: '加入一条候选记忆并回工作台审阅', done: false },
+    { label: '3', text: '复制问题信息和检查步骤，补齐验收记录', done: false }
+  ];
+  $('aiValidationSteps').innerHTML = steps.map((step) => `
+    <div class="validation-step${step.done ? ' done' : ''}">
+      <span>${step.label}</span>
+      <p>${escapeHtml(step.text)}</p>
+    </div>
+  `).join('');
   const rows = [
     { label: '页面', value: diagnostics.provider || '已识别', ok: true },
     { label: '输入框', value: diagnostics.editorFound ? '可用' : '未找到', ok: !!diagnostics.editorFound },

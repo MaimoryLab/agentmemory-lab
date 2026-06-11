@@ -37,7 +37,7 @@
 
     <section class="section ai-diagnostics" id="aiDiagnostics" hidden>
       <div class="section-head">
-        <span class="eyebrow">当前网页可用性</span>
+        <span class="eyebrow">站点验收</span>
         <div class="section-actions">
           <button id="openTestCards" class="ghost-button" type="button">测试卡</button>
           <button id="copyEvidenceCommand" class="ghost-button" type="button" disabled>复制检查步骤</button>
@@ -45,6 +45,8 @@
           <span id="aiProvider" class="type-pill">AI</span>
         </div>
       </div>
+      <div id="aiValidationSummary" class="validation-summary"></div>
+      <div id="aiValidationSteps" class="validation-steps"></div>
       <div id="aiDiagnosticList" class="diagnostic-list"></div>
       <div id="evidenceCommandHint" class="command-hint" hidden>如果网页识别不准，先复制问题信息，再复制检查步骤。</div>
     </section>

@@ -27,7 +27,7 @@ try {
   const base = `http://127.0.0.1:${port}`;
 
   const dashboard = await fetchText(base, '/');
-  for (const marker of ['renderDeliveryStatusCard', '/docs/browser-extension-ai-site-test-cards-cn.md', 'delivery-status']) {
+  for (const marker of ['renderDeliveryStatusCard', '/docs/browser-extension-ai-site-test-cards-cn.md', 'delivery-status', 'turnCount &gt; 0', '真实 AI 证据']) {
     assert(dashboard.text.includes(marker), `Viewer dashboard response missing ${marker}.`);
   }
 
@@ -52,6 +52,27 @@ try {
 
   const demo = await fetchText(base, '/demo/browser-extension.html');
   assert(demo.text.includes('Agent Memory Demo'), 'Browser extension demo route must remain available.');
+
+  const zip = await fetch(`${base}/artifacts/agent-memory-lab-extension.zip`, { headers: { Accept: '*/*' } });
+  assert(zip.ok, `Extension zip download returned HTTP ${zip.status}.`);
+  assert((zip.headers.get('content-type') || '').includes('application/zip'), 'Extension zip must be served as application/zip.');
+  assert((await zip.arrayBuffer()).byteLength > 1000, 'Extension zip download must not be empty.');
+
+  const handout = await fetchText(base, '/artifacts/external-tester-handout.md');
+  assert(handout.text.includes('外部试用说明'), 'External tester handout artifact must be served.');
+
+  const quickstart = await fetchText(base, '/artifacts/ai-validation-run/quickstart-cn.md');
+  assert(quickstart.text.includes('真实 AI 站点验收一页纸'), 'AI validation quickstart artifact must be served.');
+  assert(quickstart.text.includes('ChatGPT') && quickstart.text.includes('Perplexity'), 'AI validation quickstart must include required AI products.');
+
+  const feedbackTemplate = await fetchText(base, '/artifacts/external-feedback-template-cn.md');
+  assert(feedbackTemplate.text.includes('外部试用反馈模板'), 'External feedback template artifact must be served.');
+
+  const feedbackTriage = await fetchText(base, '/artifacts/external-feedback-triage-cn.md');
+  assert(feedbackTriage.text.includes('外部反馈分诊指南'), 'External feedback triage artifact must be served.');
+
+  const denied = await fetch(`${base}/artifacts/%252e%252e/package.json`);
+  assert(denied.status === 404, 'Viewer artifact route must not expose paths outside the safe artifact list.');
 
   console.log('viewer delivery runtime checks ok');
 } finally {

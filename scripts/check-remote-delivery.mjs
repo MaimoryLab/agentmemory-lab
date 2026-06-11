@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-const COMPANY_REMOTE = 'company';
-const COMPANY_URL = 'https://github.com/novitalabs/agentmemory-lab.git';
-const REQUIRED_BRANCH = 'szn-viewer-ui-iteration';
+const DELIVERY_REMOTE_URL = 'https://github.com/novitalabs/agentmemory-lab.git';
+const BASE_BRANCH = 'szn-viewer-ui-iteration';
+const DELIVERY_PR_BRANCH = process.env.AGENTMEMORY_DELIVERY_PR_BRANCH || 'codex/diagnostic-privacy-20260609';
 
 function runGit(args, options = {}) {
   const result = spawnSync('git', args, { encoding: 'utf8' });
@@ -20,6 +20,23 @@ function assert(condition, message) {
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+function normalizeRemoteUrl(value) {
+  return String(value || '').trim().replace(/\.git$/, '');
+}
+
+function discoverDeliveryRemote() {
+  const explicit = process.env.AGENTMEMORY_DELIVERY_REMOTE;
+  if (explicit) return explicit;
+  const target = normalizeRemoteUrl(DELIVERY_REMOTE_URL);
+  const remotes = runGit(['remote', '-v'])
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(/\s+/))
+    .filter((parts) => parts.length >= 2)
+    .find((parts) => normalizeRemoteUrl(parts[1]) === target);
+  assert(remotes, `No git remote points to ${DELIVERY_REMOTE_URL}. Set AGENTMEMORY_DELIVERY_REMOTE to the remote name.`);
+  return remotes[0];
 }
 
 function hasTrackedChanges() {
@@ -40,21 +57,25 @@ assert(existsSync(zipPath), `Missing ${zipPath}. Run npm run package:browser-ext
 const branch = runGit(['branch', '--show-current']);
 const head = runGit(['rev-parse', 'HEAD']);
 const shortHead = runGit(['rev-parse', '--short', 'HEAD']);
-const remoteUrl = runGit(['remote', 'get-url', COMPANY_REMOTE]);
-const remoteRef = runGit(['ls-remote', COMPANY_REMOTE, `refs/heads/${branch}`], { optional: true });
+const deliveryRemote = discoverDeliveryRemote();
+const remoteUrl = runGit(['remote', 'get-url', deliveryRemote]);
+const remoteRef = runGit(['ls-remote', deliveryRemote, `refs/heads/${branch}`], { optional: true });
+const prRef = runGit(['ls-remote', deliveryRemote, `refs/heads/${DELIVERY_PR_BRANCH}`], { optional: true });
 const manifest = readJson(manifestPath);
 const evidence = readJson(evidencePath);
 const artifactCommit = manifest.git?.commit || '';
+const deliveredDirectly = remoteRef.startsWith(head);
+const deliveredByPr = prRef.startsWith(head);
 
-assert(branch === REQUIRED_BRANCH, `Expected branch ${REQUIRED_BRANCH}, got ${branch || 'unknown'}.`);
-assert(remoteUrl === COMPANY_URL, `Remote ${COMPANY_REMOTE} must point to ${COMPANY_URL}, got ${remoteUrl || 'missing'}.`);
-assert(remoteRef.startsWith(head), `Company remote ${COMPANY_REMOTE}/${branch} does not contain current commit ${shortHead}. Push first.`);
+assert([BASE_BRANCH, DELIVERY_PR_BRANCH].includes(branch), `Expected branch ${BASE_BRANCH} or ${DELIVERY_PR_BRANCH}, got ${branch || 'unknown'}.`);
+assert(normalizeRemoteUrl(remoteUrl) === normalizeRemoteUrl(DELIVERY_REMOTE_URL), `Delivery remote ${deliveryRemote} must point to ${DELIVERY_REMOTE_URL}, got ${remoteUrl || 'missing'}.`);
+assert(deliveredDirectly || deliveredByPr, `Delivery remote does not contain current commit ${shortHead}. Push to ${deliveryRemote}/${branch} or PR branch ${deliveryRemote}/${DELIVERY_PR_BRANCH}.`);
 assert(artifactCommit === shortHead, `Delivery artifact commit is ${artifactCommit || 'missing'}, expected ${shortHead}. Run npm run package:browser-extension.`);
-assert(!hasTrackedChanges(), 'Tracked changes are pending. Commit or discard them before company delivery.');
+assert(!hasTrackedChanges(), 'Tracked changes are pending. Commit or discard them before remote delivery.');
 
 const release = manifest.releaseState || {};
 assert(release.localDemo === 'ready', 'Local demo must be ready.');
-assert(['ready', 'mostly-ready'].includes(release.externalTesting), 'External testing loop must be ready enough for handoff.');
+assert(['ready', 'mostly-ready'].includes(release.externalTesting), 'External testing loop must be ready enough for remote delivery.');
 assert((evidence.requiredCount || 4) === 4, 'AI validation evidence summary must track the four required AI products.');
 
 if (release.publicRelease === 'ready' || evidence.publicReleaseReadyByEvidence) {
@@ -63,9 +84,10 @@ if (release.publicRelease === 'ready' || evidence.publicReleaseReadyByEvidence) 
   assert((evidence.passedCount || 0) < (evidence.requiredCount || 4), 'Public release is blocked, but evidence summary does not show missing required products.');
 }
 
-console.log('company delivery checks ok');
+console.log('remote delivery checks ok');
 console.log(`branch: ${branch}`);
 console.log(`commit: ${shortHead}`);
-console.log(`remote: ${COMPANY_REMOTE} ${COMPANY_URL}`);
+console.log(`remote: ${deliveryRemote} ${DELIVERY_REMOTE_URL}`);
+console.log(`delivery path: ${deliveredDirectly ? `${deliveryRemote}/${branch}` : `${deliveryRemote}/${DELIVERY_PR_BRANCH} pull request`}`);
 console.log(`external testing: ${release.externalTesting}`);
 console.log(`public release: ${release.publicRelease || 'not-ready'} (${evidence.passedCount || 0}/${evidence.requiredCount || 4} real AI evidence)`);

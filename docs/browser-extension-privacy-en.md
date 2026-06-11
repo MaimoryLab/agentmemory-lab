@@ -13,8 +13,8 @@ When you use the extension, it may process information from the active browser t
 - Page title, URL, host, and page type.
 - Meta description and visible headings.
 - Text you selected on the page.
-- Visible snippets from supported AI conversation pages.
-- Current prompt draft text on supported AI pages.
+- Visible snippets from supported AI conversation pages, used locally to generate memory candidates.
+- Current prompt draft text on supported AI pages, used locally to suggest relevant memories.
 - Candidate memories, candidate lessons, and privacy hints generated from the page.
 - AI page diagnostics, including detected provider, whether an input editor was found, matched selector, prompt length, and recent turn count.
 
@@ -65,9 +65,9 @@ Long-term memories are stored by the local Agent Memory Lab workbench, not by th
 
 The side panel can copy diagnostic JSON for supported AI pages. Diagnostics are meant to help validate and repair site-specific input-box selectors. The copied JSON also includes a manual validation template for insert/copy/site-input checks; users must fill those fields themselves before treating evidence as passed.
 
-Diagnostic JSON may include page title, URL, host, detected provider, editor-found state, matched selector, prompt length, and recent turn count. It does not intentionally include cookies, passwords, access tokens, or full hidden page source.
+Diagnostic JSON may include page title, URL, host, detected provider, editor-found state, matched selector, prompt length, and recent turn count. It does not include prompt draft text, full conversation turns, memory candidate body text, cookies, passwords, access tokens, or full hidden page source.
 
-External testers may redact private prompt text, conversation snippets, sensitive page titles, and account-related details before submitting diagnostics. For site-adapter validation, keep the non-sensitive structural fields under `ai`, especially `provider`, `editorFound`, `anchorFound`, `memoryWidgetVisible`, `placement`, and `matchedSelectors.editor/anchor/send/turn`, plus the `manualValidation` result. These fields help reproduce selector issues without sharing cookies, tokens, passwords, or full chat content.
+External testers normally do not need to submit private prompt text or chat body text because copied diagnostics are designed to contain only structure fields and counts. If a page title or URL exposes a sensitive project name, account path, or internal link, testers may redact those values before sharing. For site-adapter validation, keep the non-sensitive structural fields under `ai`, especially `provider`, `editorFound`, `anchorFound`, `memoryWidgetVisible`, `placement`, and `matchedSelectors.editor/anchor/send/turn`, plus the `manualValidation` result. These fields help reproduce selector issues without sharing cookies, tokens, passwords, or full chat content.
 
 ## User Control
 

@@ -24,13 +24,17 @@
 | 演示检查清单 | `docs/demo-checklist-cn.md` | 演示前自查 |
 | AI 站点验收记录 | `docs/browser-extension-ai-validation-cn.md` | 记录真实 AI 网页适配结果 |
 | AI 站点测试卡 | `docs/browser-extension-ai-site-test-cards-cn.md` | 按 ChatGPT、Claude、Gemini、Perplexity 拆分真实页面验收任务 |
+| AI 验收一页纸 | `artifacts/ai-validation-run/quickstart-cn.md` | 给测试者先看的短清单，说明 4 个必测站点、6 步操作、通过标准和隐私边界 |
+| AI 站点外测包 | `artifacts/ai-validation-run/tester-pack-cn.md` | 完整真实站点验收包，包含每个站点的 prompt、重点观察和证据命令 |
 | 隐私说明 | `docs/browser-extension-privacy-cn.md` | 解释插件权限和数据边界 |
+
+启动 Viewer 后，首页的“浏览器记忆入口”也会直接提供这些常用入口：下载插件包、外测手册、验收一页纸、AI 验收包、反馈模板和分诊指南。外部试用者优先从首页拿材料；`artifacts/` 路径主要用于维护者归档和校验。
 
 本地交付检查还包含一个免登录交互烟测：它会模拟插件内容脚本在预览页创建“记忆建议”、渲染演示记忆，并确认插入按钮能把记忆写进输入框。这个检查不能替代真实 AI 网页验收，但能证明演示页的核心交互没有退化。
 
 ## 最短试用路线
 
-1. 打开项目仓库，或拿到别人发来的 `artifacts/agent-memory-lab-extension.zip`。
+1. 打开项目仓库，或打开 Viewer 首页，在“浏览器记忆入口”点击“下载插件包”。
 2. 进入项目目录并启动完整工作台：
 
 ```bash
@@ -128,6 +132,16 @@ npm run check:release-public
 
 逐站操作请按 `docs/browser-extension-ai-site-test-cards-cn.md` 执行。它把 ChatGPT、Claude、Gemini、Perplexity 四个公开发布必测站点拆成测试卡，并说明每个站点要观察输入框、发送按钮、模型选择和附件入口是否被插件影响。
 
+给测试者发包前，可以先生成一页式外测包：
+
+```bash
+cd agentmemory-lab
+npm run prepare:ai-validation
+npm run make:ai-validation-tester-pack
+```
+
+优先把 `artifacts/ai-validation-run/quickstart-cn.md` 发给测试者，它是一页短清单。需要更完整的站点细节时，再看 `artifacts/ai-validation-run/tester-pack-cn.md`；它会按当前提交列出 ChatGPT、Claude、Gemini、Perplexity 的建议 prompt、证据文件名、保存命令和隐私边界，适合贴到飞书或发给测试者。
+
 每个站点至少确认：
 
 - 页面被识别为对应 AI 产品。
@@ -136,6 +150,8 @@ npm run check:release-public
 - 记忆可以插入或复制。
 - 同步侧栏可以复制问题信息 JSON，也可以复制保存证据的终端命令。
 - 原站点输入、发送、滚动没有异常。
+- 页面里至少有一轮真实对话，诊断 JSON 的 `turnCount > 0`。
+- 待审阅候选来自具体对话或用户选中的文字；页面介绍、URL、导航文案或输入框草稿不能算通过。
 
 验收结果写入：
 
@@ -174,7 +190,7 @@ npm run sync:ai-validation-table
 - 同步侧栏复制出来的诊断 JSON，以及侧栏“复制检查步骤”生成的保存命令执行结果。
 - 如果可以，直接提供 `docs/validation/browser-extension-ai-sites/` 下的证据 JSON 文件。
 - 复制问题信息里的 `manualValidation` 字段需要按真实结果改成 `true` / `false`，不要默认当作通过。
-- 诊断 JSON 里 `editorFound`、`anchorFound`、`placement`、`memoryWidgetVisible` 的状态。
+- 诊断 JSON 里 `editorFound`、`anchorFound`、`placement`、`memoryWidgetVisible`、`turnCount` 和 `matchedSelectors.turn` 的状态。
 - 哪一步不符合预期。
 
 ## 当前不能承诺

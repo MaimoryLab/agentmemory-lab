@@ -752,6 +752,32 @@ describe("viewer session rendering", () => {
     expect(getElement("view-actions").innerHTML).toContain("正在整理待办");
   });
 
+  it("renders the STEP-06 待回应 placeholder section with an honest empty state", () => {
+    const { sandbox, getElement } = loadViewerSandbox();
+    sandbox.state.activeTab = "actions";
+    sandbox.state.actions = {
+      loaded: true,
+      items: [],
+      frontier: [],
+      statusFilter: "",
+      search: "",
+      reviewItems: [],
+    };
+    sandbox.renderActions();
+    const html = getElement("view-actions").innerHTML;
+    // 分区存在且标题为「待回应」
+    expect(html).toContain("awaiting-reply-section");
+    expect(html).toContain("待回应");
+    // 诚实空态:不冒充真实数据,明确标注尚未接通后端
+    expect(html).toContain("暂无待回应");
+    expect(html).toContain("尚未接通");
+    // 「待回应」出现在「完整对话过程」等 action 分组之前(顶部)
+    const idxAwaiting = html.indexOf("awaiting-reply-section");
+    const idxGroups = html.indexOf("action-group");
+    expect(idxAwaiting).toBeGreaterThan(-1);
+    expect(idxGroups === -1 || idxAwaiting < idxGroups).toBe(true);
+  });
+
   it("renders action reviews as compact decision cards while keeping tool pollution hidden", () => {
     const { sandbox, getElement } = loadViewerSandbox();
     sandbox.state.actions = {

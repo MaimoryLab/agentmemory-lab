@@ -14,7 +14,7 @@
 
 | 能力 | 用途 | 现状 | 固化建议 |
 |---|---|---|---|
-| **Claude Preview MCP**（`preview_start/eval/inspect/screenshot/snapshot`） | viewer 改动的浏览器实证:验证渲染、XSS 转义、跳转高亮、专家模式 tab | 已用，靠 `/tmp/vproxy.cjs` 改 Host 头绕过 viewer host 白名单 | 见 §4「preview 实证配方」——把代理脚本固化进 `.claude/launch.json`，避免每次手搭 |
+| **Claude Preview MCP**（`preview_start/eval/inspect/screenshot/snapshot`） | viewer 改动的浏览器实证:验证渲染、XSS 转义、跳转高亮、专家模式 tab | 已用且已固化:`scripts/viewer-preview-proxy.cjs` + `.claude/launch.json` 的 `viewer-proxy` 目标 | 见 §4「preview 实证配方」 |
 | **Explore 子代理** | 大范围代码地图(本规划的工作流梳理即由其产出) | 已用 | 任何「跨多文件摸清现状」先派 Explore，省主上下文 |
 | **gh CLI** | 开 PR / 查 CI / 合并 | 已用 | 已是默认 |
 | **逐步 STEP 文档 + 看板** | 一步一 PR、预测后回填 | 已用，docs/issues/ | 见 [[agentmemory-restructure-workflow]] 记忆 |
@@ -67,12 +67,16 @@ agentmemory-lab **本身就是个 MCP 服务器**（`src/mcp/`，51 工具，`pl
 
 ## 4. preview 实证配方（固化 viewer 验收）
 
-本轮 viewer 验证的痛点:viewer 有 host 白名单，preview 直连报 "forbidden host"，靠 `/tmp/vproxy.cjs` 改 Host 头绕过。建议固化:
+本轮 viewer 验证的痛点:viewer 有 host 白名单(DNS-rebinding 防护,`src/viewer/server.ts:1068` 非 loopback Host 返回 "forbidden host"),preview 直连被拒。已固化解决:
 
-1. **launch.json 配两个目标**:`viewer-proxy`(改 Host 头的代理，连 live worker `:3114`) 用于带后端的实证；`dist/viewer` 静态预览(`:3199`)用于纯前端形态查看。
-2. **代理脚本入仓**:把 `/tmp/vproxy.cjs` 移到 `scripts/viewer-preview-proxy.cjs`，launch.json 指向它，避免每次重搭。
+1. ✅ **代理脚本入仓**:`scripts/viewer-preview-proxy.cjs`——转发到 viewer(默认 `:3114`)时把 Host 头重写为 `localhost:<端口>` 绕过白名单。端口可经 `VIEWER_PROXY_PORT`/`AGENTMEMORY_VIEWER_PORT` 覆盖;上游不可达时给友好 502 提示。
+2. ✅ **launch.json 配两个目标**(`.claude/launch.json` —— 注意 `.claude/` 是 gitignored 的**本地**配置,不入仓;入仓的是脚本):`viewer-proxy`(`:3198`→`:3114`,带 live worker 的实证)与 `viewer-static`(`:3199` 静态 `dist/viewer`,纯前端形态)。`preview_start` 直接拉起,不必每次手搭。配置样例:
+   ```jsonc
+   { "name": "viewer-proxy", "runtimeExecutable": "node",
+     "runtimeArgs": ["scripts/viewer-preview-proxy.cjs"], "port": 3198 }
+   ```
 3. **实证清单**（UI 改动默认走）:`preview_eval` 调被测函数验逻辑 → `preview_inspect` 查元素/CSS → `preview_screenshot` 留证 → `preview_console_logs level=error` 确认无运行时错。
-4. **注意**:demo 数据被证据栏 `isDemoSession` 过滤，端到端跳转类验证需真实(非 demo)数据，这点要在验收清单里写明。
+4. **注意**:demo 数据被证据栏 `isDemoSession` 过滤,端到端跳转类验证需真实(非 demo)数据,这点要在验收清单里写明。
 
 ---
 
@@ -86,8 +90,8 @@ agentmemory-lab **本身就是个 MCP 服务器**（`src/mcp/`，51 工具，`pl
 ## 6. 行动清单（建议落地顺序）
 
 1. `/fewer-permission-prompts` 跑一次 → 减少重构期权限弹窗。（最快见效）
-2. 加 `npm run pre-pr` 聚合命令 + 写进 CONTRIBUTING。（低成本、高频收益）
-3. 把 viewer 代理脚本入仓 + launch.json 固化。（消除每次手搭）
-4. 一致性自检脚本/hook（§3.2）。（防 CI 事后红）
+2. ✅ 加 `npm run pre-pr` 聚合命令 + 写进 CONTRIBUTING（PR#15）。
+3. ✅ viewer 代理脚本入仓 + launch.json 固化（`scripts/viewer-preview-proxy.cjs`）。
+4. ✅ 一致性自检脚本（`scripts/check-consistency-local.mjs`，PR#15）。
 5. 评估 dogfood 自己的 MCP（§3.1）。（中期）
 6. 把 `/code-review` + preview 实证写进 STEP 模板的「验证」节，成为默认验收。

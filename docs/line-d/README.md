@@ -1,8 +1,10 @@
 # 线 D 方案:收件箱跨设备投递(飞书推送)
 
-> 状态:**草案 v1,待人工审阅**。前置:线 C(收件箱全栈 C1→C4)已交付合并(main `a308c8d`+)。lark-cli 与 27 个 lark-* skill 已装。
-> 日期:2026-06-15 · 基线:`@agentmemory/agentmemory` v0.9.24 · 沟通信道:`lark-cli`(`/opt/homebrew/bin/lark-cli`)。
+> 状态:**草案 v2,待人工审阅**。前置:线 C(收件箱全栈 C1→C4)已交付合并(main `a308c8d`+)。lark-cli 与 27 个 lark-* skill 已装,**bot 身份已就绪**(appId `cli_aa9eb0457cfadbc3`,`lark-cli auth status` = bot ready)。
+> 日期:2026-06-15 · 基线:`@agentmemory/agentmemory` v0.9.24 · 沟通信道:`lark-cli`(`/opt/homebrew/bin/lark-cli` v1.0.50)。
 > 方法论沿用线 A/C 验证有效的工作流:一步一 PR、预测后回填、preview/实跑实证、文档零 CI。
+>
+> **v2 拍板更新(2026-06-15)**:① question + briefing **都推**(§0.5 #1 锁定)② **要飞书内回复闭环**——D5 从「远期可选」**提为本轮必做**(§0.5 #5 改、新 §9 专章)③ 前置 lark-cli bot 配置已在另一会话就绪(已核:bot ready;agentmemory 侧 `AGENTMEMORY_LARK_*` env 仍需 D1 引入 + 填 open_id)。
 
 ## 进度看板(2026-06-15)
 
@@ -12,9 +14,9 @@
 | **D2** | lark-cli 适配器:把 InboxItem 渲染成飞书消息(卡片/markdown)并发出 | ⬜ 待开工(依赖 D1) |
 | **D3** | 挂接 inbox 写路径:ask/notify 后 fire-and-forget 触发投递 | ⬜ 待开工(依赖 D1/D2) |
 | **D4** | 投递状态回写 + viewer 呈现(已推送/推送失败标记) | ⬜ 待开工(依赖 D3) |
-| **D5**(可选) | 回执闭环:用户在飞书回复 → 写回 inbox-answer(依赖 lark-event 订阅) | ⬜ 远期,可不做 |
+| **D5** | **飞书内回复闭环**:bot 订阅收信 → 回复映射回 inbox-answer(**本轮必做**) | ⬜ 待开工(依赖 D3,见 §9) |
 
-> **里程碑**:线 C 已让「Agent 写 → 落库 → 用户**打开工作台**才看到」。线 D 补上**跨设备主动触达**——Agent 抛出 question/briefing 后,飞书 bot 主动私聊推给用户,用户不必盯着工作台。这是线 C §0.5 第 5 点明确排后、留给线 D 的那一块。
+> **里程碑**:线 C 已让「Agent 写 → 落库 → 用户**打开工作台**才看到」。线 D 补上**跨设备主动触达 + 飞书内回复闭环**——Agent 抛出 question/briefing 后,飞书 bot 主动私聊推给用户(D1-D4);用户**直接在飞书回一句**就把对应 question 在工作台标记 answered(D5)。推送 + 回复双向都在飞书完成,工作台与飞书互为镜像。
 
 ---
 
@@ -26,14 +28,14 @@
 
 | # | 议题 | 草案立场(待你拍板) |
 |---|---|---|
-| 1 | 推什么 | **question + briefing 都推**,但分级:question(Agent 在等你回)走**加急/卡片**;briefing(知悉即可)走**普通 DM**,不加急。 |
+| 1 | 推什么 | ✅ **已定:question + briefing 都推**,但分级:question(Agent 在等你回)走**加急/卡片**;briefing(知悉即可)走**普通 DM**,不加急。 |
 | 2 | 推给谁 | 本轮**只推给单个用户**(收件箱本就是单用户语义)。目标 user 由配置 `AGENTMEMORY_LARK_USER_ID` 指定。不做群推、不做多人分发。 |
-| 3 | 用什么身份 | **bot 身份(`--as bot`)**:只需 appId+appSecret、免 `auth login`、适合后台 daemon 无人值守。bot 私聊推给用户。(user 身份需交互式授权,不适合 daemon,排除) |
+| 3 | 用什么身份 | **bot 身份(`--as bot`)**:只需 appId+appSecret、免 `auth login`、适合后台 daemon 无人值守。bot 私聊推给用户。**已核:`lark-cli auth status` → bot ready**。 |
 | 4 | 触发时机 | 条目**落库后** fire-and-forget 触发(不阻塞 inbox 写)。投递失败**不影响** inbox 落库——飞书只是额外通道,工作台始终能看到。 |
-| 5 | 回执闭环 | 本轮**不做**(D5 远期)。用户在飞书看到推送后,仍回工作台操作(回应/知道了/转待处理)。"飞书内直接回复 → 写回 inbox" 依赖 lark-event 长订阅,复杂度高,单列 D5。 |
-| 6 | 去重/幂等 | 每个 InboxItem **至多推一次**。用 `lark-cli` 的 idempotency key + 本地投递台账(KV `mem:delivery`)双保险,避免重启/重试重复打扰。 |
+| 5 | 回执闭环 | ✅ **已定:本轮做**(D5,见 §9)。bot 订阅 `im.message.receive_v1` 收用户私聊回复 → 映射回对应 question → 写 `mem::inbox-answer`。**映射是难点**(飞书收信事件不带"回复哪条"的 parent 字段,见 §9 三个方案)。 |
+| 6 | 去重/幂等 | 每个 InboxItem **至多推一次**。用 `lark-cli` 的 idempotency key + 本地投递台账(KV `mem:delivery`)双保险,避免重启/重试重复打扰。回执侧用事件 `event_id`(schema 标注 dedup-safe)去重。 |
 | 7 | 失败处理 | best-effort + 有限重试。投递失败记 audit + 在 viewer 标「推送失败」,但**绝不**因投递失败阻塞或回滚 inbox。 |
-| 8 | 默认开关 | **默认关闭**(`AGENTMEMORY_LARK_DELIVERY=false`)。未配置 user-id/未开关时,inbox 行为与线 C 完全一致,零副作用。显式开启才推。 |
+| 8 | 默认开关 | **默认关闭**(`AGENTMEMORY_LARK_DELIVERY=false`)。未配置 user-id/未开关时,inbox 行为与线 C 完全一致,零副作用。显式开启才推。回执订阅另有开关 `AGENTMEMORY_LARK_REPLY_LOOP`。 |
 
 ## 1. 项目 ↔ lark-cli 的沟通方式(核心)
 
@@ -77,7 +79,7 @@
 
 ### question(🔴 Agent 在等你回)→ 交互卡片 + 加急
 
-- **消息类型**:`interactive`(飞书卡片),含标题「🔴 Agent 在等你回」、正文(item.body 的 Markdown)、来源(fromAgent)、以及一个**「去工作台回应 →」按钮**(链接到 viewer `#actions`,本轮不做卡片内直接回复=D5)。
+- **消息类型**:`interactive`(飞书卡片),含标题「🔴 Agent 在等你回」、正文(item.body 的 Markdown)、来源(fromAgent)、以及一个**「去工作台回应 →」按钮**(链接到 viewer `#actions`,作为飞书内回复=D5 之外的备选路径)。卡片底部注明「直接回复将回答这条」(配合 §9.2 方案 A)。
 - **加急**:发送后对该 message 调 `lark-cli im messages urgent_app`(应用内加急,需 `im:message.urgent` scope),确保时间敏感问题不被淹没。是否加急可由 `item.priority` 或配置 `AGENTMEMORY_LARK_URGENT_QUESTION` 控制。
 - **降级**:若卡片能力不可用(scope 缺失),降级为 markdown 文本 DM,正文末尾附工作台链接。
 
@@ -155,8 +157,10 @@ interface DeliveryRecord {
 - **结果预测**:REST 若新增端点则触发端点计数连带(3 处);viewer 加单测 + preview 实证。
 - **风险**:低-中。看是否新增端点(影响一致性铁律)。
 
-### STEP-D5(可选,远期)— 飞书内回执闭环
-- 用 `lark-event consume`(lark-event skill)长订阅 bot 收到的消息,把用户在飞书的回复写回 `mem::inbox-answer`。**复杂度高**(长驻订阅进程、消息→inbox 项映射、鉴权),且与"回工作台操作"路径重叠。**默认不做**,除非你明确要"飞书内闭环"。
+### STEP-D5(本轮必做)— 飞书内回复闭环
+- **改动面**:新增长驻订阅消费者(`lark-cli event consume im.message.receive_v1 --as bot`)+ 把回复映射回 `mem::inbox-answer`。详见 **§9 专章**(映射方案是核心难点)。
+- **结果预测**:订阅进程管理(随 worker 起停、ready marker、优雅退出)+ 映射逻辑单测 + 实跑(飞书私聊回一句 → 工作台对应 question 转 answered)。
+- **风险**:**高**(本轮最难一步)。长驻进程生命周期、回复→question 映射(事件无 parent 字段)、鉴权 scope、防重复消费。见 §9。
 
 ## 5. 验证(沿用线 A/C 配方)
 
@@ -175,18 +179,20 @@ interface DeliveryRecord {
 
 这些是**用户侧一次性配置**,计划落地前需你确认/操作:
 
-1. **lark-cli config init 已完成**(你已装好 + 27 skill,确认 `lark-cli config init` 跑过、bot appId/appSecret 配好)。
-2. **bot scope**(飞书开发者后台开通,见 lark-im §权限表):
+1. ✅ **lark-cli config init 已完成**(已核:bot 身份 ready,appId `cli_aa9eb0457cfadbc3`,配置在 `~/.lark-cli/config.json`)。
+2. **bot scope**(飞书开发者后台开通,见 lark-im / lark-event §权限表):
    - `im:message`(发消息,必需)
    - `im:message.urgent`(应用内加急,question 加急用;不开则降级为不加急)
+   - **`im:message.p2p_msg:readonly`(收私聊,D5 回复闭环必需)** + 后台勾选 `im.message.receive_v1` 事件
    - 失败时 lark-cli 回 `console_url`,照它去后台补。
 3. **bot 可私聊目标用户**:bot 加入可见范围,且与目标用户能建立 P2P 会话。
 4. **目标用户 open_id**(`ou_xxx`):用 `lark-cli contact +search-user --query "<你的名字>"`(lark-contact skill)查到,填进 `AGENTMEMORY_LARK_USER_ID`。
-5. **配置写入** `~/.agentmemory/.env`(config.ts 的 file-env 层自动加载):
+5. **配置写入** `~/.agentmemory/.env`(config.ts 的 file-env 层自动加载;**已核该文件当前不存在,D1 落地时新建**):
    ```
    AGENTMEMORY_LARK_DELIVERY=true
    AGENTMEMORY_LARK_USER_ID=ou_xxxxxxxx
    AGENTMEMORY_LARK_URGENT_QUESTION=true
+   AGENTMEMORY_LARK_REPLY_LOOP=true
    ```
 
 > 在这些就绪前,D1(纯后端 + 默认关)可以先做、先合,不依赖飞书配置。
@@ -200,17 +206,66 @@ interface DeliveryRecord {
 
 ## 8. 待人工审阅 / 拍板的点
 
-1. **§0.5 边界整体**:8 条边界(推什么/推给谁/身份/时机/回执/去重/失败/开关)是否认可?尤其:
-   - 第 1 条:question + briefing **都推**,还是**只推 question**(briefing 知悉即可、也许不必跨设备打扰)?
-   - 第 5 条:回执闭环(D5)本轮**不做**、用户回工作台操作——认可吗?还是你要"飞书内直接回复就闭环"?
-2. **沟通方式选 A(lark-cli 子进程)**:认可用 lark-cli 而非自建 webhook?(A 富能力但引入 lark-cli 运行时依赖;B 纯 HTTP 但能力弱)
-3. **投递范围**:本轮只推**单用户私聊**。未来要不要群推 / 多设备?(影响数据模型是否要 `to[]`)
-4. **加急策略**:question 默认 `urgent_app`(应用内加急)。要不要更激进(`urgent_phone` 电话加急)或更克制(完全不加急、只普通 DM)?
-5. **前置清单(§6)**:你来确认 bot scope / open_id / 配置是否就绪,D2 实跑前需要。
+> v2 已锁:① question+briefing 都推(§0.5 #1)② 飞书内回复闭环本轮做(D5/§9)③ bot 配置就绪(已核)。以下为仍需你定的点:
+
+1. ~~question + briefing 都推 还是只推 question~~ → ✅ **已定:都推**。
+2. ~~回执闭环本轮做不做~~ → ✅ **已定:做**(§9)。
+3. **沟通方式选 A(lark-cli 子进程)**:认可用 lark-cli 而非自建 webhook?(A 富能力 + 现成 bot;线 D 既然要回复闭环,本就强依赖 lark-cli 的 event consume,A 几乎是唯一合理选择)。
+4. **加急策略**:question 默认 `urgent_app`(应用内加急)。要不要更激进(`urgent_phone` 电话加急)或更克制(完全不加急)?
+5. **目标 open_id**:用 `lark-cli contact +search-user --query "<你的名字>"` 查到你的 `ou_xxx` 填进 `AGENTMEMORY_LARK_USER_ID`。**需要你给名字或直接给 open_id**(我可以代查,但要你确认是哪个账号收推送)。
+6. **【新】回复→question 映射方案**(§9.2):本轮先做**方案 A(单未决假设:回复即答最新一条未答 question,卡片注明)**,精确映射(B 文本锚 / C 一问一会话)留 D5.1?还是你要一上来就精确对应?
+7. **bot scope 确认**:除 `im:message`,回复闭环还需 `im:message.p2p_msg:readonly`(收私聊)。请确认后台已开通,或我实跑时遇 `missing_scope` 再透传 console_url 给你。
 
 ---
 
-## 附:本目录文件
+## 9. 飞书内回复闭环(D5,本轮必做)— 设计专章
+
+目标:用户在飞书私聊里**直接回一句**,就把对应 question 在工作台标记 `answered` 并写入回复正文,不必再开工作台。
+
+### 9.1 收信机制(已核实)
+
+- bot 订阅 `lark-cli event consume im.message.receive_v1 --as bot` → 用户私聊消息以 **NDJSON** 流到 stdout。
+- **scope**:`im:message.p2p_msg:readonly`(后台需开通 + console 勾选 `im.message.receive_v1` 事件)。
+- 事件字段(已查 schema):`chat_id` / `chat_type`(p2p/group)/ `content`(已渲染成纯文本)/ `sender_id`(ou_)/ `message_id`(om_)/ `event_id`(**dedup-safe**,用它防重复消费)/ `create_time`。
+- 订阅是**长驻进程**,lark-event skill 定义了 subprocess 契约:stderr `[event] ready` 就绪标记、stdin EOF 优雅退出、**禁止 `kill -9`**(会泄漏服务端订阅)。
+
+### 9.2 核心难点:回复 → 哪条 question 的映射
+
+**飞书收信事件不带"回复的是哪条消息"的 parent/root/thread 字段**(已查 schema 确认:只有 chat_id/sender_id/content,无 parent_id)。所以一条裸回复无法直接知道它答的是哪个 question。三个候选方案:
+
+| 方案 | 做法 | 优点 | 缺点 |
+|---|---|---|---|
+| **A. 单未决假设**(推荐起步) | 维护"最近一条未答 question"的指针;用户回复即视为答它 | 实现最简、零额外交互 | 多条 question 同时未决时会答错;需在卡片里提示"回复将答最新一条" |
+| **B. 引用回复 + 文本锚** | 推送时在 question 正文带短 token(如 `#q3a2`),要求用户引用/带 token 回复;消费侧正则提取 token 反查 inbox 项 | 能精确对应任意一条 | 要求用户带 token,体验差;飞书引用回复在事件里仍不一定回传 parent |
+| **C. 一问一会话**(每条 question 单开 thread/话题) | 用 `+messages-reply --reply-in-thread` 或为每条 question 建独立话题群,回复落在该 thread | 天然隔离、对应精确 | 重(每问一会话)、bot 建话题/群成本高、可能超出本轮范围 |
+
+> **草案推荐**:本轮先做 **方案 A(单未决假设)** + 在 question 卡片底部明确写「直接回复将回答上面这条;多条待答请去工作台」。把精确映射(B/C)留作 D5.1 增强。**这点需你拍板**(见 §8 新增第 6 点)。
+
+### 9.3 写回路径
+
+消费者拿到回复后:
+1. `event_id` 去重(查 KV,已处理则跳过)。
+2. 校验 `sender_id === AGENTMEMORY_LARK_USER_ID`(只认目标用户的回复,别人发的忽略)。
+3. 按 §9.2 选定方案定位 question 的 `item.id`。
+4. 调 `POST /agentmemory/inbox/answer { id, answer: content }`(复用线 C 现成端点,零新增后端语义)→ 工作台该卡转 `answered`、落 answer 正文。
+5. (可选)bot 回一条「✓ 已记录」确认。
+
+### 9.4 进程生命周期(订阅消费者)
+
+- **谁拉起**:agentmemory worker 启动时,若 `AGENTMEMORY_LARK_REPLY_LOOP=true`,spawn 一个长驻 `lark-cli event consume` 子进程(参考 `src/index.ts:542` 的后台 worker 注册 + `.unref()` 范式,但这是子进程非 setInterval)。
+- **就绪/退出**:阻塞读 stderr 等 `[event] ready` 再认为订阅生效;worker 关闭时给子进程 **SIGTERM 或关 stdin**(绝不 `kill -9`)。
+- **读取循环**:逐行读 stdout NDJSON → 解析 → §9.3 写回。失败隔离(单条解析失败不停整个循环)。
+- **风险**:这是线 D 最复杂的部分。子进程崩溃重启、订阅泄漏、worker 与子进程的生命周期耦合都要处理。**建议 D5 单独一个 PR、充分实跑**。
+
+### 9.5 STEP-D5 拆解
+
+- `src/config.ts`:`isLarkReplyLoopEnabled()`(读 `AGENTMEMORY_LARK_REPLY_LOOP`)。
+- `src/functions/lark-reply-consumer.ts`(新):spawn + 管理 `event consume` 子进程,读 NDJSON,映射,调 inbox-answer。
+- KV scope `mem:delivery` 里复用或加字段存"最近未决 question 指针"(方案 A)+ `event_id` 去重集。
+- `src/index.ts`:worker 启动时按开关 spawn 消费者;关闭时优雅停。
+- 测试:NDJSON 解析 + 映射 + 去重单测(mock 子进程 stdout);实跑飞书私聊回一句验证闭环。
+
+---
 
 - `README.md`(本文件)— 线 D 总方案。
 - 后续可加:`lark-cli-contract.md`(lark-cli 调用参数/输出契约冻结)、`delivery-wire.md`(DeliveryRecord + REST 形状),按需在开工对应 STEP 时补,避免一次写太多空中楼阁。

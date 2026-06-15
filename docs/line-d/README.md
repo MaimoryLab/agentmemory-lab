@@ -10,7 +10,7 @@
 
 | STEP | 内容 | 状态 |
 |---|---|---|
-| **D1** | 投递原语后端:`mem::inbox-deliver` 函数 + 投递配置 + audit + 去重 | ⬜ 待开工 |
+| **D1** | 投递原语后端:`mem::inbox-deliver` 函数 + 投递配置 + audit + 去重 | ✅ **已合并** [PR#34](https://github.com/MaimoryLab/agentmemory-lab/pull/34)(main 658e7b4,纯后端默认关,7 例测试 + CI 4 格绿;适配器 D1 桩、D2 实接) |
 | **D2** | lark-cli 适配器:把 InboxItem 渲染成飞书消息(卡片/markdown)并发出 | ⬜ 待开工(依赖 D1) |
 | **D3** | 挂接 inbox 写路径:ask/notify 后 fire-and-forget 触发投递 | ⬜ 待开工(依赖 D1/D2) |
 | **D4** | 投递状态回写 + viewer 呈现(已推送/推送失败标记) | ⬜ 待开工(依赖 D3) |
@@ -131,7 +131,13 @@ interface DeliveryRecord {
   - `test/inbox-deliver.test.ts`(新):去重(已 sent 跳过)、配置门(未开/缺 user-id 直接 skipped)、台账写入、失败记录。**适配器(lark-cli 调用)在测试里 mock 掉**,不真发飞书。
 - **结果预测**:build + test 绿;**不新增 MCP 工具/REST 端点**(投递是内部 fire-and-forget,无对外接口),故**不触发**一致性铁律的 8 处/3 处连带,只动 KV(2)+audit(1)。
 - **风险**:低。纯后端、有开关、默认关。
-
+- ✅ **实际反馈([PR#34](https://github.com/MaimoryLab/agentmemory-lab/pull/34) 已合并,main 658e7b4,CI 4 格绿)**:
+  - `config.ts`:`isLarkDeliveryEnabled()`(`DELIVERY==="true"` **且** user-id 有值)、`isLarkReplyLoopEnabled()`(D5)、`getLarkConfig()`→`{userId,urgentQuestion}`(缺 user-id 返 null)。
+  - `schema.ts` KV `delivery:"mem:delivery"`;`types.ts` `DeliveryRecord` + audit ops `inbox_delivered`/`delivery_failed`(KV 2 + audit 1)。
+  - `inbox-deliver.ts`:配置门(关/无配置→写 `skipped`、不调适配器)+ 去重(`sent` 跳、`failed` 重试 attempts++)+ 成功 `sent`+audit / 失败 `failed`+audit。台账独立 KV,inbox 不改。
+  - `lark-adapter.ts`:**D1 桩**(冻结契约、默认返 `pending STEP-D2`),注入式 → 测试传桩;真 lark-cli execFile 在 D2。
+  - `test/inbox-deliver.test.ts` 7 例(配置门/去重/失败重试/audit/briefing),`vi.mock` config + `vi.fn` 注入 adapter,零飞书依赖。
+  - **不新增 MCP工具/REST端点 → 不触发一致性 8/3 连带**(符合预测),只动 KV+audit。pre-pr 132 文件/1409 用例 + CI 4 格全绿。
 ### STEP-D2 — lark-cli 适配器(InboxItem → 飞书消息)
 - **改动面**:
   - `src/functions/lark-adapter.ts`(新):`deliverViaLark(item, config)`——按 kind 构造消息 JSON、`execFile("lark-cli", [...], {input, timeout})`(仿 `branch-aware.ts:8`)、解析 `--json` 输出、question 成功后调加急、返回 `{messageId, urgent, error}`。

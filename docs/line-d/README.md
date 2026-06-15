@@ -14,7 +14,7 @@
 | **D2** | lark-cli 适配器:把 InboxItem 渲染成飞书消息(卡片/markdown)并发出 | ✅ **已合并** [PR#35](https://github.com/MaimoryLab/agentmemory-lab/pull/35)(main 6a837f4,真 execFile 实接、9 例测试 + CI 4 格绿;**真发验证**:question 卡片 + briefing 各一条 `ok:true`,urgent 缺 scope 正确降级) |
 | **D3** | 挂接 inbox 写路径:ask/notify 后 fire-and-forget 触发投递 | ✅ **已合并** [PR#36](https://github.com/MaimoryLab/agentmemory-lab/pull/36)(main 9cecd5c,只改 inbox.ts、4 新测试)+ **关键修复** [PR#40](https://github.com/MaimoryLab/agentmemory-lab/pull/40)(main fca8a41):原 dispatch 用了 iii-sdk 0.11.2 不存在的 `sdk.triggerVoid`,投递从未真正发生,改用 `sdk.trigger({action:TriggerAction.Void()})`,真发复验通过 |
 | **D4** | 投递状态回写 + viewer 呈现(已推送/推送失败标记) | ✅ **已合并** [PR#41](https://github.com/MaimoryLab/agentmemory-lab/pull/41)(main 612bd28,**不新增端点**、inbox-list join `mem:delivery`、9 新测试 + CI 4 格绿;真发实证工作台显示「已推送 ✓」) |
-| **D5** | **飞书内回复闭环**:bot 订阅收信 → 回复映射回 inbox-answer(**本轮必做**) | 🔵 **拆两半**(D5 风险高于 D1-D4):**D5a** ✅ 映射内核+可测消费者(无进程)[PR#43](https://github.com/MaimoryLab/agentmemory-lab/pull/43)(main 1305158);**D5b** ⬜ worker 启动长驻 lark-cli event consume + 实跑(依赖 D5a) |
+| **D5** | **飞书内回复闭环**:bot 订阅收信 → 回复映射回 inbox-answer(**本轮必做**) | 🔵 **拆两半**(D5 风险高于 D1-D4):**D5a** ✅ 映射内核+可测消费者(无进程)[PR#43](https://github.com/MaimoryLab/agentmemory-lab/pull/43)(main 1305158);**D5b** ✅ worker 启动长驻 lark-cli event consume + 进程生命周期 [PR#45](https://github.com/MaimoryLab/agentmemory-lab/pull/45)(main f7e8b63)。**代码就绪,端到端实跑待飞书后台开通** `im:message.p2p_msg:readonly` scope + `im.message.receive_v1` 事件订阅 |
 
 > **里程碑**:线 C 已让「Agent 写 → 落库 → 用户**打开工作台**才看到」。线 D 补上**跨设备主动触达 + 飞书内回复闭环**——Agent 抛出 question/briefing 后,飞书 bot 主动私聊推给用户(D1-D4);用户**直接在飞书回一句**就把对应 question 在工作台标记 answered(D5)。推送 + 回复双向都在飞书完成,工作台与飞书互为镜像。
 
@@ -307,7 +307,9 @@ interface DeliveryRecord {
 >   - `inbox-deliver.ts`:question sent + `isLarkReplyLoopEnabled()` 时写指针(最新覆盖);briefing/失败/loop关 都不写。
 >   - 多加一个**过期指针守卫**:用户若在工作台答了该 question(status≠awaiting),消费者清掉过期指针并忽略该回复,不重复 answer。
 >   - 测试 19 例(consumer 15 + inbox-deliver 4),全 mock 无真实进程,CI 稳。**用 `sdk.trigger` 非 triggerVoid**(吸取 D3 教训)。
-> - **D5b ⬜ worker 启动长驻进程 + 实跑**(下一步):`src/index.ts` worker ready 后按 `isLarkReplyLoopEnabled()` spawn `lark-cli event consume im.message.receive_v1 --as bot --quiet`,stdout 逐行喂 D5a 的 `handleLine`;SIGTERM/关 stdin 优雅退(禁 kill -9);本地开 `AGENTMEMORY_LARK_REPLY_LOOP=true` 造 question→飞书回一句→工作台转 answered 实证。失败会集中在权限/scope/生命周期,不与映射语义混。
+> - **D5b ✅ worker 启动长驻进程 + 进程生命周期**([PR#45](https://github.com/MaimoryLab/agentmemory-lab/pull/45),main f7e8b63,CI 4 格绿):`src/functions/lark-reply-loop.ts`(新)`startLarkReplyConsumer({kv,sdk,userId,spawnFn?})` spawn `lark-cli event consume ... --quiet`(spawnFn 可注入、测试零真进程),stdout 缓冲按 `\n` 切只喂完整行(JSON 跨 chunk 重组、尾部半行留存),stderr 只记短摘要不打正文,exit 只 warn 不自动重启,`stop()` 关 stdin+SIGTERM 幂等(禁 kill -9——lark-cli 把 stdin EOF/SIGTERM 当优雅退出契约)。`src/index.ts` 注册后按开关 spawn + shutdown 先 stop。9 例 fake-child 测试。
+>   - **实跑阻塞在飞书后台(非代码,正是预判的风险点)**:本地已验证订阅能连(`feishu-websocket: connected`、`[event] ready`)、进程生命周期正常,但端到端「回复→工作台转 answered」需**在 app `cli_aa9eb0457cfadbc3` 开发者后台**(`https://open.feishu.cn/app/cli_aa9eb0457cfadbc3/`)开通 ① scope `im:message.p2p_msg:readonly` ② 事件订阅 `im.message.receive_v1`(长连接方式)。**未在代码里绕过权限**。开通后实跑:`AGENTMEMORY_LARK_DELIVERY=true`+`AGENTMEMORY_LARK_REPLY_LOOP=true`+`AGENTMEMORY_LARK_USER_ID=ou_e569d0...`→起 worker→造 question→飞书回一句→该项转 answered。
+>   - **lark-cli 契约确认**:`event consume` 把 stdin EOF 当退出信号(`wired for AI subprocess callers`)——worker spawn 留 stdin open 不会误退,`stop()` 关 stdin 正是其优雅退出路径,设计吻合。
 
 ---
 

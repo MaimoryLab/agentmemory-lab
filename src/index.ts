@@ -12,6 +12,8 @@ import {
   isConsolidationEnabled,
   isContextInjectionEnabled,
   isDropStaleIndexEnabled,
+  isLarkReplyLoopEnabled,
+  getLarkConfig,
 } from "./config.js";
 import {
   createProvider,
@@ -67,6 +69,7 @@ import { registerRoutinesFunction } from "./functions/routines.js";
 import { registerSignalsFunction } from "./functions/signals.js";
 import { registerInboxFunction } from "./functions/inbox.js";
 import { registerInboxDeliverFunction } from "./functions/inbox-deliver.js";
+import { startLarkReplyConsumer, type ReplyLoop } from "./functions/lark-reply-loop.js";
 import { registerCheckpointsFunction } from "./functions/checkpoints.js";
 import { registerFlowCompressFunction } from "./functions/flow-compress.js";
 import { registerMeshFunction } from "./functions/mesh.js";
@@ -583,8 +586,23 @@ async function main() {
     bootLog(`Auto-consolidation: enabled (every ${consolidationIntervalMs / 60000}m)`);
   }
 
+  // Line D / STEP-D5b — Feishu reply loop. Default OFF; only spawns the
+  // long-running `lark-cli event consume` subscriber when explicitly enabled
+  // and a target user is configured.
+  let replyLoop: ReplyLoop | null = null;
+  if (isLarkReplyLoopEnabled()) {
+    const larkConfig = getLarkConfig();
+    if (larkConfig?.userId) {
+      replyLoop = startLarkReplyConsumer({ kv, sdk, userId: larkConfig.userId });
+      bootLog("Lark reply loop: enabled");
+    } else {
+      bootLog("Lark reply loop: requested but no AGENTMEMORY_LARK_USER_ID — skipped");
+    }
+  }
+
   const shutdown = async () => {
     console.log(`\n[agentmemory] Shutting down...`);
+    replyLoop?.stop();
     healthMonitor.stop();
     dedupMap.stop();
     indexPersistence.stop();

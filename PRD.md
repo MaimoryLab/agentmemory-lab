@@ -127,7 +127,7 @@ Acceptance Criteria:
 | Local daemon | Yes | Run scans and serve local API/UI |
 | Local database | Yes | Store todos, sources, evidence, status, and scan checkpoints |
 | Local web UI | Yes | Display and manage extracted todos |
-| LLM classifier | TBD | Classify unfinished work and generate summaries |
+| LLM classifier | No (v1.1) | Classify unfinished work and generate summaries — deferred to v1.1; v1 uses the rule-based extractor |
 | Rule-based extractor | Yes | Provide deterministic baseline extraction and fallback |
 | i18n resource system | Yes | Store UI copy outside business logic |
 | Connector interface | Yes | Define a generic connector contract for future Feishu, Slack, Discord, Telegram, and local app integrations |
@@ -220,8 +220,8 @@ Todo `state` values:
 
 | Integration | v1 Status | Notes |
 |---|---|---|
-| Local agent sessions | Target v1 | Exact first source path and schema: TBD |
-| Browser AI conversation | Target v1 | Exact first browser source: TBD |
+| Local agent sessions | v1 | First source: Codex session logs |
+| Browser AI conversation | v1 | First source: browser AI-site capture (existing extension) |
 | Cursor local history | Future | Local storage format needs research |
 | Generic connector interface | Required in v1 | Define shape for future external tool integrations |
 | Slack / Discord / Telegram | Future | Do not need working integration in v1 |
@@ -235,7 +235,7 @@ Todo `state` values:
 - Captured content must be stored in a local database.
 - User must be able to delete extracted todos.
 - Sensitive values such as API keys, tokens, and secrets must be redacted before display when detected.
-- If an LLM is used for extraction, the provider, model, and data flow must be explicitly documented. Until confirmed, this is `TBD`.
+- v1 uses rule-based extraction only and ships no LLM classifier. If an LLM is added (v1.1), its provider, model, and data flow must be explicitly documented.
 
 ### Localization Requirements
 
@@ -253,7 +253,7 @@ Todo `state` values:
 
 #### v1 / MVP: Local AI Todo
 
-Goal: deliver the current core product scope plus the required launch constraints: local scanning, browser capture, local database, local web UI, manual cleanup, localization-ready UI, and open-source-ready documentation. Exact date: `TBD`.
+Goal: deliver the current core product scope plus the required launch constraints: local scanning, browser capture, local database, a simple lightweight todo-list web UI, manual cleanup, localization-ready UI, and open-source-ready documentation. Exact date: no hard public deadline — tracked internally, not a launch gate (confirmed 2026-06-17).
 
 Scope:
 
@@ -261,7 +261,7 @@ Scope:
 - Browser extension captures at least one browser AI source.
 - Local database stores extracted todos and evidence.
 - Incremental scanning prevents duplicate extraction across repeated runs.
-- Local web UI displays active todos.
+- Local web UI displays active todos as a simple, lightweight list with status filtering. (The two-dimensional time × type workbench is deferred to v1.1.)
 - User can mark todos as done, ignored, or deleted.
 - Docs include `README.md`, `FEATURES.md`, `ARCHITECTURE.md`, `RULES.md`, and `ROADMAP.md`.
 - Core UI copy is available through localization resources.
@@ -277,6 +277,8 @@ Scope:
 - Add copyable todo summary for PRs, issues, and docs.
 - Add benchmark dataset and evaluation script.
 - Add language preference persistence and improve localization documentation.
+- Add the two-dimensional (time × type) workbench with history hidden by default.
+- Add an optional LLM classifier (rule-based extraction remains the default and fallback).
 
 #### v2.0: Connectors and Collaboration
 
@@ -303,8 +305,11 @@ Scope:
 
 ### Open Questions
 
-- Initial technical stack: `TBD`; recommended candidate is Node.js local daemon + SQLite + browser extension + lightweight web UI.
-- First local agent source: `TBD`.
-- First browser source: `TBD`.
-- Whether v1 uses an LLM classifier or only rule-based extraction: `TBD`.
-- Exact v1 deadline: `TBD`.
+Resolved 2026-06-17 (confirmation worksheet: `docs/v1-scope-cn.md`):
+
+- Initial technical stack: **Node.js local daemon + SQLite + browser extension + lightweight web UI**.
+- First local agent source: **Codex**.
+- First browser source: **browser AI-site capture** (existing extension).
+- LLM classifier vs rule-based: **v1 is rule-based only**; the LLM classifier is deferred to v1.1.
+- v1 deadline: **no hard public deadline** — tracked internally, not a launch gate.
+- v1 UI scope: **a simple, lightweight todo list** with status filtering; the two-dimensional (time × type) workbench is deferred to v1.1.

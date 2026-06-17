@@ -1,20 +1,27 @@
-# AI Todo v1 功能收口确认（草案 v0.1）
+# AI Todo v1 功能收口确认（已确认）
 
-> 用途：2026-06-17 版本确认会的**拍板底稿**。逐条过「确认 / 推迟 v1.1 / 砍」，定 ship deadline。
-> 状态：🟡 草案，**待 2026-06-17 确认** · 来源：ACTION-ITEMS AI-2（齐木 Jason）/ PLAN-003 STEP-02。
-> 确认后：回填 `PRD.md §Open Questions`（5 个 TBD）+ 更新 `ROADMAP.md` + 回填 STEP-02「实际反馈」。
+> 用途：2026-06-17 版本确认会的记录。下方 §1–§8 各表保留为决策依据与待办清单。
+> 状态：✅ **已确认（2026-06-17）** · 来源：ACTION-ITEMS AI-2（齐木 Jason）/ PLAN-003 STEP-02。
+> 回填状态：已回填 `PRD.md`（Open Questions / Tool Requirements / Integration Points / Security / Roadmap）；root `ROADMAP.md`（仍是 agentmemory 旧路线图）随 PLAN-004 改名时一并对齐；PLAN-003 STEP-02「实际反馈」已回填。
 > 依据：`PRD.md`、`ROADMAP.md`、PLAN-001（i18n）、PLAN-002（最小 AI→工作台，含代码现状审查）。
 >
 > 说明：本文按名引用的 `ACTION-ITEMS` / `PLAN-001..004` / 各 `STEP-*` 都在一个**独立的指挥仓库**（command repo，只做规划、不随本产品仓 `MaimoryLab/AI-Todo` 发布）。因此本文**不外链**这些文件（链接在 GitHub 上会失效），只按名引用，正文力求自包含。
 
 ---
 
-## 0. 一页结论（提议，待确认）
+## 0. 确认结果（2026-06-17，已拍板）
 
-- **v1 定义（提议）**：本地优先的「AI 工作流待办抽取」最小闭环——**Codex + 浏览器**两来源 → 增量、不重读地抽成带证据的 todo → 本地 Web UI（三栏 + 状态筛选）查看与手动 done/ignore/delete → UI 字符串 i18n-ready（默认英文）→ 配齐开源文档。
-- **抽取方式（提议）**：v1 用**规则式**（`action-candidates`），**LLM 分类器推 v1.1**。
-- **二维工作台（时间×类型 + 历史默认隐藏，PLAN-002 STEP-04/05）**：**建议进 v1**，但若赶 deadline 可降级为 v1.1（详见 §4 标注）。
-- **ship deadline（提议）**：**待拍板**——但必须基于 §5 的「现实差距」来定，不能拍一个无视未建工作量的日期。给两套方案见 §5。
+> 以下为最终决定；下方 §1–§8 各表保留为依据与待办清单。
+
+1. **5 个 Open Question**：前四个按推荐答案——技术栈 = Node 守护 + SQLite + 扩展 + 轻量 Web UI；首个 local source = **Codex**；首个 browser source = **浏览器 AI 站点抓取**；**v1 不上 LLM 分类器**（规则式抽取，LLM 推 v1.1）。第 5 个 **ship deadline：不设硬期**（不作为发布闸门）。
+2. **二维工作台（时间×类型 + 历史默认隐藏）→ v1.1**。**v1 只做简洁轻量的 todo 列表**（单轴 status + 筛选），即现有 viewer 形态。
+3. **范围方案 A（最小可承诺集）**。
+4. **目标日期：不重要**（不设硬期，按吞吐量推进）。
+5. **验收门槛：按本文 §6**（含「标注评测集」前置 blocker）。
+6. **v1 明确不做：按本文 §3**（确认全部 Non-Goals）。
+
+**v1（A 方案必交集）**：Codex 扫描器 + 首启回填/增量（PLAN-002 STEP-01/02）、浏览器→抽取（STEP-03）、viewer i18n + 全量外置 + 扩展 i18n + 品牌（PLAN-001 STEP-01/02/03/04）、文档 RULES/ARCHITECTURE/FEATURES + 评审流程（PLAN-003 STEP-01/03）、connector 接口仅文档化。
+**推 v1.1**：二维工作台（PLAN-002 STEP-04/05/06）、LLM 分类器、文档 i18n 策略与 i18n CI 守卫（PLAN-001 STEP-05/06）。
 
 ---
 

@@ -984,9 +984,9 @@ describe("viewer session rendering", () => {
       const url = String(input);
       if (url.includes("config/todo-extractor") && init?.body) {
         posts.push(JSON.parse(init.body));
-        return { ok: true, json: async () => ({ success: true, envPath: "/tmp/.env", config: { LANGEXTRACT_MODEL: "pa/gpt-5.5", LANGEXTRACT_API_KEY_CONFIGURED: true } }) };
+        return { ok: true, json: async () => ({ success: true, envPath: "/tmp/.env", config: { LANGEXTRACT_MODEL: "deepseek/deepseek-v4-pro", LANGEXTRACT_API_KEY_CONFIGURED: true } }) };
       }
-      return { ok: true, json: async () => ({ success: true, envPath: "/tmp/.env", config: { LANGEXTRACT_MODEL: "pa/gpt-5.5", LANGEXTRACT_API_KEY_CONFIGURED: false } }) };
+      return { ok: true, json: async () => ({ success: true, envPath: "/tmp/.env", config: { LANGEXTRACT_MODEL: "deepseek/deepseek-v4-pro", LANGEXTRACT_API_KEY_CONFIGURED: false } }) };
     };
     sandbox.state.activeTab = "actions";
     sandbox.state.actions = {
@@ -996,7 +996,7 @@ describe("viewer session rendering", () => {
       statusFilter: "",
       search: "",
       reviewItems: [],
-      config: { envPath: "/tmp/.env", config: { LANGEXTRACT_MODEL: "pa/gpt-5.5", LANGEXTRACT_API_KEY_CONFIGURED: false } },
+      config: { envPath: "/tmp/.env", config: { LANGEXTRACT_MODEL: "deepseek/deepseek-v4-pro", LANGEXTRACT_API_KEY_CONFIGURED: false } },
     };
     sandbox.state.inbox = { loaded: true, items: [] };
     sandbox.renderActions();
@@ -1006,7 +1006,7 @@ describe("viewer session rendering", () => {
     sandbox.renderSettingsPanel();
     expect(getElement("settings-panel").innerHTML).toContain("LLM extraction config");
 
-    getElement("todo-config-LANGEXTRACT_MODEL").value = "pa/gpt-5.5";
+    getElement("todo-config-LANGEXTRACT_MODEL").value = "deepseek/deepseek-v4-pro";
     getElement("todo-config-LANGEXTRACT_API_KEY").value = "secret";
     const target = Object.create(sandbox.Element.prototype);
     target.getAttribute = (name: string) => name === "data-action" ? "save-todo-config" : null;
@@ -1014,7 +1014,7 @@ describe("viewer session rendering", () => {
     dispatchDocumentClick(target);
     await waitFor(() => sandbox.state.actions.extractMessage === "配置已保存，重启后生效。");
 
-    expect(posts[0]).toMatchObject({ LANGEXTRACT_MODEL: "pa/gpt-5.5", LANGEXTRACT_API_KEY: "secret" });
+    expect(posts[0]).toMatchObject({ LANGEXTRACT_MODEL: "deepseek/deepseek-v4-pro", LANGEXTRACT_API_KEY: "secret" });
     expect(sandbox.state.actions.extractMessage).toBe("配置已保存，重启后生效。");
   });
 

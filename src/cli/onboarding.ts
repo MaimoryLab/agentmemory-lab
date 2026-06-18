@@ -33,6 +33,10 @@ import type { ConnectResult } from "./connect/types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function homeDir(): string {
+  return process.env["HOME"] || process.env["USERPROFILE"] || homedir();
+}
+
 // Native plugin row — these agents ship an agentmemory plugin or
 // first-party integration. Glyphs match SkillKit's published set
 // where they overlap; the rest fall back to the generic `◇`.
@@ -121,7 +125,7 @@ function findEnvExample(): string | null {
 }
 
 async function seedEnvFile(provider: string | null): Promise<string | null> {
-  const target = join(homedir(), ".agentmemory", ".env");
+  const target = join(homeDir(), ".agentmemory", ".env");
   const dir = dirname(target);
   await mkdir(dir, { recursive: true });
 
@@ -271,7 +275,7 @@ export async function runOnboarding(): Promise<OnboardingResult> {
     firstRunAt: new Date().toISOString(),
   });
 
-  const prefsLocation = join(homedir(), ".agentmemory", "preferences.json");
+  const prefsLocation = join(homeDir(), ".agentmemory", "preferences.json");
   const lines = [`✓ Saved preferences to ${prefsLocation}`];
   if (envPath) {
     lines.push(`✓ Wrote ${envPath} (edit to add your API key)`);

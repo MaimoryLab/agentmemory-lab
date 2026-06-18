@@ -20,6 +20,7 @@ checklist in [RULES.md](../../RULES.md).
 |---|---|---|---|---|
 | Viewer i18n base | Done | P0 | shipped | Inline `{en, zh}` catalog + `t()` |
 | Codex source scanner | In Progress | P0 | [codex-source-scanner.md](codex-source-scanner.md) | First local source; incremental, no re-reads |
+| LLM todo extraction loop | Draft | P0 | [llm-todo-extraction-loop.md](llm-todo-extraction-loop.md) | Structured extraction, card update, and evidence navigation contract |
 
 ### Status
 

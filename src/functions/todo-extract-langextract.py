@@ -108,7 +108,7 @@ def main() -> int:
             ],
         )
     ]
-    model_id = os.environ.get("LANGEXTRACT_MODEL") or os.environ.get("GEMINI_MODEL") or "pa/gpt-5.5"
+    model_id = os.environ.get("LANGEXTRACT_MODEL") or os.environ.get("GEMINI_MODEL") or "deepseek/deepseek-v4-pro"
     result = lx.extract(
         text_or_documents=text,
         prompt_description=PROMPT,
@@ -163,9 +163,9 @@ if __name__ == "__main__":
         class DummyLx:
             factory = DummyFactory
 
-        params = extract_kwargs(DummyLx, os.environ.get("LANGEXTRACT_MODEL", "pa/gpt-5.5"), DummyConfig)
+        params = extract_kwargs(DummyLx, os.environ.get("LANGEXTRACT_MODEL", "deepseek/deepseek-v4-pro"), DummyConfig)
         config = params.get("config")
-        assert config.model_id == "pa/gpt-5.5"
+        assert config.model_id == "deepseek/deepseek-v4-pro"
         assert config.provider == "openai"
         assert config.provider_kwargs["base_url"] == "https://api.novita.ai/openai/v1"
         assert config.provider_kwargs["reasoning_effort"] == "medium"

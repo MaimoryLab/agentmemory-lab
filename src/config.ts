@@ -70,7 +70,7 @@ export function getTodoExtractorUserConfig(): Record<string, string | boolean> {
   return {
     AGENTMEMORY_TODO_EXTRACTOR: env["AGENTMEMORY_TODO_EXTRACTOR"] || "auto",
     LANGEXTRACT_PYTHON: env["LANGEXTRACT_PYTHON"] || "python3",
-    LANGEXTRACT_MODEL: env["LANGEXTRACT_MODEL"] || "pa/gpt-5.5",
+    LANGEXTRACT_MODEL: env["LANGEXTRACT_MODEL"] || "deepseek/deepseek-v4-pro",
     LANGEXTRACT_PROVIDER: env["LANGEXTRACT_PROVIDER"] || "",
     LANGEXTRACT_BASE_URL: env["LANGEXTRACT_BASE_URL"] || "",
     LANGEXTRACT_THINKING_DEPTH: env["LANGEXTRACT_THINKING_DEPTH"] || "medium",

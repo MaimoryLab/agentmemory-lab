@@ -8785,8 +8785,8 @@
         }).catch(function() {});
       }, 12000);
       apiPost('todo-extract/generate', {
-        maxSessions: 3,
-        maxObservationsPerSession: 120,
+        maxSessions: 1,
+        maxObservationsPerSession: 20,
         force: force === true
       }).then(function(result) {
         var delta = todoExtractionDelta(result);

@@ -829,8 +829,8 @@ describe("viewer session rendering", () => {
     expect(urls.some((url) => url.includes("todo-extract/generate"))).toBe(true);
     expect(urls.some((url) => url.includes("review/actions/generate"))).toBe(false);
     expect(posts[0].body).toMatchObject({
-      maxSessions: 3,
-      maxObservationsPerSession: 120,
+      maxSessions: 1,
+      maxObservationsPerSession: 20,
       force: true,
     });
     expect(sandbox.state.actions.extractMessage).toContain("new 1");

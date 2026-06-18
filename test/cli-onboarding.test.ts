@@ -29,6 +29,7 @@ vi.mock("../src/cli/connect/index.js", () => ({
 
 const ORIGINAL_HOME = process.env["HOME"];
 const ORIGINAL_USERPROFILE = process.env["USERPROFILE"];
+const ORIGINAL_CI = process.env["CI"];
 const stdinTtyDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
 const stdoutTtyDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
 
@@ -60,6 +61,7 @@ describe("cli onboarding", () => {
     sandboxHome = mkdtempSync(join(tmpdir(), "agentmemory-onboarding-"));
     process.env["HOME"] = sandboxHome;
     process.env["USERPROFILE"] = sandboxHome;
+    process.env["CI"] = "0";
     setTTY(false);
     vi.clearAllMocks();
   });
@@ -70,6 +72,8 @@ describe("cli onboarding", () => {
     else process.env["HOME"] = ORIGINAL_HOME;
     if (ORIGINAL_USERPROFILE === undefined) delete process.env["USERPROFILE"];
     else process.env["USERPROFILE"] = ORIGINAL_USERPROFILE;
+    if (ORIGINAL_CI === undefined) delete process.env["CI"];
+    else process.env["CI"] = ORIGINAL_CI;
     rmSync(sandboxHome, { recursive: true, force: true });
   });
 

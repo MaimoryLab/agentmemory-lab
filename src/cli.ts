@@ -126,11 +126,11 @@ Usage: agentmemory-lab [command] [options]
 Commands:
   (default)          Start Agent Memory Lab worker
   init               Copy bundled .env.example to ~/.agentmemory/.env if absent
-  connect [agent]    Wire agentmemory into an installed agent (claude-code,
-                     copilot-cli, codex, cursor, gemini-cli, openclaw,
-                     hermes, pi, openhuman).
-                     No arg = interactive picker. --all wires every detected agent.
-                     --dry-run shows what would change. --force re-installs.
+  connect [agent]    Wire agentmemory into an installed agent. No arg = interactive
+                     picker listing all supported agents (claude-code, codex, cursor,
+                     copilot-cli, gemini-cli, qwen, cline, zed, droid, …).
+                     --all wires every detected agent. --dry-run shows what would
+                     change. --force re-installs.
   status             Show connection status, memory count, flags, and health
   config get|set     Read or update user Todo extractor config in ~/.agentmemory/.env
   doctor             Interactive diagnostic + fixer. [F]ix · [S]kip · [?]more · [Q]uit
@@ -152,6 +152,7 @@ Commands:
 
 Options:
   --help, -h         Show this help
+  --version, -V      Print version and exit
   --verbose, -v      Show engine stderr, boot log, and diagnostic info
   --reset            Wipe ~/.agentmemory/preferences.json and re-run onboarding
   --tools all|core   Tool visibility (default: all = 51 tools; core = 8 essentials)
@@ -921,12 +922,11 @@ function workerRecoveryNote(port: number): string {
     `Port ${port} is occupied, but the Agent Memory API is not answering /agentmemory/livez.`,
     "This usually means an iii-engine process is still bound to the port after the worker exited.",
     "",
-    "Recover with:",
-    "  cd /Users/szn/agentmemory",
+    "Recover with (from your AI Todo / MaimoryLab repo checkout):",
     "  node dist/cli.mjs stop --force",
     "  npm run start:local-memory",
     "",
-    "Do not start this product with the upstream npm package. Use the MaimoryLab repo checkout above.",
+    "Do not start this product with the upstream npm package — use your MaimoryLab repo checkout.",
     "",
     "Inspect the occupied port:",
     portInUseDiagnostic(port),
@@ -1094,7 +1094,7 @@ async function main() {
           `Check whether port ${port} is already bound by another process:`,
           portInUseDiagnostic(port),
           "",
-          "If it is, free the port or override: AGENTMEMORY_PORT=<N> npm run start:local-memory",
+          "If it is, free the port or override: npm run start:local-memory -- --port <N>",
           "",
           "If it isn't, a firewall may be blocking 127.0.0.1:" + port + ".",
           "Re-run with --verbose to see engine stderr.",

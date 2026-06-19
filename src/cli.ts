@@ -995,6 +995,20 @@ function printReadyHint(consoleState: IiiConsoleState): void {
   process.stdout.write("\nTry: node dist/cli.mjs demo\n");
 }
 
+function printNotReadyHint(): void {
+  p.log.warn(`The worker did not report ready within 15s at ${getBaseUrl()}.`);
+  p.note(
+    [
+      "The engine may still be warming up, or the worker failed to bind to the port.",
+      "Check it / diagnose, or re-run with the boot log:",
+      "  node dist/cli.mjs status",
+      "  node dist/cli.mjs doctor",
+      "  npm run start:local-memory -- --verbose",
+    ].join("\n"),
+    "Worker not ready",
+  );
+}
+
 async function main() {
   // `--reset` wipes preferences before anything else so the onboarding
   // flow below always runs fresh.
@@ -1023,6 +1037,8 @@ async function main() {
       const consoleState = await ensureIiiConsole();
       await maybeOfferGlobalInstall();
       printReadyHint(consoleState);
+    } else {
+      printNotReadyHint();
     }
     return;
   }
@@ -1038,6 +1054,8 @@ async function main() {
       const consoleState = await ensureIiiConsole();
       await maybeOfferGlobalInstall();
       printReadyHint(consoleState);
+    } else {
+      printNotReadyHint();
     }
     return;
   }
@@ -1111,6 +1129,8 @@ async function main() {
     const consoleState = await ensureIiiConsole();
     await maybeOfferGlobalInstall();
     printReadyHint(consoleState);
+  } else {
+    printNotReadyHint();
   }
   // Mark splash as something to skip on subsequent runs. This is a
   // no-op if onboarding already flipped the flag (idempotent merge).

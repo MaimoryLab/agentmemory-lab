@@ -34,10 +34,7 @@ const REQUIRED_MINIMUM_EVENTS = [
 ];
 
 const KNOWN_SKILL_DIRS = [
-  "recall",
-  "remember",
   "session-history",
-  "forget",
   "handoff",
   "recap",
   "commit-context",

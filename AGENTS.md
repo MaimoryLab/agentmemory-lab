@@ -136,6 +136,6 @@ A change is done only when:
 - 55 MCP tools (8 visible by default, `AGENTMEMORY_TOOLS=all` for all)
 - 140 REST endpoints
 - 6 MCP resources, 3 MCP prompts
-- 12 hooks, 14 skills
+- 12 hooks, 9 skills
 - 60+ iii functions
 - 1300+ tests

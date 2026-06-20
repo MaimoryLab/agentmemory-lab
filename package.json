@@ -92,7 +92,7 @@
     "tiny-segmenter": "^0.2.0"
   },
   "devDependencies": {
-    "@types/node": "^25.7.0",
+    "@types/node": "^26.0.0",
     "tsdown": "^0.20.3",
     "tsx": "^4.19.0",
     "typescript": "^6.0.3",

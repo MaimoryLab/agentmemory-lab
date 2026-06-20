@@ -45,7 +45,7 @@
 
 ### 3.1 把本项目自己的 MCP 接进来（dogfooding）
 agentmemory-lab **本身就是个 MCP 服务器**（`src/mcp/`，51 工具，`plugin/.mcp.json` 注册 `npx @agentmemory/mcp`）。开发它的同时把它接给开发用的 Claude，能:
-- 让记忆/会话历史在开发会话间留存（recall/remember/recap/handoff 等 12 个 plugin skill）。
+- 让记忆/会话历史在开发会话间留存（recap/handoff/sync-session 等 9 个 plugin skill）。
 - 真实 dogfood「待办/证据」链路——开发者自己就是「个人重度 Agent 用户」。
 - **评估点**:需起本地 worker(`:3111`)+ 配 `AGENTMEMORY_URL`；注意别让开发数据污染 demo。建议用独立数据目录。
 

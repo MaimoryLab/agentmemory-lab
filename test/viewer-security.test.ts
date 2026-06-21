@@ -247,7 +247,7 @@ describe("viewer request handler DNS rebinding defence (e2e)", () => {
     // passed. The CSP nonce assertion below is the load-bearing check.
     expect(res.status === 200 || res.status === 404).toBe(true);
     if (res.status === 200) {
-      expect(res.body).toContain("灵感记忆台");
+      expect(res.body).toContain("AI Todo");
     }
   });
 

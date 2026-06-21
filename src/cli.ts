@@ -1922,7 +1922,7 @@ async function runInit() {
       "All keys are commented out by default. Uncomment the ones you want.",
       "",
       "Common next steps:",
-      "  1. Pick an LLM provider key (ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY / etc.)",
+      "  1. (Optional) set a To-Do extraction model — LANGEXTRACT_PROVIDER / LANGEXTRACT_MODEL / LANGEXTRACT_BASE_URL + LANGEXTRACT_API_KEY (To-Dos work without it via the rules extractor)",
       "  2. Run `node dist/cli.mjs doctor` to verify the daemon sees them",
       "  3. Run `npm run start:local-memory` to start the worker",
     ].join("\n"),

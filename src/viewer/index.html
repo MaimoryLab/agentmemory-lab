@@ -4311,10 +4311,10 @@
         'obs.type.image': '图片',
         'obs.type.other': '其它',
         'obs.summary.localOperation': '执行本地操作',
-        'obs.summary.restartService': '重启灵感记忆台服务',
-        'obs.summary.startService': '启动灵感记忆台服务',
-        'obs.summary.openPreview': '打开灵感记忆台预览',
-        'obs.summary.checkService': '检查记忆台服务状态',
+        'obs.summary.restartService': '重启 AI Todo 服务',
+        'obs.summary.startService': '启动 AI Todo 服务',
+        'obs.summary.openPreview': '打开 AI Todo 预览',
+        'obs.summary.checkService': '检查服务状态',
         'obs.summary.verifyPageFix': '验证页面修复是否生效',
         'obs.summary.viewFixLog': '查看修复日志',
         'obs.summary.checkBrowserAutomation': '检查浏览器自动化工具是否可用',
@@ -5802,7 +5802,7 @@
           'Dashboard failed to load: ' + msg +
           '<br><br><span style="font-size:12px;color:var(--ink-muted);">' +
           'Check the browser console for the full error. If you see CSP ' +
-          'violations, please open an issue with the agentmemory version ' +
+          'violations, please open an issue with the AI Todo version ' +
           '(top-right of the viewer) and the violation text.' +
           '</span></div>';
       }
@@ -8276,7 +8276,7 @@
         }
       } catch (err) {
         btn.textContent = '摘要服务未响应';
-        btn.title = '本地工作台没有连上摘要接口，请确认 Agent Memory Lab worker 正在运行。';
+        btn.title = '本地工作台没有连上摘要接口，请确认 AI Todo worker 正在运行。';
       }
       setTimeout(function() { btn.textContent = '生成摘要'; btn.disabled = false; }, 2600);
     }

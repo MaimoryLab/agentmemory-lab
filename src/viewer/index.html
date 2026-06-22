@@ -9775,9 +9775,11 @@
         // STEP-C4:无筛选的默认视图里,done 不混在分组流中,改由底部「已完成」
         // 折叠区单独承载、且只显当天完成的(§3.2/§3.3)。点了「已完成」筛选 chip
         // (statusFilter==='done')时则照常全列,不走折叠区。
+        // STEP-12:cancelled(归档/被更新丢弃/被合并)也不进默认活动视图——否则
+        // 合并/丢弃后卡片仍以「已取消」分组留在原处,看着像「没生效」。
         var defaultView = !statusFilter;
         var inlineStatuses = defaultView
-          ? ['active','blocked','pending','cancelled']
+          ? ['active','blocked','pending']
           : ['active','blocked','pending','done','cancelled'];
         inlineStatuses.forEach(function(status) {
           var group = items.filter(function(a) { return a.status === status; });

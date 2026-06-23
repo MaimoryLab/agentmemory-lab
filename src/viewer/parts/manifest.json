@@ -18,6 +18,15 @@
   "app/20-format-utils.js",
   "app/40-data-helpers.js",
   "app/45-transport.js",
-  "app/90-rest.js",
+  "app/50-routing.js",
+  "app/52-dashboard.js",
+  "app/54-legacy-graph-memories-timeline-obs-activity.js",
+  "app/56-sessions.js",
+  "app/58-legacy-lessons.js",
+  "app/60-actions-todo.js",
+  "app/62-legacy-crystals-audit-profile.js",
+  "app/64-ws-flags-events.js",
+  "app/68-legacy-replay.js",
+  "app/90-bootstrap.js",
   "40-tail.html"
 ]

@@ -115,5 +115,20 @@ describe("viewer i18n + transport extraction (PLAN-007 STEP-04)", () => {
   });
 });
 
+describe("viewer render/dispatch fragmentation (PLAN-007 STEP-05)", () => {
+  it("splits the render layer into per-view app fragments + a bootstrap tail", () => {
+    const m = manifest();
+    expect(m).not.toContain("app/90-rest.js");
+    expect(m.some((n) => /^app\/.*(actions|todo)/.test(n)), "no To-Do render fragment").toBe(true);
+    expect(m.some((n) => /^app\/.*bootstrap/.test(n)), "no bootstrap fragment").toBe(true);
+  });
+
+  it("isolates the To-Do render (renderActions) into app/60-actions-todo.js", () => {
+    const todo = readFileSync(join(PARTS_DIR, "app", "60-actions-todo.js"), "utf-8");
+    expect(todo).toMatch(/function renderActions\(/);
+  });
+});
+
+
 
 

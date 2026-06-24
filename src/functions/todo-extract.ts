@@ -1511,13 +1511,14 @@ export async function runTodoExtractJob(
   try {
     const result = await activeTodoExtractJob;
     return {
+      ...result,
       success: true,
       jobId: result.jobId || job.jobId,
       status: "done",
       startedAt: result.startedAt || job.startedAt,
       finishedAt: result.finishedAt,
       result,
-    };
+    } as TodoExtractJob;
   } catch {
     return getTodoExtractJobStatus();
   }

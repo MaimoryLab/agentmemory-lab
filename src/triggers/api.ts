@@ -1529,6 +1529,25 @@ export function registerApiTriggers(
     config: { api_path: "/agentmemory/todo-extract/generate", http_method: "POST" },
   });
 
+  sdk.registerFunction("api::todo-refresh-action",
+    async (req: ApiRequest): Promise<Response> => {
+      const authErr = checkAuth(req, secret);
+      if (authErr) return authErr;
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const actionId = asNonEmptyString(body.actionId);
+      if (!actionId) return { status_code: 400, body: { error: "actionId is required" } };
+      const result = await sdk.trigger({ function_id: "mem::todo-refresh-action", payload: { actionId } }) as Record<string, unknown>;
+      if (result.success === false && result.reason === "action-not-found") return { status_code: 404, body: result };
+      if (result.success === false) return { status_code: 400, body: result };
+      return { status_code: 200, body: result };
+    },
+  );
+  sdk.registerTrigger({
+    type: "http",
+    function_id: "api::todo-refresh-action",
+    config: { api_path: "/agentmemory/todo/action-refresh", http_method: "POST" },
+  });
+
   sdk.registerFunction("api::todo-update",
     async (req: ApiRequest): Promise<Response> => {
       const authErr = checkAuth(req, secret);

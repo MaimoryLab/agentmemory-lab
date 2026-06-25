@@ -1399,6 +1399,30 @@ describe("viewer session rendering", () => {
     expect(html).toContain("missing key");
   });
 
+  it("labels mixed extraction as partial instead of saying the LLM was unavailable", () => {
+    const { sandbox, getElement } = loadViewerSandbox();
+    sandbox.state.activeTab = "actions";
+    sandbox.state.actions = {
+      loaded: true,
+      items: [],
+      frontier: [],
+      statusFilter: "",
+      search: "",
+      reviewItems: [],
+      extractStatus: "done",
+      extractFallback: true,
+      extractPartial: true,
+      extractMessage: "Partial LLM extraction complete · reason: sidecar timed out",
+    };
+    sandbox.state.inbox = { loaded: true, items: [] };
+    sandbox.renderActions();
+
+    const html = getElement("view-actions").innerHTML;
+    expect(html).toContain("Partially organized");
+    expect(html).not.toContain("LLM unavailable");
+    expect(html).toContain("sidecar timed out");
+  });
+
   it("filters actions from Todo and Done metric cards", () => {
     const { sandbox, getElement, dispatchDocumentClick } = loadViewerSandbox();
     sandbox.state.activeTab = "actions";

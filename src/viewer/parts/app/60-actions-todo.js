@@ -88,6 +88,7 @@
       if (st.status === 'done' && st.summary) {
         state.actions.extractStatus = 'done';
         state.actions.extractFallback = !todoExtractionUsedLlm(st.summary);
+        state.actions.extractPartial = st.summary && st.summary.engine === 'mixed';
         state.actions.extractMessage = todoExtractionSummary(st.summary);
       } else if (st.status === 'error') {
         state.actions.extractStatus = 'error';
@@ -339,6 +340,7 @@
         }
         state.actions.extractStatus = 'done';
         state.actions.extractFallback = !todoExtractionUsedLlm(result);
+        state.actions.extractPartial = result && result.engine === 'mixed';
         state.actions.extractMessage = todoExtractionSummary(result);
         if (actionsScrolledAway()) {
           state.actions.stale = delta > 0;
@@ -1092,7 +1094,7 @@
         var extractTitle = state.actions.extractMessage || t('act.extract.title');
         var extractLabel = t('act.extract.run');
         if (state.actions.extractInFlight) extractLabel = t('act.extract.running');
-        else if (state.actions.extractStatus === 'done') extractLabel = state.actions.extractFallback ? t('act.extract.rules') : t('act.extract.done');
+        else if (state.actions.extractStatus === 'done') extractLabel = state.actions.extractPartial ? t('act.extract.partial') : (state.actions.extractFallback ? t('act.extract.rules') : t('act.extract.done'));
         else if (state.actions.extractStatus === 'error') extractLabel = t('act.extract.error');
         html += '<button class="btn btn-primary' + (state.actions.extractInFlight ? ' btn-working' : '') + '" data-action="extract-actions" type="button" title="' + esc(extractTitle) + '" style="margin-left:auto;"' + (state.actions.extractInFlight ? ' disabled aria-busy="true"' : '') + '>' + esc(extractLabel) + '</button>';
         var cleanupLabel = t('act.cleanup.run');

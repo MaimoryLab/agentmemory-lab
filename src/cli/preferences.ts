@@ -1,9 +1,9 @@
 // JSON-backed CLI preferences.
 //
-// Lives at `~/.agentmemory/preferences.json`. The agentmemory daemon
-// already owns `~/.agentmemory/.env`, `iii.pid`, `engine-state.json` —
-// adding one more sibling here keeps the install-state surface in one
-// place.
+// Lives at `~/.agentmemory/preferences.json` by default, or under
+// `AGENTMEMORY_HOME` when set. The agentmemory daemon already owns
+// `.env`, `iii.pid`, `engine-state.json` there — adding one more sibling
+// keeps the install-state surface in one place.
 //
 // All functions are synchronous, mirroring the pidfile / engine-state
 // helpers in src/cli.ts. We never throw: read failures collapse to
@@ -26,8 +26,8 @@ import {
   unlinkSync,
   writeSync,
 } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
+import { getAgentMemoryDataDir } from "../config.js";
 
 export interface Prefs {
   schemaVersion: 1;
@@ -72,7 +72,7 @@ const DEFAULTS: Prefs = {
 };
 
 export function prefsDir(): string {
-  return join(homedir(), ".agentmemory");
+  return getAgentMemoryDataDir();
 }
 
 export function prefsPath(): string {

@@ -14,6 +14,7 @@ import {
   isDropStaleIndexEnabled,
   isLarkReplyLoopEnabled,
   getLarkConfig,
+  getAgentMemoryDataDir,
 } from "./config.js";
 import {
   createProvider,
@@ -109,7 +110,6 @@ import { VERSION } from "./version.js";
 import { bootLog } from "./logger.js";
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { homedir } from "node:os";
 
 // #640 + #474: the worker process (this file) is spawned by iii-exec
 // inside the engine. When `agentmemory-lab stop` kills only the engine pid,
@@ -118,7 +118,7 @@ import { homedir } from "node:os";
 // a duplicate worker. Write the worker pid alongside iii.pid so
 // `agentmemory-lab stop` can reap us too.
 function workerPidfilePath(): string {
-  return join(homedir(), ".agentmemory", "worker.pid");
+  return join(getAgentMemoryDataDir(), "worker.pid");
 }
 function writeWorkerPidfile(): void {
   try {

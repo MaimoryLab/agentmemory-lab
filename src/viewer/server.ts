@@ -13,7 +13,19 @@ import { renderViewerDocument } from "./document.js";
 import type { Action, CompressedObservation, Memory, ReviewQueueItem, Session } from "../types.js";
 import { KV, fingerprintId } from "../state/schema.js";
 import { generateTodosFromSessions, refreshTodoAction, updateChangedTodoCards } from "../functions/todo-extract.js";
-import { getTodoExtractorUserConfig, getUserEnvPath, writeUserEnv, WRITABLE_TODO_EXTRACT_KEYS } from "../config.js";
+import {
+  detectEmbeddingProvider,
+  detectLlmProviderKind,
+  getTodoExtractorUserConfig,
+  getUserEnvPath,
+  isAutoCompressEnabled,
+  isConsolidationEnabled,
+  isContextInjectionEnabled,
+  isGraphExtractionEnabled,
+  writeUserEnv,
+  WRITABLE_TODO_EXTRACT_KEYS,
+} from "../config.js";
+import { VERSION } from "../version.js";
 
 // Self-host the viewer favicon at /favicon.svg instead of an inline
 // data: URI so the viewer CSP can stay tight at `img-src 'self'`.
@@ -966,6 +978,41 @@ async function handleReviewFallback(
   return true;
 }
 
+async function handleInboxFallback(
+  req: IncomingMessage,
+  res: ServerResponse,
+  method: string,
+  qs: string,
+  kv: ViewerKv,
+): Promise<boolean> {
+  if (method !== "GET") return false;
+  const params = parseViewerQuery(qs);
+  const status = params.status || "";
+  const kind = params.kind || "";
+  const limit = Math.max(1, Math.min(200, parseInt(params.limit || "50", 10) || 50));
+  const items = (await kv.list<Record<string, unknown>>(KV.inbox))
+    .filter((item) => !status || item.status === status)
+    .filter((item) => !kind || item.kind === kind)
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .slice(0, limit);
+  json(res, 200, { success: true, items }, req);
+  return true;
+}
+
+function viewerFlagsFallback(): Record<string, unknown> {
+  return {
+    version: VERSION,
+    provider: detectLlmProviderKind(),
+    embeddingProvider: detectEmbeddingProvider() ? "embeddings" : "none",
+    flags: [
+      { key: "GRAPH_EXTRACTION_ENABLED", label: "Knowledge graph extraction", enabled: isGraphExtractionEnabled(), default: false },
+      { key: "CONSOLIDATION_ENABLED", label: "Memory consolidation", enabled: isConsolidationEnabled(), default: false },
+      { key: "AGENTMEMORY_AUTO_COMPRESS", label: "LLM-powered observation compression", enabled: isAutoCompressEnabled(), default: false },
+      { key: "AGENTMEMORY_INJECT_CONTEXT", label: "In-conversation context injection", enabled: isContextInjectionEnabled(), default: false },
+    ],
+  };
+}
+
 async function handleReviewApproveFallback(
   req: IncomingMessage,
   res: ServerResponse,
@@ -1350,12 +1397,27 @@ export function startViewerServer(
       return;
     }
 
+    if (method === "GET" && pathname === "/agentmemory/config/flags") {
+      json(res, 200, viewerFlagsFallback(), req);
+      return;
+    }
+
     if (pathname === "/agentmemory/review") {
       try {
         if (await handleReviewFallback(req, res, method, qs, kv as ViewerKv)) return;
       } catch (err) {
         console.error(`[viewer] review fallback error:`, err);
         json(res, 500, { error: "review fallback error" }, req);
+        return;
+      }
+    }
+
+    if (pathname === "/agentmemory/inbox") {
+      try {
+        if (await handleInboxFallback(req, res, method, qs, kv as ViewerKv)) return;
+      } catch (err) {
+        console.error(`[viewer] inbox fallback error:`, err);
+        json(res, 500, { error: "inbox fallback error" }, req);
         return;
       }
     }

@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 const ORIGINAL_HOME = process.env["HOME"];
 const ORIGINAL_USERPROFILE = process.env["USERPROFILE"];
+const ORIGINAL_AGENTMEMORY_HOME = process.env["AGENTMEMORY_HOME"];
 
 let sandboxHome: string;
 
@@ -30,6 +31,7 @@ describe("loadEnvFile", () => {
     delete process.env["GRAPH_EXTRACTION_ENABLED"];
     delete process.env["TOKEN"];
     delete process.env["HASHVAL"];
+    delete process.env["AGENTMEMORY_HOME"];
   });
 
   afterEach(() => {
@@ -37,7 +39,20 @@ describe("loadEnvFile", () => {
     else process.env["HOME"] = ORIGINAL_HOME;
     if (ORIGINAL_USERPROFILE === undefined) delete process.env["USERPROFILE"];
     else process.env["USERPROFILE"] = ORIGINAL_USERPROFILE;
+    if (ORIGINAL_AGENTMEMORY_HOME === undefined) delete process.env["AGENTMEMORY_HOME"];
+    else process.env["AGENTMEMORY_HOME"] = ORIGINAL_AGENTMEMORY_HOME;
     rmSync(sandboxHome, { recursive: true, force: true });
+  });
+
+  it("honors AGENTMEMORY_HOME without changing the user's Codex home", async () => {
+    const dataHome = join(sandboxHome, "isolated-agentmemory");
+    process.env["AGENTMEMORY_HOME"] = dataHome;
+    mkdirSync(dataHome, { recursive: true });
+    writeFileSync(join(dataHome, ".env"), "TOKEN=from-data-home");
+
+    const cfg = await freshConfig();
+    expect(cfg.getUserEnvPath()).toBe(join(dataHome, ".env"));
+    expect(cfg.getEnvVar("TOKEN")).toBe("from-data-home");
   });
 
   it("strips trailing inline # comments on unquoted values", async () => {

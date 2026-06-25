@@ -43,7 +43,7 @@ import { isFirstRun, readPrefs, resetPrefs, writePrefs } from "./cli/preferences
 import { runOnboarding } from "./cli/onboarding.js";
 import { setBootVerbose } from "./logger.js";
 import { VERSION } from "./version.js";
-import { getTodoExtractorUserConfig, getUserEnvPath, writeUserEnv, WRITABLE_TODO_EXTRACT_KEYS } from "./config.js";
+import { getAgentMemoryDataDir, getTodoExtractorUserConfig, getUserEnvPath, writeUserEnv, WRITABLE_TODO_EXTRACT_KEYS } from "./config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -406,11 +406,11 @@ function enforceEngineVersionPin(iiiBinPath: string | null | undefined): void {
 }
 
 function enginePidfilePath(): string {
-  return join(homedir(), ".agentmemory", "iii.pid");
+  return join(getAgentMemoryDataDir(), "iii.pid");
 }
 
 function engineStatePath(): string {
-  return join(homedir(), ".agentmemory", "engine-state.json");
+  return join(getAgentMemoryDataDir(), "engine-state.json");
 }
 
 type EngineState =
@@ -451,7 +451,7 @@ function clearEnginePidfile(): void {
 // engine and shows up as a duplicate registration. We write the worker
 // pid from src/index.ts on boot so stop can find and reap it.
 function workerPidfilePath(): string {
-  return join(homedir(), ".agentmemory", "worker.pid");
+  return join(getAgentMemoryDataDir(), "worker.pid");
 }
 
 function readWorkerPidfile(): number | null {
@@ -1364,7 +1364,7 @@ function buildDoctorContext(): DoctorContext {
   return {
     baseUrl: getBaseUrl(),
     viewerUrl: getViewerUrl(),
-    envPath: join(homedir(), ".agentmemory", ".env"),
+    envPath: getUserEnvPath(),
     pidfilePath: enginePidfilePath(),
     enginePath: engineStatePath(),
     pinnedVersion: IIPINNED_VERSION,
@@ -1373,11 +1373,11 @@ function buildDoctorContext(): DoctorContext {
 
 function buildDoctorEffects(): DoctorEffects {
   return {
-    envFileExists: () => existsSync(join(homedir(), ".agentmemory", ".env")),
+    envFileExists: () => existsSync(getUserEnvPath()),
     readEnvFile: () => {
       try {
         return parseEnvFile(
-          readFileSync(join(homedir(), ".agentmemory", ".env"), "utf-8"),
+          readFileSync(getUserEnvPath(), "utf-8"),
         );
       } catch {
         return {};
@@ -1939,7 +1939,7 @@ function findEnvExample(): string | null {
 
 async function runInit() {
   p.intro("agentmemory-lab init");
-  const target = join(homedir(), ".agentmemory", ".env");
+  const target = getUserEnvPath();
   const template = findEnvExample();
   if (!template) {
     p.log.error(

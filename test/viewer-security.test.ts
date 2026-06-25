@@ -290,6 +290,25 @@ describe("viewer request handler DNS rebinding defence (e2e)", () => {
     expect(JSON.parse(frontier.body).frontier[0].action.title).toBe("整理验收截图");
   });
 
+  it("serves config flags and inbox from viewer KV fallback when REST proxy misses", async () => {
+    const inboxItem = {
+      id: "inbox_1",
+      kind: "question",
+      status: "awaiting",
+      body: "需要确认吗?",
+      createdAt: "2026-06-17T12:00:00Z",
+    };
+    const { port } = await spinUpViewer({ [KV.inbox]: { [inboxItem.id]: inboxItem } });
+
+    const flags = await request(port, `localhost:${port}`, "/agentmemory/config/flags");
+    const inbox = await request(port, `localhost:${port}`, "/agentmemory/inbox?status=awaiting&limit=50");
+
+    expect(flags.status).toBe(200);
+    expect(JSON.parse(flags.body).flags.map((f: { key: string }) => f.key)).toContain("GRAPH_EXTRACTION_ENABLED");
+    expect(inbox.status).toBe(200);
+    expect(JSON.parse(inbox.body).items).toHaveLength(1);
+  });
+
   it("expires stale todo extraction running status from viewer KV fallback", async () => {
     const previousTimeout = process.env.AGENTMEMORY_TODO_EXTRACT_TIMEOUT_MS;
     process.env.AGENTMEMORY_TODO_EXTRACT_TIMEOUT_MS = "1000";

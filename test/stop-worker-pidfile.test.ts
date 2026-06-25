@@ -32,6 +32,15 @@ describe("stop reaps the worker process (#640, #474)", () => {
     expect(indexSrc).toMatch(/\.agentmemory["'].*worker\.pid|"worker\.pid"/);
     expect(cliSrc).toMatch(/\.agentmemory["'].*worker\.pid|"worker\.pid"/);
   });
+
+  it("centralizes runtime data under AGENTMEMORY_HOME when set", () => {
+    const configSrc = readFileSync("src/config.ts", "utf-8");
+    const indexSrc = readFileSync("src/index.ts", "utf-8");
+    const cliSrc = readFileSync("src/cli.ts", "utf-8");
+    expect(configSrc).toMatch(/AGENTMEMORY_HOME/);
+    expect(indexSrc).toMatch(/getAgentMemoryDataDir\(\)/);
+    expect(cliSrc).toMatch(/getAgentMemoryDataDir\(\)/);
+  });
 });
 
 describe("new user startup guardrails", () => {
@@ -42,5 +51,9 @@ describe("new user startup guardrails", () => {
   it("starts the pinned iii engine without background update checks", () => {
     const source = readFileSync("src/cli.ts", "utf-8");
     expect(source).toContain('["--no-update-check", "--config", configPath]');
+  });
+
+  it("installs SOCKS support for OpenAI-compatible LangExtract behind proxies", () => {
+    expect(readFileSync("requirements-langextract.txt", "utf-8")).toMatch(/socksio|httpx\[socks\]/);
   });
 });

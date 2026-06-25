@@ -16,7 +16,11 @@ function safeParseInt(value: string | undefined, fallback: number): number {
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
-const DATA_DIR = join(homedir(), ".agentmemory");
+export function getAgentMemoryDataDir(): string {
+  return process.env["AGENTMEMORY_HOME"] || join(homedir(), ".agentmemory");
+}
+
+const DATA_DIR = getAgentMemoryDataDir();
 const ENV_FILE = join(DATA_DIR, ".env");
 export const DEFAULT_LANGEXTRACT_MODEL = "deepseek/deepseek-v4-flash";
 export const DEFAULT_LANGEXTRACT_PROVIDER = "openai";
@@ -442,7 +446,7 @@ export function loadSnapshotConfig(): {
   return {
     enabled: env["SNAPSHOT_ENABLED"] === "true",
     interval: safeParseInt(env["SNAPSHOT_INTERVAL"], 3600),
-    dir: env["SNAPSHOT_DIR"] || join(homedir(), ".agentmemory", "snapshots"),
+    dir: env["SNAPSHOT_DIR"] || join(getAgentMemoryDataDir(), "snapshots"),
   };
 }
 
@@ -515,7 +519,7 @@ export function getStandalonePersistPath(): string {
   const env = getMergedEnv();
   return (
     env["STANDALONE_PERSIST_PATH"] ||
-    join(homedir(), ".agentmemory", "standalone.json")
+    join(getAgentMemoryDataDir(), "standalone.json")
   );
 }
 

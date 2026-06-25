@@ -30,6 +30,7 @@ vi.mock("../src/cli/connect/index.js", () => ({
 const ORIGINAL_HOME = process.env["HOME"];
 const ORIGINAL_USERPROFILE = process.env["USERPROFILE"];
 const ORIGINAL_CI = process.env["CI"];
+const ORIGINAL_AGENTMEMORY_HOME = process.env["AGENTMEMORY_HOME"];
 const stdinTtyDescriptor = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
 const stdoutTtyDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
 
@@ -62,6 +63,7 @@ describe("cli onboarding", () => {
     process.env["HOME"] = sandboxHome;
     process.env["USERPROFILE"] = sandboxHome;
     process.env["CI"] = "0";
+    delete process.env["AGENTMEMORY_HOME"];
     setTTY(false);
     vi.clearAllMocks();
   });
@@ -74,6 +76,8 @@ describe("cli onboarding", () => {
     else process.env["USERPROFILE"] = ORIGINAL_USERPROFILE;
     if (ORIGINAL_CI === undefined) delete process.env["CI"];
     else process.env["CI"] = ORIGINAL_CI;
+    if (ORIGINAL_AGENTMEMORY_HOME === undefined) delete process.env["AGENTMEMORY_HOME"];
+    else process.env["AGENTMEMORY_HOME"] = ORIGINAL_AGENTMEMORY_HOME;
     rmSync(sandboxHome, { recursive: true, force: true });
   });
 
@@ -129,5 +133,25 @@ describe("cli onboarding", () => {
     expect(lines).toContain("LANGEXTRACT_MODEL=deepseek/deepseek-v4-flash");
     expect(lines).toContain("LANGEXTRACT_BASE_URL=https://api.novita.ai/openai/v1");
     expect(lines.some((line) => line.startsWith("LANGEXTRACT_API_KEY="))).toBe(false);
+  });
+
+  it("uses AGENTMEMORY_HOME for first-run preferences and env without changing Codex home", async () => {
+    const dataHome = join(sandboxHome, "isolated-agentmemory");
+    process.env["AGENTMEMORY_HOME"] = dataHome;
+    setTTY(true);
+    prompts.multiselect.mockResolvedValueOnce([]);
+    prompts.select.mockResolvedValueOnce("novita");
+    const { runOnboarding } = await freshOnboarding();
+
+    await runOnboarding();
+
+    const preferencesPath = join(dataHome, "preferences.json");
+    const envPath = join(dataHome, ".env");
+    expect(existsSync(preferencesPath)).toBe(true);
+    expect(existsSync(envPath)).toBe(true);
+    expect(existsSync(join(sandboxHome, ".agentmemory", "preferences.json"))).toBe(false);
+    expect(activeEnvLines(readFileSync(envPath, "utf-8"))).toContain(
+      "LANGEXTRACT_MODEL=deepseek/deepseek-v4-flash",
+    );
   });
 });

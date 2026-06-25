@@ -10,25 +10,21 @@
 //      rules extractor (no LLM key needed). The legacy memory-compression
 //      provider is NOT asked here — it's an advanced `.env`-only setting.
 //
-// We then write `~/.agentmemory/preferences.json` and ensure
-// `~/.agentmemory/.env` exists (seeding the chosen extractor model's
-// `LANGEXTRACT_*` defaults). The user adds `LANGEXTRACT_API_KEY` after.
+// We then write preferences and `.env` under `~/.agentmemory` by default
+// (or `AGENTMEMORY_HOME` when set), seeding the chosen extractor model's
+// `LANGEXTRACT_*` defaults. The user adds `LANGEXTRACT_API_KEY` after.
 
 import { copyFile, mkdir } from "node:fs/promises";
 import { constants as fsConstants, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
 import { writePrefs } from "./preferences.js";
 import { resolveAdapter, runAdapter } from "./connect/index.js";
 import type { ConnectResult } from "./connect/types.js";
+import { getAgentMemoryDataDir, getUserEnvPath } from "../config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function homeDir(): string {
-  return process.env["HOME"] || process.env["USERPROFILE"] || homedir();
-}
 
 // Native plugin row — these agents ship an agentmemory plugin or
 // first-party integration. Glyphs match SkillKit's published set
@@ -139,7 +135,7 @@ function findEnvExample(): string | null {
 }
 
 async function seedEnvFile(): Promise<string | null> {
-  const target = join(homeDir(), ".agentmemory", ".env");
+  const target = getUserEnvPath();
   const dir = dirname(target);
   await mkdir(dir, { recursive: true });
 
@@ -275,7 +271,7 @@ export async function runOnboarding(): Promise<OnboardingResult> {
     firstRunAt: new Date().toISOString(),
   });
 
-  const prefsLocation = join(homeDir(), ".agentmemory", "preferences.json");
+  const prefsLocation = join(getAgentMemoryDataDir(), "preferences.json");
   const lines = [`✓ Saved preferences to ${prefsLocation}`];
   if (envPath) {
     lines.push(`✓ Wrote ${envPath}`);

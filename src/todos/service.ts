@@ -19,7 +19,7 @@ export function organizeTodos(db: Database): OrganizeResult {
     const candidate = extractRuleCandidate(observation.text);
     if (!candidate) continue;
 
-    const todoId = stableId(candidate.title);
+    const todoId = stableId(candidate.mergeKey);
     const now = new Date().toISOString();
     const existing = db.prepare("SELECT id FROM todos WHERE id = ?").get(todoId);
     if (existing) {

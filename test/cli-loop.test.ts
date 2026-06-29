@@ -31,7 +31,7 @@ test("CLI runs scan, organize, list, done, and ignore", async () => {
     const listed = await capture(() => main(["list"]));
     assert.equal(listed.code, 0);
     assert.match(listed.stdout, /\btodo\b/);
-    assert.match(listed.stdout, /add CLI list output/);
+    assert.match(listed.stdout, /Add CLI list output/);
     const id = listed.stdout.match(/^([a-f0-9]{40})\s+/m)?.[1];
     assert.ok(id);
 

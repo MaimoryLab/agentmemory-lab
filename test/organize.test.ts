@@ -35,7 +35,7 @@ test("rules-only organize creates evidence-backed todo cards without duplicates"
     const todos = listTodos(db);
     db.close();
     assert.equal(todos.length, 1);
-    assert.equal(todos[0].title, "add a CLI doctor command");
+    assert.equal(todos[0].title, "Add a CLI doctor command");
     assert.equal(todos[0].status, "todo");
     assert.equal(todos[0].evidenceIds.length, 1);
   } finally {
@@ -65,6 +65,32 @@ test("organize endpoint returns OrganizeResult", async () => {
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     db.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("rules-only organize merges duplicate todo wording", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-organize-merge-"));
+  try {
+    const db = openDatabase(getAppPaths(dir));
+    ingestBrowserSession(db, {
+      id: "browser-1",
+      messages: [
+        { role: "user", text: "Please add CLI list output" },
+        { role: "user", text: "Need to add cli list output." },
+        { role: "user", text: "Please take a look when you have time." }
+      ]
+    });
+
+    const result = organizeTodos(db);
+    const todos = listTodos(db);
+    db.close();
+
+    assert.equal(result.created, 1);
+    assert.equal(todos.length, 1);
+    assert.equal(todos[0].title, "Add CLI list output");
+    assert.equal(todos[0].evidenceIds.length, 2);
+  } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });

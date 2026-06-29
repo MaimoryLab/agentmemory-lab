@@ -66,7 +66,7 @@ export async function callMcpTool(db: Database, name: string, args: unknown): Pr
   }
 
   if (name === "todo_organize") {
-    return organizeTodos(db);
+    return await organizeTodos(db);
   }
 
   if (name === "todo_list") {

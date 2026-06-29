@@ -26,8 +26,8 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   }
 
   if (command === "organize") {
-    return withDatabase((db) => {
-      const result = organizeTodos(db);
+    return withDatabase(async (db) => {
+      const result = await organizeTodos(db);
       console.log(`scanned: ${result.scanned}`);
       console.log(`created: ${result.created}`);
       console.log(`updated: ${result.updated}`);
@@ -70,10 +70,10 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   return 1;
 }
 
-function withDatabase(fn: (db: Database) => number): number {
+async function withDatabase(fn: (db: Database) => number | Promise<number>): Promise<number> {
   const db = openDatabase(getAppPaths());
   try {
-    return fn(db);
+    return await fn(db);
   } finally {
     db.close();
   }

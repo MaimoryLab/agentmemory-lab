@@ -93,7 +93,7 @@ export function createAppServer(options: { db?: Database; paths?: AppPaths } = {
     if (req.method === "POST" && path === "/todos/organize") {
       const db = requireDb(res, options.db);
       if (!db) return;
-      writeJson(res, 200, organizeTodos(db));
+      writeJson(res, 200, await organizeTodos(db));
       return;
     }
 

@@ -2,7 +2,15 @@ import type { OrganizeResult, SourceKind, TodoCard } from "../contracts.js";
 import type { Database } from "../db/index.js";
 import { extractRuleCandidate, stableId } from "../extract/rules.js";
 
-export function organizeTodos(db: Database): OrganizeResult {
+export interface TodoEnhancer {
+  enhance(candidate: { title: string; description: string; mergeKey: string; evidenceText: string }): Promise<{ title?: string; description?: string } | null>;
+}
+
+export interface OrganizeOptions {
+  enhancer?: TodoEnhancer["enhance"];
+}
+
+export async function organizeTodos(db: Database, options: OrganizeOptions = {}): Promise<OrganizeResult> {
   const started = Date.now();
   const runId = stableId("organize", new Date(started).toISOString(), Math.random().toString(36));
   const observations = db.prepare(
@@ -11,6 +19,8 @@ export function organizeTodos(db: Database): OrganizeResult {
   const sourceCounts = new Map<SourceKind, number>();
   let created = 0;
   let updated = 0;
+  let enhanced = false;
+  const warnings = new Set<string>();
 
   for (const observation of observations) {
     sourceCounts.set(observation.source, (sourceCounts.get(observation.source) ?? 0) + 1);
@@ -18,6 +28,9 @@ export function organizeTodos(db: Database): OrganizeResult {
 
     const candidate = extractRuleCandidate(observation.text);
     if (!candidate) continue;
+    if (!options.enhancer) warnings.add("llm_enhancer_unavailable");
+    const card = await enhanceCandidate({ ...candidate, evidenceText: observation.text }, options.enhancer, warnings);
+    enhanced ||= card.enhanced;
 
     const todoId = stableId(candidate.mergeKey);
     const now = new Date().toISOString();
@@ -25,12 +38,12 @@ export function organizeTodos(db: Database): OrganizeResult {
     if (existing) {
       db.prepare(
         "UPDATE todos SET description = ?, updated_at = ? WHERE id = ?"
-      ).run(candidate.description, now, todoId);
+      ).run(card.description, now, todoId);
       updated++;
     } else {
       db.prepare(
         "INSERT INTO todos (id, title, description, status, updated_at) VALUES (?, ?, ?, 'todo', ?)"
-      ).run(todoId, candidate.title, candidate.description, now);
+      ).run(todoId, card.title, card.description, now);
       created++;
     }
 
@@ -47,8 +60,8 @@ export function organizeTodos(db: Database): OrganizeResult {
     updated,
     completed: 0,
     ignored: 0,
-    engine: "rules",
-    warnings: [],
+    engine: enhanced ? "rules+llm" : "rules",
+    warnings: Array.from(warnings),
     durationMs: Date.now() - started
   };
 
@@ -56,6 +69,37 @@ export function organizeTodos(db: Database): OrganizeResult {
     "INSERT INTO organize_runs (id, result_json, created_at) VALUES (?, ?, ?)"
   ).run(runId, JSON.stringify(result), new Date().toISOString());
   return result;
+}
+
+async function enhanceCandidate(
+  candidate: { title: string; description: string; mergeKey: string; evidenceText: string },
+  enhancer: OrganizeOptions["enhancer"],
+  warnings: Set<string>
+): Promise<{ title: string; description: string; enhanced: boolean }> {
+  if (!enhancer) return { title: candidate.title, description: candidate.description, enhanced: false };
+  try {
+    const enhanced = await enhancer(candidate);
+    if (!enhanced) {
+      warnings.add("llm_enhancer_invalid");
+      return { title: candidate.title, description: candidate.description, enhanced: false };
+    }
+    if (enhanced.title !== undefined && (typeof enhanced.title !== "string" || !enhanced.title.trim())) {
+      warnings.add("llm_enhancer_invalid");
+      return { title: candidate.title, description: candidate.description, enhanced: false };
+    }
+    if (enhanced.description !== undefined && (typeof enhanced.description !== "string" || !enhanced.description.trim())) {
+      warnings.add("llm_enhancer_invalid");
+      return { title: candidate.title, description: candidate.description, enhanced: false };
+    }
+    return {
+      title: enhanced.title?.trim() ?? candidate.title,
+      description: enhanced.description?.trim() ?? candidate.description,
+      enhanced: true
+    };
+  } catch {
+    warnings.add("llm_enhancer_failed");
+    return { title: candidate.title, description: candidate.description, enhanced: false };
+  }
 }
 
 export function listTodos(db: Database): TodoCard[] {

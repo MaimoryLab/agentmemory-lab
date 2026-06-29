@@ -1496,24 +1496,24 @@ export function startViewerServer(
       const body = raw ? JSON.parse(raw) as Record<string, unknown> : {};
       const startedAt = new Date().toISOString();
       await writeTodoExtractStatus(kv as ViewerKv, { status: "running", startedAt });
-      try {
-        const result = await generateTodosFromSessions(kv as ViewerKv, body);
+      // Fire-and-forget: return 202 immediately, run extraction in background.
+      // This prevents HTTP/proxy timeouts from leaving status stuck at "running".
+      json(res, 202, { accepted: true, startedAt }, req);
+      generateTodosFromSessions(kv as ViewerKv, body).then(async (result) => {
         await writeTodoExtractStatus(kv as ViewerKv, {
           status: "done",
           startedAt,
           finishedAt: new Date().toISOString(),
           summary: result as unknown as Record<string, unknown>,
         });
-        json(res, 200, result, req);
-      } catch (err) {
+      }).catch(async (err) => {
         await writeTodoExtractStatus(kv as ViewerKv, {
           status: "error",
           startedAt,
           finishedAt: new Date().toISOString(),
           error: err instanceof Error ? err.message : String(err),
         });
-        throw err;
-      }
+      });
       return;
     }
 

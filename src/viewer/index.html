@@ -9179,32 +9179,44 @@
       apiPost('todo-extract/generate', {
         force: shouldForce
       }).then(function(result) {
-        var delta = todoExtractionDelta(result);
-        if (!result || result.success !== true) {
+        if (!result) {
           state.actions.extractStatus = 'error';
           state.actions.extractMessage = t('act.extract.failedExisting');
-          return null;
+          clearTimeout(softRefreshTimer);
+          state.actions.extractInFlight = false;
+          if (state.activeTab === 'actions' && !actionsScrolledAway()) renderActions();
+          return;
         }
-        state.actions.extractStatus = 'done';
-        state.actions.extractFallback = !todoExtractionUsedLlm(result);
-        state.actions.extractPartial = result && result.engine === 'mixed';
-        state.actions.extractMessage = todoExtractionSummary(result);
+        if (result.accepted) {
+          state.actions.extractMessage = t('act.extract.background');
+          scheduleTodoExtractStatusPoll();
+          return;
+        }
+        var delta = todoExtractionDelta(result);
+        if (result.success !== true) {
+          state.actions.extractStatus = 'error';
+          state.actions.extractMessage = t('act.extract.failedExisting');
+        } else {
+          state.actions.extractStatus = 'done';
+          state.actions.extractFallback = !todoExtractionUsedLlm(result);
+          state.actions.extractPartial = result && result.engine === 'mixed';
+          state.actions.extractMessage = todoExtractionSummary(result);
+        }
+        clearTimeout(softRefreshTimer);
+        state.actions.extractInFlight = false;
         if (actionsScrolledAway()) {
           state.actions.stale = delta > 0;
-          return null;
+          return;
         }
-        return refreshActionListsAfterExtract();
+        refreshActionListsAfterExtract().then(function() {
+          if (state.activeTab === 'actions' && !actionsScrolledAway()) renderActions();
+        });
       }).catch(function() {
         state.actions.extractStatus = 'error';
         state.actions.extractMessage = t('act.extract.failedExisting');
-      }).then(function() {
         clearTimeout(softRefreshTimer);
         state.actions.extractInFlight = false;
-        if (state.activeTab === 'actions' && !actionsScrolledAway()) {
-          renderActions();
-        } else if (state.activeTab !== 'actions') {
-          state.actions.loaded = false;
-        }
+        if (state.activeTab === 'actions' && !actionsScrolledAway()) renderActions();
       });
     }
 
@@ -9939,10 +9951,7 @@
         html += '<input id="actions-search" class="search-input" type="text" placeholder="' + esc(t('act.searchPlaceholder')) + '" value="' + esc(state.actions.search) + '" style="flex:1;min-width:200px" />';
         html += actionMetricCards(statusCounts);
         var extractTitle = state.actions.extractMessage || t('act.extract.title');
-        var extractLabel = t('act.extract.run');
-        if (state.actions.extractInFlight) extractLabel = t('act.extract.running');
-        else if (state.actions.extractStatus === 'done') extractLabel = state.actions.extractPartial ? t('act.extract.partial') : (state.actions.extractFallback ? t('act.extract.rules') : t('act.extract.done'));
-        else if (state.actions.extractStatus === 'error') extractLabel = t('act.extract.error');
+        var extractLabel = state.actions.extractInFlight ? t('act.extract.running') : t('act.extract.run');
         html += '<button class="btn btn-primary' + (state.actions.extractInFlight ? ' btn-working' : '') + '" data-action="extract-actions" type="button" title="' + esc(extractTitle) + '" style="margin-left:auto;"' + (state.actions.extractInFlight ? ' disabled aria-busy="true"' : '') + '>' + esc(extractLabel) + '</button>';
         var cleanupLabel = t('act.cleanup.run');
         if (state.actions.cleanupInFlight) cleanupLabel = t('act.cleanup.running');

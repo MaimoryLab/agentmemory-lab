@@ -2,6 +2,12 @@ import type { OrganizeResult, SourceKind, TodoCard } from "../contracts.js";
 import type { Database } from "../db/index.js";
 import { extractRuleCandidate, stableId } from "../extract/rules.js";
 
+export interface TodoEvidence {
+  id: string;
+  observationId: string;
+  text: string;
+}
+
 export interface TodoEnhancer {
   enhance(candidate: { title: string; description: string; mergeKey: string; evidenceText: string }): Promise<{ title?: string; description?: string } | null>;
 }
@@ -133,6 +139,21 @@ export function updateTodoStatus(db: Database, id: string, status: "done" | "ign
     "UPDATE todos SET status = ?, updated_at = ? WHERE id = ?"
   ).run(status, new Date().toISOString(), id);
   return result.changes > 0;
+}
+
+export function listTodoEvidence(db: Database, todoId: string): TodoEvidence[] | null {
+  const todo = db.prepare("SELECT id FROM todos WHERE id = ?").get(todoId);
+  if (!todo) return null;
+  return db.prepare(
+    "SELECT id, observation_id as observationId, text FROM evidence WHERE todo_id = ? ORDER BY id"
+  ).all(todoId).map((row) => {
+    const record = row as Record<string, unknown>;
+    return {
+      id: String(record.id),
+      observationId: String(record.observationId),
+      text: String(record.text)
+    };
+  });
 }
 
 export function getOrganizeRun(db: Database, id: string): OrganizeResult | null {

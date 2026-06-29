@@ -1,16 +1,25 @@
+import { createReadStream, existsSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadConfig, parseConfig, saveConfig } from "../config.js";
 import type { Database } from "../db/index.js";
 import { getAppPaths, type AppPaths } from "../paths.js";
 import { ingestBrowserSession, validateBrowserSessionInput } from "../sources/browser.js";
 import { scanSource as scanSourceSessions } from "../sources/scan.js";
 import { listSessionObservations, listSessions, listSources } from "../sources/service.js";
-import { getOrganizeRun, listTodos, organizeTodos, updateTodoStatus } from "../todos/service.js";
+import { getOrganizeRun, listTodoEvidence, listTodos, organizeTodos, updateTodoStatus } from "../todos/service.js";
+
+const PUBLIC_DIR = fileURLToPath(new URL("../../../public/", import.meta.url));
 
 export function createAppServer(options: { db?: Database; paths?: AppPaths } = {}) {
   const paths = options.paths ?? getAppPaths();
   return createServer(async (req, res) => {
     const path = new URL(req.url ?? "/", "http://localhost").pathname;
+
+    if (req.method === "GET" && (path === "/" || path.startsWith("/app."))) {
+      if (serveStatic(res, path)) return;
+    }
 
     if (req.method === "GET" && path === "/healthz") {
       writeJson(res, 200, { ok: true });
@@ -104,6 +113,19 @@ export function createAppServer(options: { db?: Database; paths?: AppPaths } = {
       return;
     }
 
+    const todoEvidenceMatch = path.match(/^\/todos\/([^/]+)\/evidence$/);
+    if (req.method === "GET" && todoEvidenceMatch) {
+      const db = requireDb(res, options.db);
+      if (!db) return;
+      const evidence = listTodoEvidence(db, decodeURIComponent(todoEvidenceMatch[1]));
+      if (!evidence) {
+        writeJson(res, 404, { error: "todo_not_found" });
+        return;
+      }
+      writeJson(res, 200, evidence);
+      return;
+    }
+
     const todoMatch = path.match(/^\/todos\/([^/]+)$/);
     if (req.method === "PATCH" && todoMatch) {
       const db = requireDb(res, options.db);
@@ -138,6 +160,22 @@ export function createAppServer(options: { db?: Database; paths?: AppPaths } = {
 
     writeJson(res, 404, { error: "not_found" });
   });
+}
+
+function serveStatic(res: ServerResponse<IncomingMessage>, path: string): boolean {
+  const filename = path === "/" ? "index.html" : path.slice(1);
+  if (!/^(index\.html|app\.css|app\.js)$/.test(filename)) return false;
+  const file = join(PUBLIC_DIR, filename);
+  if (!existsSync(file)) return false;
+  res.writeHead(200, { "content-type": contentType(file) });
+  createReadStream(file).pipe(res);
+  return true;
+}
+
+function contentType(file: string): string {
+  if (extname(file) === ".css") return "text/css; charset=utf-8";
+  if (extname(file) === ".js") return "text/javascript; charset=utf-8";
+  return "text/html; charset=utf-8";
 }
 
 function writeJson(res: ServerResponse<IncomingMessage>, status: number, body: unknown): void {

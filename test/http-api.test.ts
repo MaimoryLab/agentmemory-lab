@@ -55,6 +55,10 @@ test("HTTP API scans sources, lists sessions, observations, runs, and updates to
     assert.equal(patch.status, 200);
     assert.equal((await patch.json()).status, "done");
 
+    const evidence = await getJson(server.url(`/todos/${todo.id}/evidence`));
+    assert.equal(evidence.status, 200);
+    assert.equal((await evidence.json())[0].text, "Please add HTTP API routes");
+
     const updated = await getJson(server.url("/todos"));
     assert.equal((await updated.json())[0].status, "done");
   } finally {
@@ -76,6 +80,7 @@ test("HTTP API returns small explicit errors", async () => {
     assert.equal((await getJson(server.url("/sessions/missing/observations"))).status, 404);
     assert.equal((await patchJson(server.url("/todos/missing"), { status: "done" })).status, 404);
     assert.equal((await patchJson(server.url("/todos/missing"), { status: "todo" })).status, 400);
+    assert.equal((await getJson(server.url("/todos/missing/evidence"))).status, 404);
     assert.equal((await getJson(server.url("/organize-runs/missing"))).status, 404);
   } finally {
     await server.close();
@@ -198,6 +203,30 @@ test("HTTP browser ingest validates input", async () => {
     assert.equal((await postJson(server.url("/browser/sessions"), { messages: [{ text: 1 }] })).status, 400);
     assert.equal((await postJson(server.url("/browser/sessions"), { messages: [{ text: "x", createdAt: "nope" }] })).status, 400);
     assert.equal((await postJson(server.url("/browser/sessions"), { messages: [{ role: "user", text: "Valid browser todo" }] })).status, 200);
+  } finally {
+    await server.close();
+    db.close();
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("HTTP server serves the minimal UI assets", async () => {
+  const fixture = createFixture();
+  const db = openDatabase(getAppPaths(join(fixture.root, "home")));
+  const server = await startServer(db);
+
+  try {
+    const index = await getJson(server.url("/"));
+    assert.equal(index.status, 200);
+    assert.match(await index.text(), /Source Dashboard/);
+
+    const css = await getJson(server.url("/app.css"));
+    assert.equal(css.status, 200);
+    assert.match(css.headers.get("content-type") ?? "", /text\/css/);
+
+    const js = await getJson(server.url("/app.js"));
+    assert.equal(js.status, 200);
+    assert.match(await js.text(), /organize/);
   } finally {
     await server.close();
     db.close();

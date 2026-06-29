@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI-Todo</title>
+    <link rel="stylesheet" href="/app.css">
+  </head>
+  <body>
+    <nav class="tabs" aria-label="AI-Todo views">
+      <button class="active" data-view="dashboard">Dashboard</button>
+      <button data-view="todos">Todos</button>
+      <button data-view="evidence">Evidence</button>
+      <button data-view="settings">Settings</button>
+    </nav>
+
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>AI-Todo</h1>
+          <p id="status">Loading local workspace...</p>
+        </div>
+        <div class="actions">
+          <button id="scan-codex" type="button">Scan Codex</button>
+          <button id="scan-claude" type="button">Scan Claude</button>
+          <button id="organize" type="button" class="primary">Organize</button>
+        </div>
+      </header>
+
+      <section id="dashboard" class="view active" aria-labelledby="dashboard-title">
+        <h2 id="dashboard-title">Source Dashboard</h2>
+        <div id="source-grid" class="stats-grid"></div>
+        <h3>Sessions</h3>
+        <div id="sessions" class="list"></div>
+      </section>
+
+      <section id="todos" class="view" aria-labelledby="todos-title">
+        <h2 id="todos-title">Todos</h2>
+        <div id="todo-list" class="list"></div>
+      </section>
+
+      <section id="evidence" class="view" aria-labelledby="evidence-title">
+        <h2 id="evidence-title">Evidence</h2>
+        <div id="evidence-list" class="list empty">Select a todo to inspect evidence.</div>
+      </section>
+
+      <section id="settings" class="view" aria-labelledby="settings-title">
+        <h2 id="settings-title">Settings</h2>
+        <form id="settings-form" class="settings-form">
+          <label>
+            Codex source path
+            <input id="codex-path" name="codex" autocomplete="off">
+          </label>
+          <label>
+            Claude Code source path
+            <input id="claude-path" name="claude" autocomplete="off">
+          </label>
+          <button type="submit" class="primary">Save Settings</button>
+        </form>
+      </section>
+    </main>
+
+    <dialog id="organize-dialog">
+      <form method="dialog">
+        <header class="dialog-head">
+          <h2>Organize Result</h2>
+          <button aria-label="Close dialog">Close</button>
+        </header>
+        <div id="organize-result" class="result-grid"></div>
+      </form>
+    </dialog>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

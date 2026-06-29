@@ -21,6 +21,7 @@ export const HTTP_ROUTES = [
   "POST /todos/organize",
   "GET /todos",
   "PATCH /todos/:id",
+  "GET /todos/:id/evidence",
   "POST /todos/:id/refresh",
   "GET /organize-runs/:id",
   "GET /settings",

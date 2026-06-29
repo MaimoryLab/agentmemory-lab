@@ -4,6 +4,7 @@ import type { Database } from "./db/index.js";
 import { openDatabase } from "./db/index.js";
 import { getAppPaths } from "./paths.js";
 import { runMcpStdio } from "./mcp/stdio.js";
+import { createAppServer } from "./server/index.js";
 import { scanSource } from "./sources/scan.js";
 import { listTodos, organizeTodos, updateTodoStatus } from "./todos/service.js";
 
@@ -57,8 +58,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   }
 
   if (command === "open") {
-    console.log("ai-todo viewer is not implemented yet");
-    return 0;
+    return openUi();
   }
 
   if (command === "mcp") {
@@ -77,6 +77,28 @@ async function withDatabase(fn: (db: Database) => number | Promise<number>): Pro
   } finally {
     db.close();
   }
+}
+
+async function openUi(): Promise<number> {
+  const paths = getAppPaths();
+  const db = openDatabase(paths);
+  const server = createAppServer({ db, paths });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") return 1;
+  console.log(`AI-Todo UI: http://127.0.0.1:${address.port}/`);
+  console.log("Press Ctrl+C to stop.");
+  await new Promise<void>((resolve) => {
+    const stop = () => {
+      server.close(() => {
+        db.close();
+        resolve();
+      });
+    };
+    process.once("SIGINT", stop);
+    process.once("SIGTERM", stop);
+  });
+  return 0;
 }
 
 function scan(db: Database, source: string | undefined, path: string | undefined): number {

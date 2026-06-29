@@ -31,5 +31,13 @@ export function migrate(db: Database): void {
       text TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS scan_checkpoints (
+      source TEXT NOT NULL,
+      path TEXT NOT NULL,
+      mtime_ms REAL NOT NULL,
+      size INTEGER NOT NULL,
+      PRIMARY KEY (source, path)
+    );
   `);
 }

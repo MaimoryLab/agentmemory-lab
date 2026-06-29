@@ -1,16 +1,41 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { loadConfig, parseConfig, saveConfig } from "../config.js";
 import type { Database } from "../db/index.js";
+import { getAppPaths, type AppPaths } from "../paths.js";
 import { ingestBrowserSession, validateBrowserSessionInput } from "../sources/browser.js";
 import { scanSource as scanSourceSessions } from "../sources/scan.js";
 import { listSessionObservations, listSessions, listSources } from "../sources/service.js";
 import { getOrganizeRun, listTodos, organizeTodos, updateTodoStatus } from "../todos/service.js";
 
-export function createAppServer(options: { db?: Database } = {}) {
+export function createAppServer(options: { db?: Database; paths?: AppPaths } = {}) {
+  const paths = options.paths ?? getAppPaths();
   return createServer(async (req, res) => {
     const path = new URL(req.url ?? "/", "http://localhost").pathname;
 
     if (req.method === "GET" && path === "/healthz") {
       writeJson(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "GET" && path === "/settings") {
+      try {
+        writeJson(res, 200, loadConfig(paths));
+      } catch {
+        writeJson(res, 500, { error: "config_invalid" });
+      }
+      return;
+    }
+
+    if (req.method === "PUT" && path === "/settings") {
+      const body = await readJson(req, res);
+      if (!body) return;
+      try {
+        const config = parseConfig(body);
+        saveConfig(paths, config);
+        writeJson(res, 200, config);
+      } catch {
+        writeJson(res, 400, { error: "config_invalid" });
+      }
       return;
     }
 
@@ -26,7 +51,7 @@ export function createAppServer(options: { db?: Database } = {}) {
       if (!db) return;
       const body = await readJson(req, res);
       if (!body) return;
-      const result = scanSource(db, body);
+      const result = scanSource(db, body, paths);
       writeJson(res, result.status, result.body);
       return;
     }
@@ -137,8 +162,8 @@ async function readJson(req: IncomingMessage, res: ServerResponse<IncomingMessag
   }
 }
 
-function scanSource(db: Database, body: any) {
-  const scan = scanSourceSessions(db, body?.source, body?.path);
+function scanSource(db: Database, body: any, paths: AppPaths) {
+  const scan = scanSourceSessions(db, body?.source, body?.path, paths);
   if (!scan.ok) return { status: scan.status, body: { error: scan.error } };
   return { status: 200, body: scan.result };
 }

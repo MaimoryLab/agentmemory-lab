@@ -9,8 +9,9 @@ import { createAppServer } from "../src/server/index.js";
 
 test("HTTP API scans sources, lists sessions, observations, runs, and updates todos", async () => {
   const fixture = createFixture();
-  const db = openDatabase(getAppPaths(join(fixture.root, "home")));
-  const server = await startServer(db);
+  const paths = getAppPaths(join(fixture.root, "home"));
+  const db = openDatabase(paths);
+  const server = await startServer(db, paths);
 
   try {
     const scan = await postJson(server.url("/sources/scan"), {
@@ -65,8 +66,9 @@ test("HTTP API scans sources, lists sessions, observations, runs, and updates to
 
 test("HTTP API returns small explicit errors", async () => {
   const fixture = createFixture();
-  const db = openDatabase(getAppPaths(join(fixture.root, "home")));
-  const server = await startServer(db);
+  const paths = getAppPaths(join(fixture.root, "home"));
+  const db = openDatabase(paths);
+  const server = await startServer(db, paths);
 
   try {
     assert.equal((await postJson(server.url("/sources/scan"), { source: "browser", path: fixture.codex })).status, 400);
@@ -127,7 +129,57 @@ test("HTTP source scan uses default paths with environment overrides", async () 
     assert.equal(response.status, 200);
     assert.equal((await response.json()).scanned, 1);
   } finally {
-    process.env.AI_TODO_CODEX_HOME = previousCodex;
+    if (previousCodex === undefined) {
+      delete process.env.AI_TODO_CODEX_HOME;
+    } else {
+      process.env.AI_TODO_CODEX_HOME = previousCodex;
+    }
+    await server.close();
+    db.close();
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("HTTP settings persist source paths and scan uses config path", async () => {
+  const fixture = createFixture();
+  const paths = getAppPaths(join(fixture.root, "home"));
+  const db = openDatabase(paths);
+  const server = await startServer(db, paths);
+
+  try {
+    const initial = await getJson(server.url("/settings"));
+    assert.equal(initial.status, 200);
+    assert.deepEqual(await initial.json(), { sources: { codex: {}, "claude-code": {} } });
+
+    const saved = await putJson(server.url("/settings"), {
+      sources: { codex: { path: fixture.codex }, "claude-code": {} }
+    });
+    assert.equal(saved.status, 200);
+    assert.equal((await saved.json()).sources.codex.path, fixture.codex);
+
+    const scan = await postJson(server.url("/sources/scan"), { source: "codex" });
+    assert.equal(scan.status, 200);
+    assert.equal((await scan.json()).scanned, 1);
+  } finally {
+    await server.close();
+    db.close();
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("HTTP settings rejects invalid config", async () => {
+  const fixture = createFixture();
+  const paths = getAppPaths(join(fixture.root, "home"));
+  const db = openDatabase(paths);
+  const server = await startServer(db, paths);
+
+  try {
+    assert.equal((await putJson(server.url("/settings"), { sources: { codex: {}, browser: {} } })).status, 400);
+    assert.equal((await putJson(server.url("/settings"), { sources: { codex: { path: "" }, "claude-code": {} } })).status, 400);
+    assert.equal((await putJson(server.url("/settings"), { sources: { codex: { path: 1 }, "claude-code": {} } })).status, 400);
+    const badJson = await fetch(server.url("/settings"), { method: "PUT", body: "{" });
+    assert.equal(badJson.status, 400);
+  } finally {
     await server.close();
     db.close();
     rmSync(fixture.root, { recursive: true, force: true });
@@ -163,8 +215,8 @@ function createFixture() {
   return { root, codex };
 }
 
-async function startServer(db: Database) {
-  const server = createAppServer({ db });
+async function startServer(db: Database, paths = getAppPaths()) {
+  const server = createAppServer({ db, paths });
   await new Promise<void>((resolve) => server.listen(0, resolve));
   const address = server.address();
   assert.ok(address && typeof address !== "string");
@@ -188,6 +240,13 @@ function postJson(url: string, body: unknown) {
 function patchJson(url: string, body: unknown) {
   return fetch(url, {
     method: "PATCH",
+    body: JSON.stringify(body)
+  });
+}
+
+function putJson(url: string, body: unknown) {
+  return fetch(url, {
+    method: "PUT",
     body: JSON.stringify(body)
   });
 }

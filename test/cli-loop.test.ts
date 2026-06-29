@@ -27,6 +27,8 @@ test("CLI runs scan, organize, list, done, and ignore", async () => {
     const organized = await capture(() => main(["organize"]));
     assert.equal(organized.code, 0);
     assert.match(organized.stdout, /created: 1/);
+    assert.match(organized.stdout, /engine: rules/);
+    assert.match(organized.stdout, /warnings: llm_config_missing/);
 
     const listed = await capture(() => main(["list"]));
     assert.equal(listed.code, 0);

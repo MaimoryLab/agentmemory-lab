@@ -12,29 +12,94 @@ export interface TodoEnhancer {
   enhance(candidate: { title: string; description: string; mergeKey: string; evidenceText: string }): Promise<{ title?: string; description?: string } | null>;
 }
 
+export type LlmOrganizeWarning =
+  | "llm_config_missing"
+  | "llm_runtime_missing"
+  | "llm_timeout"
+  | "llm_provider_failed"
+  | "llm_output_invalid"
+  | "llm_no_valid_candidates";
+
+export interface LlmTodoCandidate {
+  title: string;
+  description: string;
+  confidence: number;
+  sourceObservationId: string;
+  quote: string;
+  dedupeKey: string;
+}
+
+export type LlmExtractResult =
+  | { ok: true; todos: LlmTodoCandidate[] }
+  | { ok: false; warning: LlmOrganizeWarning };
+
 export interface OrganizeOptions {
   enhancer?: TodoEnhancer["enhance"];
+  llmExtractor?: (observations: ObservationForOrganize[]) => Promise<LlmExtractResult>;
 }
+
+export interface ObservationForOrganize {
+  id: string;
+  sessionId: string;
+  source: SourceKind;
+  role: string;
+  text: string;
+  createdAt: string;
+}
+
+type WriteResult = { created: number; updated: number; engine: "rules" | "rules+llm" | "llm" };
 
 export async function organizeTodos(db: Database, options: OrganizeOptions = {}): Promise<OrganizeResult> {
   const started = Date.now();
   const runId = stableId("organize", new Date(started).toISOString(), Math.random().toString(36));
   const observations = db.prepare(
-    "SELECT id, source, role, text FROM observations ORDER BY created_at, id"
-  ).all() as Array<{ id: string; source: SourceKind; role: string; text: string }>;
+    "SELECT id, session_id as sessionId, source, role, text, created_at as createdAt FROM observations ORDER BY created_at, id"
+  ).all() as unknown as ObservationForOrganize[];
   const sourceCounts = new Map<SourceKind, number>();
+  for (const observation of observations) {
+    sourceCounts.set(observation.source, (sourceCounts.get(observation.source) ?? 0) + 1);
+  }
+  const warnings = new Set<string>();
+  let writeResult: WriteResult | null = options.llmExtractor ? await writeLlmTodos(db, observations, options.llmExtractor, warnings) : null;
+  if (!writeResult) {
+    writeResult = await writeRuleTodos(db, observations, options, warnings);
+  }
+
+  const result: OrganizeResult = {
+    runId,
+    scanned: observations.length,
+    sources: Array.from(sourceCounts, ([source, scanned]) => ({ source, scanned })),
+    created: writeResult.created,
+    updated: writeResult.updated,
+    completed: 0,
+    ignored: 0,
+    engine: writeResult.engine,
+    warnings: Array.from(warnings),
+    durationMs: Date.now() - started
+  };
+
+  db.prepare(
+    "INSERT INTO organize_runs (id, result_json, created_at) VALUES (?, ?, ?)"
+  ).run(runId, JSON.stringify(result), new Date().toISOString());
+  return result;
+}
+
+async function writeRuleTodos(
+  db: Database,
+  observations: ObservationForOrganize[],
+  options: OrganizeOptions,
+  warnings: Set<string>
+): Promise<WriteResult> {
   let created = 0;
   let updated = 0;
   let enhanced = false;
-  const warnings = new Set<string>();
 
   for (const observation of observations) {
-    sourceCounts.set(observation.source, (sourceCounts.get(observation.source) ?? 0) + 1);
     if (observation.role !== "user") continue;
 
     const candidate = extractRuleCandidate(observation.text);
     if (!candidate) continue;
-    if (!options.enhancer) warnings.add("llm_enhancer_unavailable");
+    if (!options.enhancer && !options.llmExtractor) warnings.add("llm_enhancer_unavailable");
     const card = await enhanceCandidate({ ...candidate, evidenceText: observation.text }, options.enhancer, warnings);
     enhanced ||= card.enhanced;
 
@@ -58,23 +123,68 @@ export async function organizeTodos(db: Database, options: OrganizeOptions = {})
     ).run(stableId(todoId, observation.id), todoId, observation.id, observation.text);
   }
 
-  const result: OrganizeResult = {
-    runId,
-    scanned: observations.length,
-    sources: Array.from(sourceCounts, ([source, scanned]) => ({ source, scanned })),
-    created,
-    updated,
-    completed: 0,
-    ignored: 0,
-    engine: enhanced ? "rules+llm" : "rules",
-    warnings: Array.from(warnings),
-    durationMs: Date.now() - started
-  };
+  return { created, updated, engine: enhanced ? "rules+llm" : "rules" };
+}
 
-  db.prepare(
-    "INSERT INTO organize_runs (id, result_json, created_at) VALUES (?, ?, ?)"
-  ).run(runId, JSON.stringify(result), new Date().toISOString());
-  return result;
+async function writeLlmTodos(
+  db: Database,
+  observations: ObservationForOrganize[],
+  extractor: NonNullable<OrganizeOptions["llmExtractor"]>,
+  warnings: Set<string>
+): Promise<WriteResult | null> {
+  const extracted = await extractor(observations);
+  if (!extracted.ok) {
+    warnings.add(extracted.warning);
+    return null;
+  }
+  const byId = new Map(observations.map((observation) => [observation.id, observation]));
+  const candidates = extracted.todos.filter((candidate) => validLlmCandidate(candidate, byId));
+  if (candidates.length === 0) {
+    warnings.add("llm_no_valid_candidates");
+    return null;
+  }
+
+  let created = 0;
+  let updated = 0;
+  for (const candidate of candidates) {
+    const observation = byId.get(candidate.sourceObservationId);
+    if (!observation) continue;
+    const todoId = stableId(candidate.dedupeKey);
+    const now = new Date().toISOString();
+    const existing = db.prepare("SELECT id FROM todos WHERE id = ?").get(todoId);
+    if (existing) {
+      db.prepare(
+        "UPDATE todos SET title = ?, description = ?, updated_at = ? WHERE id = ?"
+      ).run(candidate.title.trim(), candidate.description.trim(), now, todoId);
+      updated++;
+    } else {
+      db.prepare(
+        "INSERT INTO todos (id, title, description, status, updated_at) VALUES (?, ?, ?, 'todo', ?)"
+      ).run(todoId, candidate.title.trim(), candidate.description.trim(), now);
+      created++;
+    }
+    db.prepare(
+      "INSERT OR REPLACE INTO evidence (id, todo_id, observation_id, text) VALUES (?, ?, ?, ?)"
+    ).run(stableId(todoId, observation.id), todoId, observation.id, candidate.quote.trim());
+  }
+  return { created, updated, engine: "llm" };
+}
+
+function validLlmCandidate(candidate: LlmTodoCandidate, observations: Map<string, ObservationForOrganize>): boolean {
+  const observation = observations.get(candidate.sourceObservationId);
+  return !!observation &&
+    typeof candidate.title === "string" &&
+    !!candidate.title.trim() &&
+    typeof candidate.description === "string" &&
+    !!candidate.description.trim() &&
+    typeof candidate.quote === "string" &&
+    !!candidate.quote.trim() &&
+    observation.text.includes(candidate.quote.trim()) &&
+    typeof candidate.dedupeKey === "string" &&
+    !!candidate.dedupeKey.trim() &&
+    typeof candidate.confidence === "number" &&
+    Number.isFinite(candidate.confidence) &&
+    candidate.confidence >= 0.55;
 }
 
 async function enhanceCandidate(

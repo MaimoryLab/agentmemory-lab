@@ -8,11 +8,12 @@ import { getAppPaths, type AppPaths } from "../paths.js";
 import { ingestBrowserSession, validateBrowserSessionInput } from "../sources/browser.js";
 import { scanSource as scanSourceSessions } from "../sources/scan.js";
 import { listSessionObservations, listSessions, listSources } from "../sources/service.js";
-import { getOrganizeRun, listTodoEvidence, listTodos, organizeTodos, updateTodoStatus } from "../todos/service.js";
+import { organizeConfiguredTodos } from "../todos/configured.js";
+import { getOrganizeRun, listTodoEvidence, listTodos, type OrganizeOptions, updateTodoStatus } from "../todos/service.js";
 
 const PUBLIC_DIR = fileURLToPath(new URL("../../../public/", import.meta.url));
 
-export function createAppServer(options: { db?: Database; paths?: AppPaths } = {}) {
+export function createAppServer(options: { db?: Database; paths?: AppPaths; organizeOptions?: OrganizeOptions } = {}) {
   const paths = options.paths ?? getAppPaths();
   return createServer(async (req, res) => {
     const path = new URL(req.url ?? "/", "http://localhost").pathname;
@@ -103,7 +104,7 @@ export function createAppServer(options: { db?: Database; paths?: AppPaths } = {
     if (req.method === "POST" && path === "/todos/organize") {
       const db = requireDb(res, options.db);
       if (!db) return;
-      writeJson(res, 200, await organizeTodos(db));
+      writeJson(res, 200, await organizeConfiguredTodos(db, paths, options.organizeOptions));
       return;
     }
 

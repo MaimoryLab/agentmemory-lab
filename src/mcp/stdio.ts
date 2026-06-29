@@ -11,13 +11,14 @@ interface JsonRpcRequest {
 }
 
 export async function runMcpStdio(): Promise<void> {
-  const db = openDatabase(getAppPaths());
+  const paths = getAppPaths();
+  const db = openDatabase(paths);
   const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });
 
   try {
     for await (const line of rl) {
       if (!line.trim()) continue;
-      const response = await handleJsonRpcLine(db, line);
+      const response = await handleJsonRpcLine(db, line, paths);
       if (response) process.stdout.write(`${JSON.stringify(response)}\n`);
     }
   } finally {
@@ -25,7 +26,7 @@ export async function runMcpStdio(): Promise<void> {
   }
 }
 
-export async function handleJsonRpcLine(db: Database, line: string): Promise<unknown | null> {
+export async function handleJsonRpcLine(db: Database, line: string, paths = getAppPaths()): Promise<unknown | null> {
   let request: JsonRpcRequest;
   try {
     request = JSON.parse(line) as JsonRpcRequest;
@@ -49,7 +50,7 @@ export async function handleJsonRpcLine(db: Database, line: string): Promise<unk
     }
 
     if (request.method === "tools/call") {
-      const result = await callMcpTool(db, request.params?.name, request.params?.arguments ?? {});
+      const result = await callMcpTool(db, request.params?.name, request.params?.arguments ?? {}, paths);
       return successResponse(request.id, {
         content: [{ type: "text", text: JSON.stringify(result) }]
       });

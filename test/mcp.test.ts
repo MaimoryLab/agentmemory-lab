@@ -27,23 +27,61 @@ test("MCP tools scan, organize, list, update, and open", async () => {
       JSON.stringify({ role: "user", text: "Please add MCP tool support" })
     ].join("\n"));
 
-    const db = openDatabase(getAppPaths(join(dir, "home")));
-    const scan = await callMcpTool(db, "todo_scan", { source: "codex", path: sessions });
+    const paths = getAppPaths(join(dir, "home"));
+    const db = openDatabase(paths);
+    const scan = await callMcpTool(db, "todo_scan", { source: "codex", path: sessions }, paths);
     assert.equal(scan.source, "codex");
     assert.equal(scan.scanned, 1);
 
-    const organize = await callMcpTool(db, "todo_organize", {});
+    const organize = await callMcpTool(db, "todo_organize", {}, paths);
     assert.equal(organize.created, 1);
+    assert.equal(organize.engine, "rules");
+    assert.deepEqual(organize.warnings, ["llm_config_missing"]);
 
-    const listed = await callMcpTool(db, "todo_list", {});
+    const listed = await callMcpTool(db, "todo_list", {}, paths);
     assert.equal(listed.length, 1);
 
-    const updated = await callMcpTool(db, "todo_update", { id: listed[0].id, status: "done" });
+    const updated = await callMcpTool(db, "todo_update", { id: listed[0].id, status: "done" }, paths);
     assert.equal(updated.status, "done");
 
-    const open = await callMcpTool(db, "todo_open", {});
+    const open = await callMcpTool(db, "todo_open", {}, paths);
     db.close();
-    assert.deepEqual(open, { opened: false, message: "ai-todo viewer is not implemented yet" });
+    assert.deepEqual(open, { opened: false, message: "run ai-todo open to start the local UI" });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("MCP organize can use configured llm extraction", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-mcp-llm-"));
+  try {
+    const paths = getAppPaths(join(dir, "home"));
+    const db = openDatabase(paths);
+    const sessions = join(dir, "codex");
+    mkdirSync(sessions);
+    writeFileSync(join(sessions, "session.jsonl"), JSON.stringify({ role: "user", text: "Please add MCP LLM cards" }));
+    await callMcpTool(db, "todo_scan", { source: "codex", path: sessions }, paths);
+    const observationId = String((db.prepare("SELECT id FROM observations LIMIT 1").get() as any).id);
+
+    const organize = await callMcpTool(db, "todo_organize", {}, paths, {
+      organizeOptions: {
+        llmExtractor: async () => ({
+          ok: true,
+          todos: [{
+            title: "Add MCP LLM cards",
+            description: "Use the configured LLM path from MCP.",
+            confidence: 0.9,
+            sourceObservationId: observationId,
+            quote: "Please add MCP LLM cards",
+            dedupeKey: "mcp-llm-cards"
+          }]
+        })
+      }
+    });
+    db.close();
+
+    assert.equal(organize.engine, "llm");
+    assert.equal(organize.created, 1);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -52,11 +90,12 @@ test("MCP tools scan, organize, list, update, and open", async () => {
 test("MCP tools return small explicit errors", async () => {
   const dir = mkdtempSync(join(tmpdir(), "ai-todo-mcp-errors-"));
   try {
-    const db = openDatabase(getAppPaths(join(dir, "home")));
-    await assert.rejects(() => callMcpTool(db, "missing", {}), /unknown tool/);
-    await assert.rejects(() => callMcpTool(db, "todo_scan", { source: "browser" }), /unsupported source/);
-    await assert.rejects(() => callMcpTool(db, "todo_update", { id: "missing", status: "todo" }), /invalid status/);
-    await assert.rejects(() => callMcpTool(db, "todo_update", { id: "missing", status: "done" }), /todo not found/);
+    const paths = getAppPaths(join(dir, "home"));
+    const db = openDatabase(paths);
+    await assert.rejects(() => callMcpTool(db, "missing", {}, paths), /unknown tool/);
+    await assert.rejects(() => callMcpTool(db, "todo_scan", { source: "browser" }, paths), /unsupported source/);
+    await assert.rejects(() => callMcpTool(db, "todo_update", { id: "missing", status: "todo" }, paths), /invalid status/);
+    await assert.rejects(() => callMcpTool(db, "todo_update", { id: "missing", status: "done" }, paths), /todo not found/);
     db.close();
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -66,8 +105,9 @@ test("MCP tools return small explicit errors", async () => {
 test("MCP JSON-RPC handles list, call, and errors", async () => {
   const dir = mkdtempSync(join(tmpdir(), "ai-todo-mcp-rpc-"));
   try {
-    const db = openDatabase(getAppPaths(join(dir, "home")));
-    const list = await handleJsonRpcLine(db, JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" })) as any;
+    const paths = getAppPaths(join(dir, "home"));
+    const db = openDatabase(paths);
+    const list = await handleJsonRpcLine(db, JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }), paths) as any;
     assert.equal(list.result.tools.length, 5);
 
     const call = await handleJsonRpcLine(db, JSON.stringify({
@@ -75,13 +115,13 @@ test("MCP JSON-RPC handles list, call, and errors", async () => {
       id: 2,
       method: "tools/call",
       params: { name: "todo_open", arguments: {} }
-    })) as any;
+    }), paths) as any;
     assert.equal(JSON.parse(call.result.content[0].text).opened, false);
 
-    const unknown = await handleJsonRpcLine(db, JSON.stringify({ jsonrpc: "2.0", id: 3, method: "missing" })) as any;
+    const unknown = await handleJsonRpcLine(db, JSON.stringify({ jsonrpc: "2.0", id: 3, method: "missing" }), paths) as any;
     assert.equal(unknown.error.code, -32601);
 
-    const bad = await handleJsonRpcLine(db, "{") as any;
+    const bad = await handleJsonRpcLine(db, "{", paths) as any;
     db.close();
     assert.equal(bad.error.code, -32700);
   } finally {

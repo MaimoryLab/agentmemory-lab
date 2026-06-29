@@ -38,7 +38,7 @@ export const MCP_TOOLS = [
 
 export type TodoStatus = "todo" | "done" | "ignored";
 export type SourceKind = "codex" | "claude-code" | "browser";
-export type OrganizeEngine = "rules" | "rules+llm";
+export type OrganizeEngine = "rules" | "llm" | "rules+llm";
 
 export interface SessionRecord {
   id: string;

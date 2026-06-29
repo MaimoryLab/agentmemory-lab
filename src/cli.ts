@@ -6,7 +6,8 @@ import { getAppPaths } from "./paths.js";
 import { runMcpStdio } from "./mcp/stdio.js";
 import { createAppServer } from "./server/index.js";
 import { scanSource } from "./sources/scan.js";
-import { listTodos, organizeTodos, updateTodoStatus } from "./todos/service.js";
+import { getLlmDoctorStatus, organizeConfiguredTodos } from "./todos/configured.js";
+import { listTodos, updateTodoStatus } from "./todos/service.js";
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   const command = argv[0] ?? "doctor";
@@ -16,8 +17,16 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     mkdirSync(paths.configDir, { recursive: true });
     mkdirSync(paths.dataDir, { recursive: true });
     openDatabase(paths).close();
+    const llm = getLlmDoctorStatus(paths);
     console.log(`config: ${paths.configDir}`);
     console.log(`data: ${paths.dataDir}`);
+    console.log(`llm enabled: ${llm.enabled}`);
+    console.log(`llm key: ${llm.keyConfigured ? "configured" : "missing"}`);
+    console.log(`llm model: ${llm.model}`);
+    console.log(`llm endpoint: ${llm.endpoint}`);
+    console.log(`llm python: ${llm.pythonPath}`);
+    console.log(`llm sidecar: ${llm.sidecarPath}`);
+    console.log(`llm runtime: ${llm.runtimeReady ? "ready" : "missing"}`);
     console.log("ok");
     return 0;
   }
@@ -27,14 +36,16 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   }
 
   if (command === "organize") {
+    const paths = getAppPaths();
     return withDatabase(async (db) => {
-      const result = await organizeTodos(db);
+      const result = await organizeConfiguredTodos(db, paths);
       console.log(`scanned: ${result.scanned}`);
       console.log(`created: ${result.created}`);
       console.log(`updated: ${result.updated}`);
       console.log(`completed: ${result.completed}`);
       console.log(`ignored: ${result.ignored}`);
       console.log(`engine: ${result.engine}`);
+      if (result.warnings.length > 0) console.log(`warnings: ${result.warnings.join(",")}`);
       return 0;
     });
   }

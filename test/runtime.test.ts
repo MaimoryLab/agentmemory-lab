@@ -14,7 +14,15 @@ test("doctor creates config, data, and database paths", async () => {
   process.env.AI_TODO_HOME = dir;
 
   try {
-    assert.equal(await main(["doctor"]), 0);
+    const doctor = await capture(() => main(["doctor"]));
+    assert.equal(doctor.code, 0);
+    assert.match(doctor.stdout, /llm enabled: true/);
+    assert.match(doctor.stdout, /llm key: missing/);
+    assert.match(doctor.stdout, /llm model: deepseek\/deepseek-v4-flash/);
+    assert.match(doctor.stdout, /llm endpoint: https:\/\/api\.novita\.ai\/openai\/v1/);
+    assert.match(doctor.stdout, /llm python: python3/);
+    assert.match(doctor.stdout, /llm sidecar: .*todo-extract-langextract\.py/);
+    assert.match(doctor.stdout, /llm runtime: (ready|missing)/);
     const db = openDatabase(getAppPaths(dir));
     const rows = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
     db.close();
@@ -41,3 +49,16 @@ test("healthz returns ok", async () => {
     });
   }
 });
+
+async function capture(fn: () => Promise<number>) {
+  let stdout = "";
+  const originalLog = console.log;
+  console.log = (...args: unknown[]) => {
+    stdout += `${args.join(" ")}\n`;
+  };
+  try {
+    return { code: await fn(), stdout };
+  } finally {
+    console.log = originalLog;
+  }
+}

@@ -122,12 +122,13 @@ test("invalid enhancer output falls back to rules card with warning", async () =
 
 test("organize endpoint returns OrganizeResult", async () => {
   const dir = mkdtempSync(join(tmpdir(), "ai-todo-organize-http-"));
-  const db = openDatabase(getAppPaths(dir));
+  const paths = getAppPaths(dir);
+  const db = openDatabase(paths);
   ingestBrowserSession(db, {
     id: "browser-1",
     messages: [{ role: "user", text: "Need update settings persistence" }]
   });
-  const server = createAppServer({ db });
+  const server = createAppServer({ db, paths });
 
   await new Promise<void>((resolve) => server.listen(0, resolve));
   try {
@@ -139,6 +140,51 @@ test("organize endpoint returns OrganizeResult", async () => {
     assert.equal(result.engine, "rules");
     assert.equal(result.created, 1);
     assert.equal(result.ignored, 0);
+    assert.deepEqual(result.warnings, ["llm_config_missing"]);
+  } finally {
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    db.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("organize endpoint can use configured llm extraction", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-organize-http-llm-"));
+  const paths = getAppPaths(dir);
+  const db = openDatabase(paths);
+  ingestBrowserSession(db, {
+    id: "browser-1",
+    messages: [{ role: "user", text: "Please add HTTP LLM cards" }]
+  });
+  const observationId = String((db.prepare("SELECT id FROM observations LIMIT 1").get() as any).id);
+  const server = createAppServer({
+    db,
+    paths,
+    organizeOptions: {
+      llmExtractor: async () => ({
+        ok: true,
+        todos: [{
+          title: "Add HTTP LLM cards",
+          description: "Use the configured LLM path from the HTTP endpoint.",
+          confidence: 0.9,
+          sourceObservationId: observationId,
+          quote: "Please add HTTP LLM cards",
+          dedupeKey: "http-llm-cards"
+        }]
+      })
+    }
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== "string");
+    const response = await fetch(`http://127.0.0.1:${address.port}/todos/organize`, { method: "POST" });
+    const result = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(result.engine, "llm");
+    assert.equal(result.created, 1);
+    assert.deepEqual(result.warnings, []);
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     db.close();
@@ -167,6 +213,118 @@ test("rules-only organize merges duplicate todo wording", async () => {
     assert.equal(todos.length, 1);
     assert.equal(todos[0].title, "Add CLI list output");
     assert.equal(todos[0].evidenceIds.length, 2);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("llm organize creates grounded cards and dedupes by model key", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-organize-llm-"));
+  try {
+    const db = openDatabase(getAppPaths(dir));
+    ingestBrowserSession(db, {
+      id: "browser-1",
+      messages: [
+        { role: "user", text: "Please add LLM settings UI" },
+        { role: "user", text: "Please add LLM settings UI" }
+      ]
+    });
+    const observationId = String((db.prepare("SELECT id FROM observations ORDER BY created_at, id LIMIT 1").get() as any).id);
+
+    const result = await organizeTodos(db, {
+      llmExtractor: async () => ({
+        ok: true,
+        todos: [{
+          title: "Add LLM settings UI",
+          description: "Add settings controls for the LLM provider.",
+          confidence: 0.91,
+          sourceObservationId: observationId,
+          quote: "Please add LLM settings UI",
+          dedupeKey: "add-llm-settings-ui"
+        }]
+      })
+    });
+    const second = await organizeTodos(db, {
+      llmExtractor: async () => ({
+        ok: true,
+        todos: [{
+          title: "Add LLM settings UI",
+          description: "Add settings controls for the LLM provider.",
+          confidence: 0.91,
+          sourceObservationId: observationId,
+          quote: "Please add LLM settings UI",
+          dedupeKey: "add-llm-settings-ui"
+        }]
+      })
+    });
+    const todos = listTodos(db);
+    db.close();
+
+    assert.equal(result.engine, "llm");
+    assert.deepEqual(result.warnings, []);
+    assert.equal(result.created, 1);
+    assert.equal(second.created, 0);
+    assert.equal(second.updated, 1);
+    assert.equal(todos.length, 1);
+    assert.equal(todos[0].title, "Add LLM settings UI");
+    assert.equal(todos[0].evidenceIds.length, 1);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("llm organize falls back to rules when extractor is unavailable", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-organize-llm-fallback-"));
+  try {
+    const db = openDatabase(getAppPaths(dir));
+    ingestBrowserSession(db, {
+      id: "browser-1",
+      messages: [{ role: "user", text: "Please add fallback warnings" }]
+    });
+
+    const result = await organizeTodos(db, {
+      llmExtractor: async () => ({ ok: false, warning: "llm_config_missing" })
+    });
+    const todos = listTodos(db);
+    db.close();
+
+    assert.equal(result.engine, "rules");
+    assert.deepEqual(result.warnings, ["llm_config_missing"]);
+    assert.equal(todos[0].title, "Add fallback warnings");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("llm organize rejects ungrounded model output and falls back", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-organize-llm-invalid-"));
+  try {
+    const db = openDatabase(getAppPaths(dir));
+    ingestBrowserSession(db, {
+      id: "browser-1",
+      messages: [{ role: "user", text: "Please add grounded evidence checks" }]
+    });
+    const observationId = String((db.prepare("SELECT id FROM observations LIMIT 1").get() as any).id);
+
+    const result = await organizeTodos(db, {
+      llmExtractor: async () => ({
+        ok: true,
+        todos: [{
+          title: "Add unrelated todo",
+          description: "This quote is not grounded.",
+          confidence: 0.9,
+          sourceObservationId: observationId,
+          quote: "missing quote",
+          dedupeKey: "bad"
+        }]
+      })
+    });
+    const todos = listTodos(db);
+    db.close();
+
+    assert.equal(result.engine, "rules");
+    assert.deepEqual(result.warnings, ["llm_no_valid_candidates"]);
+    assert.equal(todos[0].title, "Add grounded evidence checks");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -1,6 +1,8 @@
 import type { Database } from "../db/index.js";
+import { getAppPaths, type AppPaths } from "../paths.js";
 import { scanSource } from "../sources/scan.js";
-import { listTodos, organizeTodos, updateTodoStatus } from "../todos/service.js";
+import { organizeConfiguredTodos } from "../todos/configured.js";
+import { listTodos, type OrganizeOptions, updateTodoStatus } from "../todos/service.js";
 
 export interface McpTool {
   name: string;
@@ -28,7 +30,7 @@ export function listMcpTools(): McpTool[] {
     },
     {
       name: "todo_organize",
-      description: "Organize observations into rules-only todo cards.",
+      description: "Organize observations into evidence-grounded todo cards.",
       inputSchema: { type: "object", properties: {} }
     },
     {
@@ -56,17 +58,23 @@ export function listMcpTools(): McpTool[] {
   ];
 }
 
-export async function callMcpTool(db: Database, name: string, args: unknown): Promise<any> {
+export async function callMcpTool(
+  db: Database,
+  name: string,
+  args: unknown,
+  paths: AppPaths = getAppPaths(),
+  options: { organizeOptions?: OrganizeOptions } = {}
+): Promise<any> {
   const input = objectArgs(args);
 
   if (name === "todo_scan") {
-    const scan = scanSource(db, input.source, input.path);
+    const scan = scanSource(db, input.source, input.path, paths);
     if (!scan.ok) throw new Error(scan.error === "unsupported_source" ? "unsupported source" : "path not found");
     return scan.result;
   }
 
   if (name === "todo_organize") {
-    return await organizeTodos(db);
+    return await organizeConfiguredTodos(db, paths, options.organizeOptions);
   }
 
   if (name === "todo_list") {
@@ -81,7 +89,7 @@ export async function callMcpTool(db: Database, name: string, args: unknown): Pr
   }
 
   if (name === "todo_open") {
-    return { opened: false, message: "ai-todo viewer is not implemented yet" };
+    return { opened: false, message: "run ai-todo open to start the local UI" };
   }
 
   throw new Error(`unknown tool: ${name}`);

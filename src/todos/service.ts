@@ -90,3 +90,10 @@ export function updateTodoStatus(db: Database, id: string, status: "done" | "ign
   ).run(status, new Date().toISOString(), id);
   return result.changes > 0;
 }
+
+export function getOrganizeRun(db: Database, id: string): OrganizeResult | null {
+  const row = db.prepare(
+    "SELECT result_json as resultJson FROM organize_runs WHERE id = ?"
+  ).get(id) as { resultJson: string } | undefined;
+  return row ? JSON.parse(row.resultJson) as OrganizeResult : null;
+}

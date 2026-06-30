@@ -6,13 +6,16 @@ import {
   CircleDot,
   Code2,
   Eye,
+  FolderOpen,
   FolderKanban,
   Globe2,
   Loader2,
+  MessageSquareText,
   RefreshCw,
   Save,
   Search,
   Settings,
+  SlidersHorizontal,
   Sparkles,
   TerminalSquare
 } from "lucide-react";
@@ -29,6 +32,8 @@ type SourceScanResult = { warning?: string };
 
 const SESSION_PAGE_SIZE = 50;
 const OPEN_GROUP_PREVIEW_LIMIT = 6;
+const SESSION_GROUP_PREVIEW_LIMIT = 6;
+const OBSERVATION_PREVIEW_LIMIT = 12;
 
 const sourceLabels: Record<SourceKind, string> = {
   codex: "Codex",
@@ -167,15 +172,16 @@ export function App() {
   const closedTodos = todos.filter((todo) => todo.status !== "todo");
 
   return (
-    <main className="min-h-screen bg-neutral-100 text-neutral-950">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-4 border-b border-neutral-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="min-h-screen bg-[var(--app-bg)] text-neutral-950">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+        <header className="flex flex-col gap-4 border-b border-neutral-300/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm font-medium text-neutral-500">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               AI Todo
             </div>
             <h1 className="text-2xl font-semibold tracking-normal">Action inbox</h1>
+            <p className="mt-1 max-w-2xl text-sm text-neutral-600">Review task intent, agent progress, and source trails from recent AI sessions.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <IconButton label="Refresh" onClick={() => void refresh()}>
@@ -188,13 +194,13 @@ export function App() {
           </div>
         </header>
 
-        <nav className="sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto border-b border-neutral-200 bg-neutral-100/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0" aria-label="Primary">
+        <nav className="sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto border-b border-neutral-300/80 bg-[var(--app-bg)]/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0" aria-label="Primary">
           <NavButton active={view === "todos"} onClick={() => setView("todos")} icon={<CircleDot className="h-4 w-4" />}>To-Do</NavButton>
           <NavButton active={view === "sources"} onClick={() => setView("sources")} icon={<FolderKanban className="h-4 w-4" />}>Sources</NavButton>
           <NavButton active={view === "settings"} onClick={() => setView("settings")} icon={<Settings className="h-4 w-4" />}>Settings</NavButton>
         </nav>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section className="min-w-0">
             {view === "todos" && (
               <TodoWorkspace
@@ -235,7 +241,7 @@ export function App() {
               />
             )}
           </section>
-          <aside className="min-w-0 space-y-4">
+          <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
             <Card className="p-4">
               <SectionTitle>Status</SectionTitle>
               <p className="mt-2 text-sm text-neutral-700">{status}</p>
@@ -301,39 +307,45 @@ function TodoWorkspace(props: {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <SectionTitle>To-Do</SectionTitle>
           <h2 className="text-xl font-semibold tracking-normal">Open loops first</h2>
+          <p className="mt-1 text-sm text-neutral-600">Grouped by agent progress so the next review pass starts with the riskiest work.</p>
         </div>
-        <Badge>{props.openTodos.length} open</Badge>
+        <Badge className="self-start border-blue-200 bg-blue-50 text-blue-700">{props.openTodos.length} open</Badge>
       </div>
       {todoGroups(props.openTodos).map((group) => {
         const expanded = expandedOpenGroups[group.key] ?? false;
         const visibleTodos = expanded ? group.todos : group.todos.slice(0, OPEN_GROUP_PREVIEW_LIMIT);
         const hiddenCount = group.todos.length - visibleTodos.length;
         return (
-        <section key={group.key} className="space-y-2">
+        <section key={group.key} className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <button
             type="button"
-            className="flex w-full items-center justify-between gap-3 text-left"
+            className="flex w-full items-center justify-between gap-3 border-b border-neutral-100 bg-neutral-50/70 px-3 py-2 text-left"
             aria-expanded={expanded}
             onClick={() => setExpandedOpenGroups((current) => ({ ...current, [group.key]: !expanded }))}
           >
-            <h3 className="text-sm font-semibold text-neutral-700">{group.label}</h3>
+            <span className="min-w-0">
+              <h3 className="text-sm font-semibold text-neutral-800">{group.label}</h3>
+              <span className="block truncate text-xs text-neutral-500">{group.description}</span>
+            </span>
             <span className="inline-flex items-center gap-2">
-              <Badge>{group.todos.length}</Badge>
+              <Badge className={group.badgeClass}>{group.todos.length}</Badge>
               <ChevronDown className={cn("h-4 w-4 text-neutral-500 transition", expanded && "rotate-180")} aria-hidden="true" />
             </span>
           </button>
-          <div className="space-y-3">
+          <div className="divide-y divide-neutral-100">
             {visibleTodos.map((todo) => (
               <TodoItem key={todo.id} todo={todo} onComplete={props.onComplete} onIgnore={props.onIgnore} onSources={props.onSources} compactStatus />
             ))}
             {hiddenCount > 0 && (
+              <div className="p-3">
               <Button variant="secondary" className="w-full" onClick={() => setExpandedOpenGroups((current) => ({ ...current, [group.key]: true }))}>
                 Show {hiddenCount} more
               </Button>
+              </div>
             )}
           </div>
         </section>
@@ -341,7 +353,7 @@ function TodoWorkspace(props: {
       })}
       {props.closedTodos.length > 0 && (
         <section className="rounded-lg border border-neutral-200 bg-white p-3">
-          <button className="flex w-full items-center justify-between gap-3 text-left text-sm font-semibold text-neutral-700" type="button" onClick={() => setShowClosed(!showClosed)}>
+          <button className="flex w-full items-center justify-between gap-3 text-left text-sm font-semibold text-neutral-700" type="button" aria-expanded={showClosed} onClick={() => setShowClosed(!showClosed)}>
             Completed / ignored
             <span className="inline-flex items-center gap-2 text-xs font-medium text-neutral-500">
               {props.closedTodos.length}
@@ -361,11 +373,11 @@ function TodoWorkspace(props: {
   );
 }
 
-function todoGroups(todos: TodoCard[]): Array<{ key: string; label: string; todos: TodoCard[] }> {
+function todoGroups(todos: TodoCard[]): Array<{ key: string; label: string; description: string; badgeClass: string; todos: TodoCard[] }> {
   const groups = [
-    { key: "blocked", label: "Blocked", todos: [] as TodoCard[] },
-    { key: "in_progress", label: "In progress", todos: [] as TodoCard[] },
-    { key: "needs_review", label: "Needs review", todos: [] as TodoCard[] }
+    { key: "blocked", label: "Blocked", description: "Needs a decision, credential, or missing source.", badgeClass: "border-red-200 bg-red-50 text-red-700", todos: [] as TodoCard[] },
+    { key: "in_progress", label: "In progress", description: "Agent has started work; review what changed.", badgeClass: "border-blue-200 bg-blue-50 text-blue-700", todos: [] as TodoCard[] },
+    { key: "needs_review", label: "Needs review", description: "Ready for human triage or follow-up.", badgeClass: "border-amber-200 bg-amber-50 text-amber-700", todos: [] as TodoCard[] }
   ];
   for (const todo of todos) {
     const state = todo.metadata.completionState?.toLowerCase().replace(/\s+/g, "_");
@@ -384,12 +396,13 @@ function TodoItem({ todo, muted, compactStatus, onComplete, onIgnore, onSources 
   onSources: (todo: TodoCard) => void;
 }) {
   return (
-    <Card className={cn("p-4", muted && "opacity-70")}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <Card className={cn("relative overflow-hidden rounded-none border-0 border-b border-neutral-100 p-4 shadow-none last:border-b-0", muted && "opacity-70")}>
+      <div className={cn("absolute inset-y-0 left-0 w-1", sourceRailClass(todo.origin?.source))} aria-hidden="true" />
+      <div className="flex flex-col gap-4 pl-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-2">
           {!compactStatus && (
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className={todo.status === "todo" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : ""}>{todo.status === "todo" ? "Open" : todo.status === "done" ? "Done" : "Ignored"}</Badge>
+              <Badge className={todo.status === "todo" ? "border-blue-200 bg-blue-50 text-blue-700" : "border-green-200 bg-green-50 text-green-700"}>{todo.status === "todo" ? "Open" : todo.status === "done" ? "Done" : "Ignored"}</Badge>
               {todo.metadata.completionState && <Badge>{todo.metadata.completionState}</Badge>}
             </div>
           )}
@@ -400,7 +413,7 @@ function TodoItem({ todo, muted, compactStatus, onComplete, onIgnore, onSources 
               <span className="font-medium text-neutral-600">Agent:</span> {todo.metadata.completionSummary}
             </p>
           )}
-          <button aria-label={`Open source session for ${todo.title}`} className="flex max-w-full items-start gap-2 text-left text-sm text-neutral-500 hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-70" type="button" title={originLabel(todo)} disabled={!todo.origin} onClick={() => onSources(todo)}>
+          <button aria-label={`Open source session for ${todo.title}`} className="flex max-w-full items-start gap-2 rounded-md text-left text-sm text-neutral-500 hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-70" type="button" title={originLabel(todo)} disabled={!todo.origin} onClick={() => onSources(todo)}>
             <SourceIcon source={todo.origin?.source} />
             <span className="min-w-0">
               <span className="block truncate font-medium text-neutral-600">{originProjectLabel(todo)}</span>
@@ -438,20 +451,35 @@ function SourcesWorkspace({ sessions, sourceSummaries, sourceFilter, sessionOffs
   onLoadMore: () => void;
   onSelect: (sessionId: string) => void;
 }) {
+  const [query, setQuery] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [showAllMessages, setShowAllMessages] = useState(false);
   const selected = sessions.find((session) => session.id === selectedSessionId) ?? (selectedSessionId ? undefined : sessions[0]);
   const observations = selected ? observationsBySession[selected.id] ?? [] : [];
+  const visibleObservations = showAllMessages ? observations : observations.slice(0, OBSERVATION_PREVIEW_LIMIT);
   const totalSessions = sourceFilter === "all"
     ? sourceSummaries.reduce((sum, source) => sum + source.sessions, 0)
     : sourceSummaries.find((source) => source.source === sourceFilter)?.sessions ?? 0;
   const filters: SourceFilter[] = ["all", "codex", "claude-code", "browser"];
+  const filteredSessions = sessions.filter((session) => matchesSessionQuery(session, query));
+  const groups = sessionGroups(filteredSessions);
+
+  useEffect(() => {
+    setShowAllMessages(false);
+  }, [selectedSessionId]);
+
   return (
-    <div className="grid gap-4 xl:grid-cols-[340px_1fr]">
+    <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
       <Card className="min-w-0 p-3">
         <div className="mb-3 space-y-3 px-1">
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-neutral-400" aria-hidden="true" />
             <SectionTitle>Sources</SectionTitle>
           </div>
+          <label className="relative block">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+            <Input aria-label="Search sources" placeholder="Search sources" value={query} onChange={(event) => setQuery(event.target.value)} className="pl-9" />
+          </label>
           <div className="flex gap-1 overflow-x-auto" aria-label="Source filter">
             {filters.map((filter) => (
               <button
@@ -471,24 +499,63 @@ function SourcesWorkspace({ sessions, sourceSummaries, sourceFilter, sessionOffs
         </div>
         <div className="max-h-[calc(100vh-220px)] space-y-2 overflow-y-auto pr-1">
           {sessions.length === 0 && <div className="rounded-md bg-neutral-50 p-4 text-sm text-neutral-600">Connect or scan a source to review sessions.</div>}
-          {sessions.map((session) => (
-            <button
-              key={session.id}
-              type="button"
-              className={cn(
-                "w-full rounded-md border p-3 text-left transition",
-                selected?.id === session.id ? "border-neutral-900 bg-neutral-50" : "border-neutral-200 bg-white hover:bg-neutral-50"
-              )}
-              onClick={() => onSelect(session.id)}
-            >
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <SourceIcon source={session.source} />
-                <span className="truncate">{sourceLabels[session.source]}</span>
-              </div>
-              <div className="mt-1 truncate text-sm text-neutral-600">{session.preview || "Temporary session"}</div>
-              <div className="mt-2 text-xs text-neutral-400">{session.observationCount} messages</div>
-            </button>
-          ))}
+          {sessions.length > 0 && groups.length === 0 && <div className="rounded-md bg-neutral-50 p-4 text-sm text-neutral-600">No sessions match this search.</div>}
+          {groups.map((group) => {
+            const expanded = expandedGroups[group.key] ?? false;
+            const visibleSessions = expanded ? group.sessions : group.sessions.slice(0, SESSION_GROUP_PREVIEW_LIMIT);
+            const hiddenCount = group.sessions.length - visibleSessions.length;
+            return (
+              <section key={group.key} className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  className="flex w-full items-center justify-between gap-3 border-b border-neutral-100 bg-neutral-50/70 px-3 py-2 text-left"
+                  onClick={() => setExpandedGroups((current) => ({ ...current, [group.key]: !expanded }))}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <FolderOpen className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-neutral-800">{group.label}</span>
+                      <span className="block text-xs text-neutral-500">{group.sessions.length} sessions</span>
+                    </span>
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 text-neutral-500 transition", expanded && "rotate-180")} aria-hidden="true" />
+                </button>
+                <div className="divide-y divide-neutral-100">
+                  {visibleSessions.map((session) => (
+                    <button
+                      key={session.id}
+                      type="button"
+                      className={cn(
+                        "w-full p-3 text-left transition",
+                        selected?.id === session.id ? "bg-blue-50" : "bg-white hover:bg-neutral-50"
+                      )}
+                      onClick={() => {
+                        setShowAllMessages(false);
+                        onSelect(session.id);
+                      }}
+                    >
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <SourceIcon source={session.source} />
+                        <span className="truncate">{sourceLabels[session.source]}</span>
+                      </div>
+                      <div className="mt-1 truncate text-sm text-neutral-600">{session.preview || "Temporary session"}</div>
+                      <div className="mt-2 text-xs text-neutral-400">{session.observationCount} messages</div>
+                    </button>
+                  ))}
+                  {hiddenCount > 0 && (
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-sm font-medium text-blue-700 hover:bg-blue-50"
+                      onClick={() => setExpandedGroups((current) => ({ ...current, [group.key]: true }))}
+                    >
+                      Show {hiddenCount} more sessions
+                    </button>
+                  )}
+                </div>
+              </section>
+            );
+          })}
           {sessionOffset < totalSessions && (
             <Button variant="secondary" className="w-full" onClick={onLoadMore}>
               Load more
@@ -508,7 +575,7 @@ function SourcesWorkspace({ sessions, sourceSummaries, sourceFilter, sessionOffs
             </div>
             <div className="max-h-[calc(100vh-220px)] space-y-3 overflow-y-auto pr-1">
               {observations.length === 0 && <div className="rounded-md bg-neutral-50 p-4 text-sm text-neutral-600">Select a source to load its conversation.</div>}
-              {observations.map((observation) => (
+              {visibleObservations.map((observation) => (
                 <article
                   id={`obs-${observation.id}`}
                   key={observation.id}
@@ -524,6 +591,12 @@ function SourcesWorkspace({ sessions, sourceSummaries, sourceFilter, sessionOffs
                   <p className="whitespace-pre-wrap break-words text-sm leading-6 text-neutral-800">{observation.text}</p>
                 </article>
               ))}
+              {!showAllMessages && observations.length > visibleObservations.length && (
+                <Button variant="secondary" className="w-full" onClick={() => setShowAllMessages(true)}>
+                  <MessageSquareText className="h-4 w-4" aria-hidden="true" />
+                  Show all messages
+                </Button>
+              )}
             </div>
           </>
         ) : (
@@ -574,33 +647,42 @@ function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicApp
   return (
     <div className="space-y-4">
       <Card className="p-4">
-        <SectionTitle>Settings</SectionTitle>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <Field label="Codex source">
-            <Input value={form.sources.codex.path ?? ""} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, sources: { ...form.sources, codex: { path: event.target.value } } })} />
-          </Field>
-          <Field label="Claude source">
-            <Input value={form.sources["claude-code"].path ?? ""} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, sources: { ...form.sources, "claude-code": { path: event.target.value } } })} />
-          </Field>
-          <Field label="Model">
-            <Input value={form.llm.model} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, llm: { ...form.llm, model: event.target.value } })} />
-          </Field>
-          <Field label="Endpoint">
-            <Input value={form.llm.endpoint} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, llm: { ...form.llm, endpoint: event.target.value } })} />
-          </Field>
-          <Field label="Look-back days">
-            <Input type="number" min={1} value={form.organize.sinceDays} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, organize: { ...form.organize, sinceDays: Number(event.target.value) } })} />
-          </Field>
-          <Field label="Max sessions">
-            <Input type="number" min={1} max={200} value={form.organize.maxSessions} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, organize: { ...form.organize, maxSessions: Number(event.target.value) } })} />
-          </Field>
-          <Field label="API key">
-            <Input type="password" placeholder={settings.llm.apiKeyConfigured ? `Configured ${settings.llm.apiKeyMasked}` : "Paste API key"} value={apiKey} onChange={(event: ChangeEvent<HTMLInputElement>) => setApiKey(event.target.value)} />
-          </Field>
-          <label className="flex items-center gap-2 self-end text-sm text-neutral-700">
-            <input type="checkbox" checked={clearKey} onChange={(event) => setClearKey(event.target.checked)} />
-            Clear saved API key
-          </label>
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-neutral-500" aria-hidden="true" />
+          <SectionTitle>Settings</SectionTitle>
+        </div>
+        <div className="mt-4 space-y-6">
+          <section>
+            <h2 className="text-base font-semibold">Sources</h2>
+            <p className="mt-1 text-sm text-neutral-600">Choose where AI-Todo scans local agent sessions.</p>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <Field label="Codex source">
+                <Input value={form.sources.codex.path ?? ""} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, sources: { ...form.sources, codex: { path: event.target.value } } })} />
+              </Field>
+              <Field label="Claude source">
+                <Input value={form.sources["claude-code"].path ?? ""} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, sources: { ...form.sources, "claude-code": { path: event.target.value } } })} />
+              </Field>
+            </div>
+          </section>
+          <section>
+            <h2 className="text-base font-semibold">Extraction</h2>
+            <p className="mt-1 text-sm text-neutral-600">Control how many recent sessions are organized into cards.</p>
+            <div className="mt-3 grid gap-4 md:grid-cols-3">
+              <Field label="Look-back days">
+                <Input type="number" min={1} value={form.organize.sinceDays} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, organize: { ...form.organize, sinceDays: Number(event.target.value) } })} />
+              </Field>
+              <Field label="Max sessions">
+                <Input type="number" min={1} max={200} value={form.organize.maxSessions} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, organize: { ...form.organize, maxSessions: Number(event.target.value) } })} />
+              </Field>
+              <Field label="API key">
+                <Input type="password" placeholder={settings.llm.apiKeyConfigured ? `Configured ${settings.llm.apiKeyMasked}` : "Paste API key"} value={apiKey} onChange={(event: ChangeEvent<HTMLInputElement>) => setApiKey(event.target.value)} />
+              </Field>
+            </div>
+            <label className="mt-3 flex items-center gap-2 text-sm text-neutral-700">
+              <input type="checkbox" checked={clearKey} onChange={(event) => setClearKey(event.target.checked)} />
+              Clear saved API key
+            </label>
+          </section>
         </div>
         <Button className="mt-4" onClick={() => void save()} disabled={saving}>
           <Save className="h-4 w-4" aria-hidden="true" />
@@ -610,10 +692,16 @@ function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicApp
       </Card>
       <details className="rounded-lg border border-neutral-200 bg-white p-4">
         <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
-          Diagnostics
+          Advanced diagnostics
           <ChevronDown className="h-4 w-4" aria-hidden="true" />
         </summary>
-        <div className="mt-3 space-y-2 text-sm text-neutral-600">
+        <div className="mt-3 grid gap-4 text-sm text-neutral-600 md:grid-cols-2">
+          <Field label="Model">
+            <Input value={form.llm.model} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, llm: { ...form.llm, model: event.target.value } })} />
+          </Field>
+          <Field label="Endpoint">
+            <Input value={form.llm.endpoint} onChange={(event: ChangeEvent<HTMLInputElement>) => setForm({ ...form, llm: { ...form.llm, endpoint: event.target.value } })} />
+          </Field>
           <p>Startup scan: {startup?.status ?? "idle"}</p>
           <p>Extraction: {settings.llm.apiKeyConfigured ? "Configured" : "Needs setup"}</p>
           {startup?.warnings.map((warning: string) => <p key={warning}>{userFacingError(warning)}</p>)}
@@ -630,6 +718,37 @@ function changedSourcePaths(
   return (["codex", "claude-code"] as const).filter((source) =>
     (before[source].path ?? "").trim() !== (after[source].path ?? "").trim()
   );
+}
+
+function sessionGroups(sessions: SessionRecord[]): Array<{ key: string; label: string; sessions: SessionRecord[] }> {
+  const groups = new Map<string, { key: string; label: string; sessions: SessionRecord[] }>();
+  for (const session of sessions) {
+    const label = sessionProjectLabel(session);
+    const key = `${session.source}:${label}`;
+    const group = groups.get(key) ?? { key, label, sessions: [] };
+    group.sessions.push(session);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
+function matchesSessionQuery(session: SessionRecord, query: string): boolean {
+  const term = query.trim().toLowerCase();
+  if (!term) return true;
+  return [sourceLabels[session.source], sessionProjectLabel(session), session.preview, session.path]
+    .some((value) => value.toLowerCase().includes(term));
+}
+
+function sessionProjectLabel(session: SessionRecord): string {
+  if (session.source === "browser") return session.path === "browser" ? "Browser sessions" : readablePathSegment(session.path);
+  const parts = session.path.split("/").filter(Boolean);
+  if (session.source === "claude-code") return readablePathSegment(parts.at(-2) ?? parts.at(-1));
+  return readablePathSegment(parts.at(-3) ?? parts.at(-2) ?? parts.at(-1));
+}
+
+function readablePathSegment(value?: string): string {
+  if (!value) return "Temporary session";
+  return value.replace(/\.jsonl$/u, "").replace(/^-+|-+$/gu, "").replace(/[-_]+/gu, " ") || "Temporary session";
 }
 
 async function scanChangedSources(sources: SessionSource[]): Promise<string | undefined> {
@@ -665,8 +784,15 @@ function Metric({ label, value }: { label: string; value: number }) {
   );
 }
 
+function sourceRailClass(source?: SourceKind): string {
+  if (source === "codex") return "bg-blue-500";
+  if (source === "claude-code") return "bg-green-500";
+  if (source === "browser") return "bg-amber-500";
+  return "bg-neutral-300";
+}
+
 function SourceIcon({ source }: { source?: SourceKind }) {
-  const className = "h-4 w-4 shrink-0 text-neutral-500";
+  const className = cn("h-4 w-4 shrink-0", source ? "text-neutral-500" : "text-neutral-400");
   if (source === "codex") return <TerminalSquare className={className} aria-hidden="true" />;
   if (source === "claude-code") return <Bot className={className} aria-hidden="true" />;
   if (source === "browser") return <Globe2 className={className} aria-hidden="true" />;
@@ -687,14 +813,14 @@ function startupStatusMessage(startup: StartupScanStatus | null): string {
 }
 
 function originLabel(todo: TodoCard): string {
-  if (!todo.origin) return "Source not linked";
+  if (!todo.origin) return "Source unavailable";
   const project = todo.origin.projectTitle || sourceLabels[todo.origin.source];
   const session = todo.origin.sessionTitle || "Temporary session";
   return `${sourceLabels[todo.origin.source]} · ${project} › ${session}`;
 }
 
 function originProjectLabel(todo: TodoCard): string {
-  if (!todo.origin) return "Source not linked";
+  if (!todo.origin) return "Source unavailable";
   const project = todo.origin.projectTitle || sourceLabels[todo.origin.source];
   return `${sourceLabels[todo.origin.source]} · ${project}`;
 }

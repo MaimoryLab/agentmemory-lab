@@ -23,6 +23,11 @@ test("React UI keeps task-first Sources wording and accessible icon controls", (
   assert.match(app, /Temporary session/);
   assert.match(app, /sourceFilter/);
   assert.match(app, /Source filter/);
+  assert.match(app, /Search sources/);
+  assert.match(app, /sessionGroups\(filteredSessions\)/);
+  assert.match(app, /SESSION_GROUP_PREVIEW_LIMIT/);
+  assert.match(app, /OBSERVATION_PREVIEW_LIMIT/);
+  assert.match(app, /Show all messages/);
   assert.match(app, /Load more/);
   assert.match(app, /max-h-\[calc\(100vh-220px\)\]/);
   assert.match(app, /ensureSessionLoaded/);
@@ -39,7 +44,10 @@ test("React UI keeps task-first Sources wording and accessible icon controls", (
   assert.match(app, /aria-expanded=\{expanded\}/);
   assert.match(app, /originProjectLabel\(todo\)/);
   assert.match(app, /originSessionLabel\(todo\)/);
+  assert.match(app, /sourceRailClass\(todo\.origin\?\.source\)/);
   assert.match(app, /Completed \/ ignored/);
+  assert.match(app, />Extraction</);
+  assert.match(app, /Advanced diagnostics/);
   assert.match(app, /max=\{200\}/);
   assert.match(app, /organizeStatus\(result\)/);
   assert.match(client, /Extraction needs setup/);

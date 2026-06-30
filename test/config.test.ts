@@ -17,6 +17,7 @@ import {
   saveSecrets
 } from "../src/config.js";
 import { openDatabase } from "../src/db/index.js";
+import { discoverSourcePaths, ensureDiscoveredSourceEnv } from "../src/sources/discovery.js";
 import { resolveSourcePath, resolveSourcePaths, scanConfiguredSources } from "../src/sources/scan.js";
 
 test("config reads defaults and persists source paths", () => {
@@ -268,6 +269,73 @@ test("partial source init keeps unconfigured sources out of env but startup scan
   } finally {
     if (previousHome === undefined) delete process.env.HOME;
     else process.env.HOME = previousHome;
+    if (previousClaude === undefined) delete process.env.AI_TODO_CLAUDE_HOME;
+    else process.env.AI_TODO_CLAUDE_HOME = previousClaude;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("source discovery writes missing agent paths without overwriting configured env", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-source-discovery-"));
+  const previousHome = process.env.HOME;
+  const previousCodex = process.env.AI_TODO_CODEX_HOME;
+  const previousClaude = process.env.AI_TODO_CLAUDE_HOME;
+  delete process.env.AI_TODO_CODEX_HOME;
+  delete process.env.AI_TODO_CLAUDE_HOME;
+
+  try {
+    process.env.HOME = dir;
+    const paths = getAppPaths(join(dir, "home"));
+    mkdirSync(join(dir, ".codex", "sessions"), { recursive: true });
+    mkdirSync(join(dir, ".claude", "projects"), { recursive: true });
+
+    const discovered = discoverSourcePaths(paths);
+    assert.deepEqual(discovered.map((source) => [source.source, source.status]), [
+      ["codex", "discovered"],
+      ["claude-code", "discovered"]
+    ]);
+
+    ensureDiscoveredSourceEnv(paths);
+    const env = loadEnvConfig(paths);
+    assert.equal(env.AI_TODO_CODEX_HOME, join(dir, ".codex"));
+    assert.equal(env.AI_TODO_CLAUDE_HOME, join(dir, ".claude", "projects"));
+
+    process.env.AI_TODO_CODEX_HOME = join(dir, "custom-codex");
+    ensureDiscoveredSourceEnv(paths);
+    assert.equal(loadEnvConfig(paths).AI_TODO_CODEX_HOME, join(dir, ".codex"));
+  } finally {
+    if (previousHome === undefined) delete process.env.HOME;
+    else process.env.HOME = previousHome;
+    if (previousCodex === undefined) delete process.env.AI_TODO_CODEX_HOME;
+    else process.env.AI_TODO_CODEX_HOME = previousCodex;
+    if (previousClaude === undefined) delete process.env.AI_TODO_CLAUDE_HOME;
+    else process.env.AI_TODO_CLAUDE_HOME = previousClaude;
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("source discovery leaves env empty when agent paths are missing", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-source-discovery-missing-"));
+  const previousHome = process.env.HOME;
+  const previousCodex = process.env.AI_TODO_CODEX_HOME;
+  const previousClaude = process.env.AI_TODO_CLAUDE_HOME;
+  delete process.env.AI_TODO_CODEX_HOME;
+  delete process.env.AI_TODO_CLAUDE_HOME;
+
+  try {
+    process.env.HOME = dir;
+    const paths = getAppPaths(join(dir, "home"));
+    const discovery = ensureDiscoveredSourceEnv(paths);
+    assert.deepEqual(discovery.map((source) => [source.source, source.status]), [
+      ["codex", "missing"],
+      ["claude-code", "missing"]
+    ]);
+    assert.deepEqual(loadEnvConfig(paths), {});
+  } finally {
+    if (previousHome === undefined) delete process.env.HOME;
+    else process.env.HOME = previousHome;
+    if (previousCodex === undefined) delete process.env.AI_TODO_CODEX_HOME;
+    else process.env.AI_TODO_CODEX_HOME = previousCodex;
     if (previousClaude === undefined) delete process.env.AI_TODO_CLAUDE_HOME;
     else process.env.AI_TODO_CLAUDE_HOME = previousClaude;
     rmSync(dir, { recursive: true, force: true });

@@ -192,6 +192,52 @@ test("HTTP startup scan status exposes automatic scan results", async () => {
   }
 });
 
+test("HTTP startup scanner discovers source paths before scanning", async () => {
+  const fixture = createFixture();
+  const previousHome = process.env.HOME;
+  const previousCodex = process.env.AI_TODO_CODEX_HOME;
+  const previousClaude = process.env.AI_TODO_CLAUDE_HOME;
+  delete process.env.AI_TODO_CODEX_HOME;
+  delete process.env.AI_TODO_CLAUDE_HOME;
+
+  try {
+    process.env.HOME = fixture.root;
+    mkdirSync(join(fixture.root, ".codex", "sessions"), { recursive: true });
+    writeFileSync(join(fixture.root, ".codex", "sessions", "session.jsonl"), [
+      JSON.stringify({ role: "user", text: "Please auto-discover Codex", timestamp: new Date().toISOString() })
+    ].join("\n"));
+    mkdirSync(join(fixture.root, ".claude", "projects"), { recursive: true });
+
+    const paths = getAppPaths(join(fixture.root, "home"));
+    const db = openDatabase(paths);
+    const scanner = createStartupScanner(db, paths);
+    const server = createAppServer({ db, paths, startupScan: scanner.status });
+    await new Promise<void>((resolve) => server.listen(0, resolve));
+    const address = server.address();
+    assert.ok(address && typeof address !== "string");
+    const url = (path: string) => `http://127.0.0.1:${address.port}${path}`;
+
+    try {
+      scanner.start();
+      await waitFor(async () => ((await (await getJson(url("/startup/scan"))).json()) as any).status !== "indexing");
+      const body = await (await getJson(url("/startup/scan"))).json();
+      assert.equal(body.discovery.find((source: any) => source.source === "codex").status, "discovered");
+      assert.equal(body.sources.find((source: any) => source.source === "codex").result.scanned, 1);
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      db.close();
+    }
+  } finally {
+    if (previousHome === undefined) delete process.env.HOME;
+    else process.env.HOME = previousHome;
+    if (previousCodex === undefined) delete process.env.AI_TODO_CODEX_HOME;
+    else process.env.AI_TODO_CODEX_HOME = previousCodex;
+    if (previousClaude === undefined) delete process.env.AI_TODO_CLAUDE_HOME;
+    else process.env.AI_TODO_CLAUDE_HOME = previousClaude;
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("HTTP source scan uses default paths with environment overrides", async () => {
   const fixture = createFixture();
   const previousCodex = process.env.AI_TODO_CODEX_HOME;

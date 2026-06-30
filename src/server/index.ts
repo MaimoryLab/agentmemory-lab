@@ -6,6 +6,7 @@ import { loadConfig, loadSecrets, parseSettingsUpdate, publicConfig, saveEnvConf
 import type { Database } from "../db/index.js";
 import { getAppPaths, type AppPaths } from "../paths.js";
 import { ingestBrowserSession, validateBrowserSessionInput } from "../sources/browser.js";
+import { ensureDiscoveredSourceEnv, type SourceDiscoveryResult } from "../sources/discovery.js";
 import { scanConfiguredSources, scanSource as scanSourceSessions, type ConfiguredScanSummary } from "../sources/scan.js";
 import { listSessionObservations, listSessions, listSources, type ListSessionsOptions } from "../sources/service.js";
 import { organizeConfiguredTodos } from "../todos/configured.js";
@@ -18,11 +19,12 @@ export type StartupScanStatus = {
   startedAt?: string;
   finishedAt?: string;
   sources: ConfiguredScanSummary["sources"];
+  discovery: SourceDiscoveryResult[];
   warnings: string[];
 };
 
 export function createStartupScanner(db: Database, paths: AppPaths): { status: StartupScanStatus; start: () => void } {
-  const status: StartupScanStatus = { status: "idle", sources: [], warnings: [] };
+  const status: StartupScanStatus = { status: "idle", sources: [], discovery: [], warnings: [] };
   let running = false;
   return {
     status,
@@ -33,6 +35,7 @@ export function createStartupScanner(db: Database, paths: AppPaths): { status: S
       status.startedAt = new Date().toISOString();
       setImmediate(() => {
         try {
+          status.discovery = ensureDiscoveredSourceEnv(paths);
           const result = scanConfiguredSources(db, paths);
           status.sources = result.sources;
           status.warnings = result.warnings;
@@ -76,7 +79,7 @@ export function createAppServer(options: {
     }
 
     if (req.method === "GET" && path === "/startup/scan") {
-      writeJson(res, 200, options.startupScan ?? { status: "idle", sources: [], warnings: [] });
+      writeJson(res, 200, options.startupScan ?? { status: "idle", sources: [], discovery: [], warnings: [] });
       return;
     }
 

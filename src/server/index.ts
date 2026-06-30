@@ -308,5 +308,5 @@ async function readJson(req: IncomingMessage, res: ServerResponse<IncomingMessag
 function scanSource(db: Database, body: any, paths: AppPaths) {
   const scan = scanSourceSessions(db, body?.source, body?.path, paths);
   if (!scan.ok) return { status: scan.status, body: { error: scan.error } };
-  return { status: 200, body: scan.result };
+  return { status: 200, body: { ...scan.result, warning: scan.warning } };
 }

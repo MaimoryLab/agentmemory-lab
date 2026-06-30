@@ -12,7 +12,7 @@ import type { ScanResult } from "./jsonl-source.js";
 export type SessionSource = Extract<SourceKind, "codex" | "claude-code">;
 
 export type SourceScanResult =
-  | { ok: true; result: ScanResult; path: string }
+  | { ok: true; result: ScanResult; path: string; warning?: string }
   | { ok: false; status: 400; error: "unsupported_source" | "path_not_found" };
 
 export interface ConfiguredScanSummary {
@@ -45,16 +45,19 @@ export function scanSource(db: Database, source: unknown, explicitPath?: unknown
   const result = aggregateScanResults(existingRoots.map((path) => source === "codex"
     ? scanCodexSessions(db, path)
     : scanClaudeCodeSessions(db, path)));
-  return { ok: true, result, path: roots.join(", ") };
+  return {
+    ok: true,
+    result,
+    path: roots.join(", "),
+    warning: sourceSessionCount(db, source, roots) === 0 ? `${source}_no_sessions` : undefined
+  };
 }
 
 export function scanConfiguredSources(db: Database, paths: AppPaths = getAppPaths()): ConfiguredScanSummary {
   const sources: ConfiguredScanSummary["sources"] = [];
   const warnings: string[] = [];
   for (const source of ["codex", "claude-code"] as const) {
-    const configured = configuredSourcePath(source, paths);
-    if (!configured) continue;
-    const roots = sourceRoots(source, configured);
+    const roots = sourceRoots(source, configuredSourcePath(source, paths) ?? defaultSourcePath(source));
     const existingRoots = roots.filter((path) => existsSync(path));
     if (existingRoots.length === 0) {
       const warning = `${source}_path_not_found`;
@@ -65,7 +68,9 @@ export function scanConfiguredSources(db: Database, paths: AppPaths = getAppPath
     const result = aggregateScanResults(existingRoots.map((path) => source === "codex"
       ? scanCodexSessions(db, path)
       : scanClaudeCodeSessions(db, path)));
-    sources.push({ source, path: roots.join(", "), result });
+    const warning = sourceSessionCount(db, source, roots) === 0 ? `${source}_no_sessions` : undefined;
+    if (warning) warnings.push(warning);
+    sources.push({ source, path: roots.join(", "), result, warning });
   }
   return { sources, warnings };
 }
@@ -110,4 +115,9 @@ function aggregateScanResults(results: ScanResult[]): ScanResult {
     observations: results.reduce((sum, result) => sum + result.observations, 0),
     skipped: results.reduce((sum, result) => sum + result.skipped, 0)
   };
+}
+
+function sourceSessionCount(db: Database, source: SessionSource, roots: string[]): number {
+  const rows = db.prepare("SELECT path FROM sessions WHERE source = ?").all(source) as Array<{ path: string }>;
+  return rows.filter((row) => roots.some((root) => row.path === root || row.path.startsWith(`${root.replace(/\/+$/u, "")}/`))).length;
 }

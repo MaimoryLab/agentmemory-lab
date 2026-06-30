@@ -238,7 +238,7 @@ test("default env generation writes necessary values without empty api key", () 
   }
 });
 
-test("partial source init keeps unconfigured sources out of env and automatic scans", () => {
+test("partial source init keeps unconfigured sources out of env but startup scan checks missing defaults", () => {
   const dir = mkdtempSync(join(tmpdir(), "ai-todo-env-partial-source-"));
   const previousHome = process.env.HOME;
   const previousClaude = process.env.AI_TODO_CLAUDE_HOME;
@@ -259,7 +259,9 @@ test("partial source init keeps unconfigured sources out of env and automatic sc
     const db = openDatabase(paths);
     try {
       const scan = scanConfiguredSources(db, paths);
-      assert.deepEqual(scan.sources.map((source) => source.source), ["codex"]);
+      assert.deepEqual(scan.sources.map((source) => source.source), ["codex", "claude-code"]);
+      assert.ok(scan.warnings.includes("codex_no_sessions"));
+      assert.ok(scan.warnings.includes("claude-code_no_sessions"));
     } finally {
       db.close();
     }

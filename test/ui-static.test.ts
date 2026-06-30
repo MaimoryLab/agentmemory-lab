@@ -26,6 +26,10 @@ test("React UI keeps task-first Sources wording and accessible icon controls", (
   assert.match(app, /Load more/);
   assert.match(app, /max-h-\[calc\(100vh-220px\)\]/);
   assert.match(app, /ensureSessionLoaded/);
+  assert.match(app, /scanChangedSources/);
+  assert.match(app, /Source scan finished/);
+  assert.match(app, /Source scan failed/);
+  assert.match(app, /startupStatusMessage/);
   assert.match(app, /mergeSessions/);
   assert.match(app, /sessionId/);
   assert.match(app, /scrollIntoView/);
@@ -41,6 +45,7 @@ test("React UI keeps task-first Sources wording and accessible icon controls", (
   assert.match(client, /Extraction needs setup/);
   assert.match(client, /No actionable cards found in some sessions/);
   assert.match(client, /Some sessions could not be processed/);
+  assert.match(client, /No Codex sessions were found in the source path/);
   assert.doesNotMatch(app, />LLM unavailable</);
   assert.match(css, /overflow-x: hidden/);
 });

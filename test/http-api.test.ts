@@ -216,8 +216,28 @@ test("HTTP source scan uses default paths with environment overrides", async () 
   }
 });
 
+test("HTTP source scan reports existing paths with no sessions", async () => {
+  const fixture = createFixture();
+  const emptyCodex = join(fixture.root, "empty-codex");
+  mkdirSync(emptyCodex, { recursive: true });
+  const paths = getAppPaths(join(fixture.root, "home"));
+  const db = openDatabase(paths);
+  const server = await startServer(db, paths);
+
+  try {
+    const response = await postJson(server.url("/sources/scan"), { source: "codex", path: emptyCodex });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).warning, "codex_no_sessions");
+  } finally {
+    await server.close();
+    db.close();
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("HTTP settings persist source paths and scan uses config path", async () => {
   const fixture = createFixture();
+  const missingClaudePath = join(tmpdir(), `ai-todo-missing-claude-${Date.now()}`);
   const paths = getAppPaths(join(fixture.root, "home"));
   const db = openDatabase(paths);
   const server = await startServer(db, paths);
@@ -233,7 +253,7 @@ test("HTTP settings persist source paths and scan uses config path", async () =>
     assert.equal(initialBody.organize.maxSessions, 16);
 
     const saved = await putJson(server.url("/settings"), {
-      sources: { codex: { path: fixture.codex }, "claude-code": {} },
+      sources: { codex: { path: fixture.codex }, "claude-code": { path: missingClaudePath } },
       llm: {
         enabled: true,
         provider: "openai",
@@ -253,6 +273,7 @@ test("HTTP settings persist source paths and scan uses config path", async () =>
     assert.equal(saved.status, 200);
     const savedBody = await saved.json();
     assert.equal(savedBody.sources.codex.path, fixture.codex);
+    assert.equal(savedBody.sources["claude-code"].path, missingClaudePath);
     assert.equal(savedBody.llm.model, "custom/model");
     assert.equal(savedBody.llm.apiKeyConfigured, true);
     assert.equal(savedBody.llm.apiKeyMasked, "dum****alue");
@@ -265,6 +286,10 @@ test("HTTP settings persist source paths and scan uses config path", async () =>
     const scan = await postJson(server.url("/sources/scan"), { source: "codex" });
     assert.equal(scan.status, 200);
     assert.equal((await scan.json()).scanned, 1);
+
+    const missingClaude = await postJson(server.url("/sources/scan"), { source: "claude-code" });
+    assert.equal(missingClaude.status, 400);
+    assert.equal((await missingClaude.json()).error, "path_not_found");
   } finally {
     await server.close();
     db.close();

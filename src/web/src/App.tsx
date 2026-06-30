@@ -24,6 +24,8 @@ import type { ObservationRecord, OrganizeResult, PublicAppConfig, SessionRecord,
 
 type View = "todos" | "sources" | "settings";
 type SourceFilter = SourceKind | "all";
+type SessionSource = Extract<SourceKind, "codex" | "claude-code">;
+type SourceScanResult = { warning?: string };
 
 const SESSION_PAGE_SIZE = 50;
 const OPEN_GROUP_PREVIEW_LIMIT = 6;
@@ -48,6 +50,7 @@ export function App() {
   const [highlightedObservationId, setHighlightedObservationId] = useState<string>("");
   const [status, setStatus] = useState("Ready");
   const [busy, setBusy] = useState(false);
+  const [startupNoticeShown, setStartupNoticeShown] = useState(false);
 
   useEffect(() => {
     void refresh();
@@ -65,6 +68,19 @@ export function App() {
     if (view !== "sources" || !highlightedObservationId || !observationsBySession[selectedSessionId]) return;
     requestAnimationFrame(() => document.getElementById(`obs-${highlightedObservationId}`)?.scrollIntoView({ block: "center" }));
   }, [view, selectedSessionId, highlightedObservationId, observationsBySession]);
+
+  useEffect(() => {
+    if (!startup) return;
+    if (startup.status === "indexing") {
+      const timer = window.setTimeout(() => void refresh(), 500);
+      return () => window.clearTimeout(timer);
+    }
+    const message = startupStatusMessage(startup);
+    if (message && !startupNoticeShown) {
+      setStatus(message);
+      setStartupNoticeShown(true);
+    }
+  }, [startup, startupNoticeShown]);
 
   async function refresh() {
     const [nextTodos, nextSources, nextSettings, nextStartup] = await Promise.all([
@@ -212,9 +228,9 @@ export function App() {
               <SettingsWorkspace
                 settings={settings}
                 startup={startup}
-                onSaved={async () => {
+                onSaved={async (message) => {
                   await refresh();
-                  setStatus("Settings saved.");
+                  setStatus(message ?? "Settings saved.");
                 }}
               />
             )}
@@ -518,7 +534,7 @@ function SourcesWorkspace({ sessions, sourceSummaries, sourceFilter, sessionOffs
   );
 }
 
-function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicAppConfig; startup: StartupScanStatus | null; onSaved: () => Promise<void> }) {
+function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicAppConfig; startup: StartupScanStatus | null; onSaved: (message?: string) => Promise<void> }) {
   const [form, setForm] = useState(settings);
   const [apiKey, setApiKey] = useState("");
   const [clearKey, setClearKey] = useState(false);
@@ -529,6 +545,7 @@ function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicApp
     setSaving(true);
     setSaveError("");
     try {
+      const changedSources = changedSourcePaths(settings.sources, form.sources);
       const saved = await api<PublicAppConfig>("/settings", {
         method: "PUT",
         body: {
@@ -546,7 +563,7 @@ function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicApp
         }
       });
       setForm(saved);
-      await onSaved();
+      await onSaved(await scanChangedSources(changedSources));
     } catch (error) {
       setSaveError((error as Error).message);
     } finally {
@@ -606,6 +623,30 @@ function SettingsWorkspace({ settings, startup, onSaved }: { settings: PublicApp
   );
 }
 
+function changedSourcePaths(
+  before: PublicAppConfig["sources"],
+  after: PublicAppConfig["sources"]
+): SessionSource[] {
+  return (["codex", "claude-code"] as const).filter((source) =>
+    (before[source].path ?? "").trim() !== (after[source].path ?? "").trim()
+  );
+}
+
+async function scanChangedSources(sources: SessionSource[]): Promise<string | undefined> {
+  if (sources.length === 0) return undefined;
+  const failures: string[] = [];
+  for (const source of sources) {
+    try {
+      const result = await api<SourceScanResult>("/sources/scan", { method: "POST", body: { source } });
+      if (result.warning) failures.push(`${sourceLabels[source]}: ${userFacingError(result.warning)}`);
+    } catch (error) {
+      failures.push(`${sourceLabels[source]}: ${(error as Error).message}`);
+    }
+  }
+  if (failures.length > 0) return `Source scan failed: ${failures.join(" ")}`;
+  return "Source scan finished.";
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-1 text-sm font-medium text-neutral-700">
@@ -638,6 +679,11 @@ function organizeStatus(result: OrganizeResult): string {
   const warnings = result.warnings.map(userFacingError).join(" ");
   if (result.created + result.updated > 0) return `${summary} Some sessions need review: ${warnings}`;
   return `${summary} ${warnings}`;
+}
+
+function startupStatusMessage(startup: StartupScanStatus | null): string {
+  if (!startup?.warnings.length) return "";
+  return `Source scan failed: ${startup.warnings.map(userFacingError).join(" ")}`;
 }
 
 function originLabel(todo: TodoCard): string {

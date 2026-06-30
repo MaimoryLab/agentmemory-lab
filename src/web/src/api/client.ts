@@ -22,6 +22,10 @@ export function userFacingError(error: string): string {
   if (error === "llm_input_truncated") return "Some session text was shortened for extraction.";
   if (error === "organize_scope_truncated") return "Some older sessions were left out by current limits.";
   if (error === "path_not_found") return "Source path needs setup.";
+  if (error === "codex_path_not_found") return "Codex source path was not found.";
+  if (error === "claude-code_path_not_found") return "Claude source path was not found.";
+  if (error === "codex_no_sessions") return "No Codex sessions were found in the source path.";
+  if (error === "claude-code_no_sessions") return "No Claude sessions were found in the source path.";
   if (error === "config_invalid") return "Settings need review.";
   if (error === "database_unavailable") return "Local database is unavailable.";
   if (error === "organize_failed") return "Organize failed. Open diagnostics for details.";

@@ -16,7 +16,8 @@ import {
   saveEnvConfig,
   saveSecrets
 } from "../src/config.js";
-import { resolveSourcePath, resolveSourcePaths } from "../src/sources/scan.js";
+import { openDatabase } from "../src/db/index.js";
+import { resolveSourcePath, resolveSourcePaths, scanConfiguredSources } from "../src/sources/scan.js";
 
 test("config reads defaults and persists source paths", () => {
   const dir = mkdtempSync(join(tmpdir(), "ai-todo-config-"));
@@ -233,6 +234,40 @@ test("default env generation writes necessary values without empty api key", () 
     assert.equal((readFileSync(paths.envPath).byteLength > 0), true);
     assert.equal(statSync(paths.envPath).mode & 0o777, 0o600);
   } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("partial source init keeps unconfigured sources out of env and automatic scans", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-env-partial-source-"));
+  const previousHome = process.env.HOME;
+  const previousClaude = process.env.AI_TODO_CLAUDE_HOME;
+  delete process.env.AI_TODO_CLAUDE_HOME;
+
+  try {
+    process.env.HOME = dir;
+    const paths = getAppPaths(dir);
+    const codexHome = join(dir, ".codex");
+    mkdirSync(join(codexHome, "sessions"), { recursive: true });
+    mkdirSync(join(dir, ".claude", "projects"), { recursive: true });
+
+    ensureDefaultEnv(paths, { AI_TODO_CODEX_HOME: codexHome });
+    const text = readFileSync(paths.envPath, "utf8");
+    assert.match(text, /AI_TODO_CODEX_HOME=/);
+    assert.doesNotMatch(text, /AI_TODO_CLAUDE_HOME/);
+
+    const db = openDatabase(paths);
+    try {
+      const scan = scanConfiguredSources(db, paths);
+      assert.deepEqual(scan.sources.map((source) => source.source), ["codex"]);
+    } finally {
+      db.close();
+    }
+  } finally {
+    if (previousHome === undefined) delete process.env.HOME;
+    else process.env.HOME = previousHome;
+    if (previousClaude === undefined) delete process.env.AI_TODO_CLAUDE_HOME;
+    else process.env.AI_TODO_CLAUDE_HOME = previousClaude;
     rmSync(dir, { recursive: true, force: true });
   }
 });

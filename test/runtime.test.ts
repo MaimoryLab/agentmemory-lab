@@ -33,6 +33,13 @@ test("doctor creates config, data, and database paths", async () => {
   }
 });
 
+test("help prints CLI usage", async () => {
+  const help = await capture(() => main(["--help"]));
+  assert.equal(help.code, 0);
+  assert.match(help.stdout, /Usage: ai-todo/);
+  assert.match(help.stdout, /open \[--port <port>\]/);
+});
+
 test("healthz returns ok", async () => {
   const server = createAppServer();
 

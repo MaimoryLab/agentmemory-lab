@@ -13,9 +13,26 @@ import { getLlmDoctorStatus, organizeConfiguredTodos } from "./todos/configured.
 import { listTodos, updateTodoStatus } from "./todos/service.js";
 
 export const DEFAULT_UI_PORT = 3111;
+const HELP_TEXT = `Usage: ai-todo [command]
+
+Commands:
+  init [options]              Create local config.
+  doctor                      Check local config, data, and LLM setup.
+  scan <codex|claude-code> [path]
+  organize                    Extract todos from configured sessions.
+  list                        List todos.
+  done <todo-id>              Mark a todo complete.
+  ignore <todo-id>            Ignore a todo.
+  open [--port <port>]        Start the local UI.
+  mcp                         Start the MCP stdio server.`;
 
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   const command = argv[0] ?? "doctor";
+
+  if (command === "help" || argv.includes("--help") || argv.includes("-h")) {
+    console.log(HELP_TEXT);
+    return 0;
+  }
 
   if (command === "init") {
     return init(argv.slice(1));

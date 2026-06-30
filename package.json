@@ -16,6 +16,9 @@
   "engines": {
     "node": ">=24.0.0"
   },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  },
   "devDependencies": {
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",

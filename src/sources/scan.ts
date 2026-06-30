@@ -25,16 +25,12 @@ export function resolveSourcePath(source: SessionSource, explicitPath?: string, 
 }
 
 export function resolveSourcePaths(source: SessionSource, explicitPath?: string, paths: AppPaths = getAppPaths()): string[] {
-  const configured = sourceBasePath(source, explicitPath, paths);
-  if (source === "codex") return codexSessionRoots(configured);
-  return [configured];
+  return sourceRoots(source, sourceBasePath(source, explicitPath, paths));
 }
 
 function sourceBasePath(source: SessionSource, explicitPath?: string, paths: AppPaths = getAppPaths()): string {
   if (explicitPath) return explicitPath;
-  const config = loadConfig(paths);
-  if (source === "codex") return envPath(process.env.AI_TODO_CODEX_HOME) ?? config.sources.codex.path ?? join(homedir(), ".codex");
-  return envPath(process.env.AI_TODO_CLAUDE_HOME) ?? config.sources["claude-code"].path ?? join(homedir(), ".claude", "projects");
+  return configuredSourcePath(source, paths) ?? defaultSourcePath(source);
 }
 
 export function scanSource(db: Database, source: unknown, explicitPath?: unknown, paths: AppPaths = getAppPaths()): SourceScanResult {
@@ -56,7 +52,9 @@ export function scanConfiguredSources(db: Database, paths: AppPaths = getAppPath
   const sources: ConfiguredScanSummary["sources"] = [];
   const warnings: string[] = [];
   for (const source of ["codex", "claude-code"] as const) {
-    const roots = resolveSourcePaths(source, undefined, paths);
+    const configured = configuredSourcePath(source, paths);
+    if (!configured) continue;
+    const roots = sourceRoots(source, configured);
     const existingRoots = roots.filter((path) => existsSync(path));
     if (existingRoots.length === 0) {
       const warning = `${source}_path_not_found`;
@@ -78,6 +76,21 @@ export function isSessionSource(source: unknown): source is SessionSource {
 
 function envPath(value: string | undefined): string | undefined {
   return value && value.trim() ? value : undefined;
+}
+
+function configuredSourcePath(source: SessionSource, paths: AppPaths): string | undefined {
+  const config = loadConfig(paths);
+  if (source === "codex") return envPath(process.env.AI_TODO_CODEX_HOME) ?? config.sources.codex.path;
+  return envPath(process.env.AI_TODO_CLAUDE_HOME) ?? config.sources["claude-code"].path;
+}
+
+function defaultSourcePath(source: SessionSource): string {
+  return source === "codex" ? join(homedir(), ".codex") : join(homedir(), ".claude", "projects");
+}
+
+function sourceRoots(source: SessionSource, path: string): string[] {
+  if (source === "codex") return codexSessionRoots(path);
+  return [path];
 }
 
 function codexSessionRoots(path: string): string[] {

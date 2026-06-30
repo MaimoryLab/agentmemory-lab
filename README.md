@@ -55,6 +55,7 @@ AI_TODO_HOME=.local/ai-todo node dist/cli.js list
 | --- | --- |
 | `ai-todo init` | Create the local `.env` config and database directory. |
 | `ai-todo doctor` | Show config paths and LLM setup without printing secrets. |
+| `ai-todo help` / `ai-todo --help` | Print CLI usage. |
 | `ai-todo scan <codex\|claude-code> [path]` | Import sessions from a configured or explicit source path. |
 | `ai-todo organize` | Run LLM-only todo extraction over recent observations. |
 | `ai-todo list` | Print current todo cards. |
@@ -85,6 +86,8 @@ AI_TODO_LLM_API_KEY=...
 
 - Codex sessions default to `~/.codex`.
 - Claude Code sessions default to `~/.claude/projects`.
+- Startup scans use only sources present in config; explicit `scan` commands can
+  still use those defaults.
 - Browser sessions can be posted to `POST /browser/sessions` while the local UI
   server is running.
 

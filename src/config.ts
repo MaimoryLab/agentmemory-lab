@@ -15,6 +15,7 @@ export const DEFAULT_ORGANIZE_MAX_OBSERVATIONS_PER_SESSION = 40;
 const DEFAULT_CODEX_HOME = join(homedir(), ".codex");
 const DEFAULT_CLAUDE_HOME = join(homedir(), ".claude", "projects");
 const IGNORED_ENV_KEYS = new Set(["AI_TODO_LLM_" + "PYTHON"]);
+const SOURCE_ENV_KEYS = ["AI_TODO_CODEX_HOME", "AI_TODO_CLAUDE_HOME"] as const;
 
 export interface AppConfig {
   sources: {
@@ -155,9 +156,13 @@ export function saveEnvConfig(paths: AppPaths, env: EnvConfig): void {
 }
 
 export function ensureDefaultEnv(paths: AppPaths, overrides: EnvConfig = {}): EnvConfig {
-  const env = existsSync(paths.envPath)
-    ? { ...defaultEnvConfig(), ...loadEnvConfig(paths), ...sanitizeEnvConfig(overrides) }
-    : { ...defaultEnvConfig(), ...sanitizeEnvConfig(overrides) };
+  const current = existsSync(paths.envPath) ? loadEnvConfig(paths) : {};
+  const sanitized = sanitizeEnvConfig(overrides);
+  const defaults = defaultEnvConfig();
+  if (hasSourceConfig(current) || hasSourceConfig(sanitized)) {
+    for (const key of SOURCE_ENV_KEYS) delete defaults[key];
+  }
+  const env = { ...defaults, ...current, ...sanitized };
   saveEnvConfig(paths, env);
   return env;
 }
@@ -404,6 +409,10 @@ function sanitizeEnvConfig(input: EnvConfig): EnvConfig {
     env[key] = text;
   }
   return env;
+}
+
+function hasSourceConfig(env: EnvConfig): boolean {
+  return SOURCE_ENV_KEYS.some((key) => env[key] !== undefined);
 }
 
 function parseEnvValue(rawValue: string): string {

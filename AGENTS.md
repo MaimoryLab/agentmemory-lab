@@ -11,9 +11,9 @@ direction.
 - Real `.env` files, API keys, tokens, or local credentials.
 - Local data directories: `data/`, `data-*`, `.local/`, `.ai-todo/`.
 - Build or dependency output: `dist/`, `node_modules/`, `*.tsbuildinfo`.
-- Private planning docs: `docs/hybrid-rebuild/`, `docs/rebuild/`.
-- Old private repository content, iii-engine internals, agentmemory graph data,
-  or real user transcripts.
+- Private planning docs: `docs/hybrid-rebuild/`, `docs/rebuild/`, and
+  `docs/task-chain-perspective-cn.md`.
+- Old private repository internals or real user transcripts.
 
 ## Architecture Boundaries
 

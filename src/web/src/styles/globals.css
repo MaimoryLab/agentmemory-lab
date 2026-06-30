@@ -62,3 +62,31 @@ textarea {
 ::selection {
   background: #bfdbfe;
 }
+
+.ledger-rail {
+  background: var(--app-line);
+}
+
+.ledger-rail-codex {
+  background: var(--app-blue);
+}
+
+.ledger-rail-claude {
+  background: var(--app-green);
+}
+
+.ledger-rail-browser {
+  background: var(--app-amber);
+}
+
+.ledger-rail-missing {
+  background: #cbd5e1;
+}
+
+@media (max-width: 430px) {
+  button,
+  input,
+  textarea {
+    min-width: 0;
+  }
+}

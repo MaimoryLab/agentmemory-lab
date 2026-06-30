@@ -36,6 +36,10 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("rounded-lg border border-neutral-200 bg-white shadow-[0_1px_0_rgba(15,23,42,0.03)]", className)} {...props} />;
 }
 
+export function Panel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("rounded-lg border border-[var(--app-line)] bg-white", className)} {...props} />;
+}
+
 export function Badge({ className, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
@@ -55,4 +59,33 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
 
 export function SectionTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return <h2 className={cn("text-xs font-semibold uppercase tracking-normal text-neutral-500", className)} {...props} />;
+}
+
+export function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="grid gap-1 text-sm font-medium text-neutral-700">
+      {label}
+      {children}
+    </label>
+  );
+}
+
+export function StatusCallout({ className, tone = "neutral", ...props }: HTMLAttributes<HTMLParagraphElement> & {
+  tone?: "neutral" | "danger";
+}) {
+  return (
+    <p
+      className={cn(
+        "rounded-md border px-3 py-2 text-sm",
+        tone === "neutral" && "border-neutral-200 bg-neutral-50 text-neutral-700",
+        tone === "danger" && "border-red-200 bg-red-50 text-red-700",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function SegmentedFilter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex gap-1 overflow-x-auto", className)} {...props} />;
 }

@@ -8,13 +8,14 @@ import { originLabel, originProjectLabel, SourceIcon } from "./source-labels.js"
 
 const OPEN_GROUP_PREVIEW_LIMIT = 6;
 type TodoSourceFilter = "all" | SourceKind;
+type SourceTarget = Pick<TodoEvidence, "sessionId" | "observationId">;
 
 export function TodoBoard(props: {
   openTodos: TodoCard[];
   closedTodos: TodoCard[];
   onComplete: (id: string) => void;
   onIgnore: (id: string) => void;
-  onSources: (todo: TodoCard) => void;
+  onSources: (todo: TodoCard, target?: SourceTarget) => void;
   evidenceByTodo: Record<string, TodoEvidence[]>;
   onSelectTodo: (todo: TodoCard) => void;
   onOrganize: () => void;
@@ -214,7 +215,7 @@ function TaskChainContainer({ todo, locale, selected, onSelect, onComplete, onIg
   onSelect: () => void;
   onComplete: (id: string) => void;
   onIgnore: (id: string) => void;
-  onSources: (todo: TodoCard) => void;
+  onSources: (todo: TodoCard, target?: SourceTarget) => void;
 }) {
   const text = textFor(locale);
   const completedNodes = todo.chain?.completedNodes ?? [];
@@ -250,7 +251,7 @@ function TodoItem({ todo, muted, compactStatus, selected, locale, onSelect, onCo
   onSelect?: () => void;
   onComplete: (id: string) => void;
   onIgnore: (id: string) => void;
-  onSources: (todo: TodoCard) => void;
+  onSources: (todo: TodoCard, target?: SourceTarget) => void;
 }) {
   const text = textFor(locale);
   const eventTime = todoEventTime(todo);
@@ -322,7 +323,7 @@ function TodoInspector({ todo, evidence, locale, onSources }: {
   todo: TodoCard | undefined;
   evidence: TodoEvidence[];
   locale: Locale;
-  onSources: (todo: TodoCard) => void;
+  onSources: (todo: TodoCard, target?: SourceTarget) => void;
 }) {
   const text = textFor(locale);
   if (!todo) {
@@ -359,26 +360,35 @@ function TodoInspector({ todo, evidence, locale, onSources }: {
             <h3 className="text-sm font-semibold text-[var(--app-ink)]">{text.evidence}</h3>
             <div className="mt-3 space-y-3">
               {(evidence.length ? evidence.slice(0, 2) : fallbackEvidence(todo)).map((item) => (
-                <blockquote key={item.id} className="rounded-lg border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-4 text-sm leading-6 text-[var(--app-muted)]">
-                  <span className="text-xl leading-none text-[var(--app-subtle)]">“</span>
-                  {item.text}
-                </blockquote>
+                <details key={item.id} className="rounded-lg border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-4 text-sm text-[var(--app-muted)]">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <Badge className="bg-white">
+                        <SourceIcon source={item.source ?? todo.origin?.source} />
+                        {item.source ? sourceLabel(item.source, locale) : text.sourceUnavailable}
+                      </Badge>
+                      <Badge className="bg-white">{roleLabel(item.role, locale)}</Badge>
+                      <time className="text-xs text-[var(--app-subtle)]" dateTime={item.createdAt ?? todoEventTime(todo)} title={new Date(item.createdAt ?? todoEventTime(todo)).toLocaleString()}>
+                        {formatRelativeTime(item.createdAt ?? todoEventTime(todo), locale)}
+                      </time>
+                    </div>
+                    <div className="mt-2 min-w-0 break-words text-xs font-medium text-[var(--app-ink)]">
+                      {item.projectTitle || todo.origin?.projectTitle || text.unknownProject}
+                    </div>
+                    <div className="mt-1 min-w-0 break-words text-xs text-[var(--app-subtle)]">
+                      {item.sessionTitle || todo.origin?.sessionTitle || text.temporarySession}
+                    </div>
+                    <p className="mt-1 min-w-0 break-words leading-6">{evidencePreview(item.text)}</p>
+                  </summary>
+                  <blockquote className="mt-3 whitespace-pre-wrap break-words border-l-2 border-[var(--app-border-strong)] pl-3 leading-6">
+                    {item.text}
+                  </blockquote>
+                  <Button className="mt-3 w-full" variant="secondary" size="sm" onClick={() => onSources(todo, item)} aria-label={text.openTodoSources(todo.title)}>
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    {text.openSources}
+                  </Button>
+                </details>
               ))}
-            </div>
-          </section>
-          <section>
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--app-ink)]">
-              <Archive className="h-4 w-4 text-[var(--app-subtle)]" aria-hidden="true" />
-              {text.attachments}
-            </h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {todo.evidenceIds.slice(0, 3).map((id, index) => (
-                <Badge key={id} className="bg-white">
-                  <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                  {text.evidenceFile(index + 1)}
-                </Badge>
-              ))}
-              {todo.evidenceIds.length === 0 && <span className="text-sm text-[var(--app-subtle)]">{text.sourceUnavailable}</span>}
             </div>
           </section>
           <section className="grid gap-3 sm:grid-cols-2">
@@ -390,7 +400,7 @@ function TodoInspector({ todo, evidence, locale, onSources }: {
             )}
             <div className="rounded-lg border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-3">
               <div className="text-xs text-[var(--app-subtle)]">{text.source}</div>
-              <div className="mt-1 truncate text-sm font-semibold text-[var(--app-ink)]">{todo.origin?.sessionTitle || text.temporarySession}</div>
+              <div className="mt-1 break-words text-sm font-semibold text-[var(--app-ink)]">{todo.origin?.sessionTitle || text.temporarySession}</div>
             </div>
           </section>
           <Button className="w-full" onClick={() => onSources(todo)} aria-label={text.openTodoSources(todo.title)}>
@@ -453,9 +463,28 @@ function fallbackEvidence(todo: TodoCard): TodoEvidence[] {
     {
       id: "description",
       observationId: todo.origin?.observationId ?? todo.id,
+      sessionId: todo.origin?.sessionId,
+      source: todo.origin?.source,
+      createdAt: todo.origin?.eventCreatedAt ?? todo.updatedAt,
+      sessionTitle: todo.origin?.sessionTitle,
+      projectTitle: todo.origin?.projectTitle,
       text: todo.metadata.completionSummary || todo.description
     }
   ];
+}
+
+function evidencePreview(text: string): string {
+  const value = text.trim();
+  return value.length > 220 ? `${value.slice(0, 220)}...` : value;
+}
+
+function roleLabel(role: string | undefined, locale: Locale): string {
+  if (locale === "zh-CN") {
+    if (role === "user") return "用户";
+    if (role === "assistant") return "助手";
+    if (role === "system") return "系统";
+  }
+  return role || "source";
 }
 
 function todoEventTime(todo: TodoCard): string {

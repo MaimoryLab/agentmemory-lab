@@ -43,6 +43,10 @@ test("help prints CLI usage", async () => {
 test("npm start launches the web workspace command", () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8")) as { scripts: Record<string, string> };
   assert.equal(pkg.scripts.start, "node dist/cli.js start");
+  assert.doesNotMatch(pkg.scripts.build, /rm -rf/);
+  assert.match(pkg.scripts.build, /node:fs/);
+  assert.match(pkg.scripts.build, /rmSync/);
+  assert.equal(pkg.scripts.test, "npm run build && node --test \"dist/test/*.test.js\"");
 });
 
 test("healthz returns ok", async () => {

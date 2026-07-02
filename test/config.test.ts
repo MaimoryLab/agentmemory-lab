@@ -275,6 +275,29 @@ test("partial source init keeps unconfigured sources out of env but startup scan
   }
 });
 
+test("configured scan counts Windows-style session paths under configured roots", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ai-todo-windows-paths-"));
+  try {
+    const paths = getAppPaths(dir);
+    const codexHome = join(dir, ".codex");
+    mkdirSync(join(codexHome, "sessions"), { recursive: true });
+    ensureDefaultEnv(paths, { AI_TODO_CODEX_HOME: codexHome });
+
+    const windowsRoot = join(codexHome, "sessions").replace(/\//gu, "\\");
+    const db = openDatabase(paths);
+    try {
+      db.prepare("INSERT INTO sessions (id, source, path, updated_at) VALUES ('win-session', 'codex', ?, '2026-01-01T00:00:00.000Z')")
+        .run(`${windowsRoot}\\2026\\01\\01\\session.jsonl`);
+      const scan = scanConfiguredSources(db, paths);
+      assert.ok(!scan.warnings.includes("codex_no_sessions"));
+    } finally {
+      db.close();
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("source discovery writes missing agent paths without overwriting configured env", () => {
   const dir = mkdtempSync(join(tmpdir(), "ai-todo-source-discovery-"));
   const previousHome = process.env.HOME;

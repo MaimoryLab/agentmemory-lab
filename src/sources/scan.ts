@@ -119,5 +119,16 @@ function aggregateScanResults(results: ScanResult[]): ScanResult {
 
 function sourceSessionCount(db: Database, source: SessionSource, roots: string[]): number {
   const rows = db.prepare("SELECT path FROM sessions WHERE source = ?").all(source) as Array<{ path: string }>;
-  return rows.filter((row) => roots.some((root) => row.path === root || row.path.startsWith(`${root.replace(/\/+$/u, "")}/`))).length;
+  return rows.filter((row) => roots.some((root) => pathIsWithinRoot(row.path, root))).length;
+}
+
+function pathIsWithinRoot(path: string, root: string): boolean {
+  const normalizedPath = normalizePathSeparators(path);
+  const normalizedRoot = normalizePathSeparators(root).replace(/\/+$/u, "");
+  if (!normalizedRoot) return false;
+  return normalizedPath === normalizedRoot || normalizedPath.startsWith(`${normalizedRoot}/`);
+}
+
+function normalizePathSeparators(path: string): string {
+  return path.replace(/\\/gu, "/");
 }
